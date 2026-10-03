@@ -1,8 +1,9 @@
 import { Plus } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import DesktopNav from '@/components/layout/DesktopNav'
 import Logo from '@/components/layout/Logo'
 import MobileNav from '@/components/layout/MobileNav'
+import NavLabel from '@/components/layout/NavLabel'
 import { Button } from '@/components/ui/button'
 import { NAV } from '@/shared/constants/navigation'
 
@@ -18,14 +19,19 @@ const Navbar = () => {
             variant="ghost"
             size="lg"
             nativeButton={false}
-            render={<Link to={NAV.login.to} />}
-            className="hidden px-3.5 md:inline-flex"
+            render={<NavLink to={NAV.login.to} />}
+            className="group/nav hidden px-3.5 md:inline-flex"
           >
-            {NAV.login.label}
+            <NavLabel>{NAV.login.label}</NavLabel>
           </Button>
-          <Button size="lg" nativeButton={false} render={<Link to={NAV.publish.to} />} className="px-3.5">
+          <Button
+            size="lg"
+            nativeButton={false}
+            render={<NavLink to={NAV.publish.to} />}
+            className="group/nav px-3.5"
+          >
             <Plus />
-            {NAV.publish.label}
+            <NavLabel>{NAV.publish.label}</NavLabel>
           </Button>
           <MobileNav className="md:hidden" />
         </div>

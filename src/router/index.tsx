@@ -4,6 +4,7 @@ import LoginPage from '@/features/auth/pages/LoginPage'
 import ContactPage from '@/features/contact/pages/ContactPage'
 import PublishPropertyPage from '@/features/properties/pages/PublishPropertyPage'
 import SearchPage from '@/features/search/pages/SearchPage'
+import PricingPage from '@/features/shop/pages/PricingPage'
 import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import { ROUTES } from '@/shared/constants/routes'
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.contact, element: <ContactPage /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.publish, element: <PublishPropertyPage /> },
+      { path: ROUTES.pricing, element: <PricingPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

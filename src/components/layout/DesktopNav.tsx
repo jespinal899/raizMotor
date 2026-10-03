@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import NavLabel from '@/components/layout/NavLabel'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -14,7 +15,7 @@ import { NAV, PROPERTY_CATEGORIES } from '@/shared/constants/navigation'
 
 const itemStyle = cn(
   navigationMenuTriggerStyle(),
-  'px-3 text-foreground/70 hover:text-foreground aria-[current=page]:text-primary',
+  'group/nav px-3 text-foreground/70 hover:text-foreground aria-[current=page]:text-primary',
 )
 
 interface DesktopNavProps {
@@ -30,13 +31,13 @@ const DesktopNav = ({ className }: DesktopNavProps) => {
       <NavigationMenuList className="gap-1">
         <NavigationMenuItem>
           <NavigationMenuLink render={<NavLink to={NAV.home.to} end />} className={itemStyle}>
-            {NAV.home.label}
+            <NavLabel>{NAV.home.label}</NavLabel>
           </NavigationMenuLink>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
           <NavigationMenuTrigger className={cn(itemStyle, inProperties && 'text-primary')}>
-            {NAV.properties.label}
+            <NavLabel active={inProperties}>{NAV.properties.label}</NavLabel>
           </NavigationMenuTrigger>
           <NavigationMenuContent className="p-2">
             <ul className="grid w-80 gap-0.5">
@@ -74,7 +75,7 @@ const DesktopNav = ({ className }: DesktopNavProps) => {
 
         <NavigationMenuItem>
           <NavigationMenuLink render={<NavLink to={NAV.contact.to} />} className={itemStyle}>
-            {NAV.contact.label}
+            <NavLabel>{NAV.contact.label}</NavLabel>
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>

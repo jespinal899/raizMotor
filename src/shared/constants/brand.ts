@@ -1,3 +1,3 @@
 export const BRAND = {
-  name: 'RaizMotor',
+  name: 'DomusRaíz',
 } as const

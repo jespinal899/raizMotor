@@ -31,6 +31,7 @@
     --color-muted: var(--muted);
     --color-secondary-foreground: var(--secondary-foreground);
     --color-secondary: var(--secondary);
+    --color-primary-light: var(--primary-light);
     --color-primary-foreground: var(--primary-foreground);
     --color-primary: var(--primary);
     --color-popover-foreground: var(--popover-foreground);
@@ -48,6 +49,31 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+    --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    --animate-carousel-progress: carousel-progress linear forwards;
+
+    @keyframes fade-up {
+        from {
+            opacity: 0;
+            transform: translateY(1.25rem);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes carousel-progress {
+        from {
+            transform: scaleX(0);
+        }
+        to {
+            transform: scaleX(1);
+        }
+    }
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
@@ -57,6 +83,7 @@
     --popover-foreground: oklch(0.145 0 0);
     --primary: oklch(0.409 0.106 250.21);
     --primary-foreground: oklch(0.985 0 0);
+    --primary-light: oklch(0.71 0.119 243.93);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
@@ -92,6 +119,7 @@
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.707 0.165 254.624);
     --primary-foreground: oklch(0.205 0 0);
+    --primary-light: oklch(0.82 0.09 243.93);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
