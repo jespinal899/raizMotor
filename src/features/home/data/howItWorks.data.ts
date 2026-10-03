@@ -1,4 +1,4 @@
-import { Megaphone, MessageCircle, Search } from 'lucide-react'
+import { Megaphone, MessageCircle, Scale, Search } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export interface HowItWorksStep {
@@ -9,18 +9,24 @@ export interface HowItWorksStep {
 
 export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   {
+    icon: Megaphone,
+    title: 'Publicar',
+    description:
+      'Anuncia tu casa, apartamento o terreno con planes que se adaptan a particulares, inmobiliarias y constructoras.',
+  },
+  {
     icon: Search,
-    title: 'Busca',
-    description: 'Filtra por tipo de propiedad, ubicación y precio hasta dar con lo que necesitas.',
+    title: 'Encontrar',
+    description: 'Filtra por tipo de propiedad, ubicación y precio hasta dar con lo que buscas.',
   },
   {
     icon: MessageCircle,
-    title: 'Contacta directo',
-    description: 'Habla con quien publica el anuncio, sin intermediarios ni comisiones ocultas.',
+    title: 'Contactar',
+    description: 'Habla directamente con quien publica el anuncio, sin intermediarios ni comisiones ocultas.',
   },
   {
-    icon: Megaphone,
-    title: 'Publica',
-    description: 'Particulares, inmobiliarias y constructoras anuncian con planes que se adaptan a cada caso.',
+    icon: Scale,
+    title: 'Decidir',
+    description: 'Compara fotos, características y precios con información clara antes de elegir.',
   },
 ]
