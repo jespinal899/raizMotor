@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom'
+import Container from '@/components/layout/Container'
 import Logo from '@/components/layout/Logo'
 import { FOOTER_SECTIONS } from '@/components/layout/navigation'
 import { BRAND } from '@/shared/constants/brand'
 
-const container = 'mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'
 const CURRENT_YEAR = new Date().getFullYear()
 
 const Footer = () => {
   return (
     <footer className="border-t bg-muted/40">
-      <div className={`${container} grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.6fr_repeat(3,1fr)]`}>
+      <Container className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.6fr_repeat(3,1fr)]">
         <div className="grid content-start gap-4 sm:col-span-2 lg:col-span-1">
           <Logo className="justify-self-start" />
           <p className="max-w-xs text-sm text-muted-foreground">{BRAND.tagline}</p>
@@ -32,12 +32,14 @@ const Footer = () => {
             </ul>
           </nav>
         ))}
-      </div>
+      </Container>
 
       <div className="border-t">
-        <p className={`${container} py-5 text-sm text-muted-foreground`}>
-          © {CURRENT_YEAR} {BRAND.name}. Todos los derechos reservados.
-        </p>
+        <Container className="py-5">
+          <p className="text-sm text-muted-foreground">
+            © {CURRENT_YEAR} {BRAND.name}. Todos los derechos reservados.
+          </p>
+        </Container>
       </div>
     </footer>
   )

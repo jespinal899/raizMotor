@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
+import Container from '@/components/layout/Container'
 import PropertyCollection from '@/features/properties/components/PropertyCollection'
 import { useFeaturedProperties } from '@/features/properties/hooks/useFeaturedProperties'
 import { ROUTES } from '@/shared/constants/routes'
@@ -10,7 +11,7 @@ const FeaturedProperties = () => {
   const { properties, isLoading, error } = useFeaturedProperties()
 
   return (
-    <section aria-labelledby="propiedades-destacadas" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <Container as="section" aria-labelledby="propiedades-destacadas" className="py-14">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div className="grid gap-1.5">
           <h2
@@ -33,7 +34,7 @@ const FeaturedProperties = () => {
         error={error}
         skeletonCount={FEATURED_COUNT}
       />
-    </section>
+    </Container>
   )
 }
 

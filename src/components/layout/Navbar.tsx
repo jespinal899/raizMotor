@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
+import Container from '@/components/layout/Container'
 import DesktopNav from '@/components/layout/DesktopNav'
 import Logo from '@/components/layout/Logo'
 import MobileNav from '@/components/layout/MobileNav'
@@ -9,7 +10,7 @@ import { NAV } from '@/components/layout/navigation'
 const Navbar = () => {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:gap-8 lg:px-8">
+      <Container className="flex h-16 items-center gap-3 lg:gap-8">
         <Logo />
         <DesktopNav className="hidden lg:flex" />
 
@@ -29,7 +30,7 @@ const Navbar = () => {
           </ButtonLink>
           <MobileNav className="lg:hidden" />
         </div>
-      </div>
+      </Container>
     </header>
   )
 }
