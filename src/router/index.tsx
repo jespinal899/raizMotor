@@ -8,21 +8,26 @@ import SearchPage from '@/features/search/pages/SearchPage'
 import PricingPage from '@/features/shop/pages/PricingPage'
 import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import { toRouterBasename } from '@/router/basename'
 import { ROUTES } from '@/shared/constants/routes'
 
-export const router = createBrowserRouter([
-  {
-    element: <MainLayout />,
-    children: [
-      { path: ROUTES.home, element: <HomePage /> },
-      { path: ROUTES.properties, element: <SearchPage /> },
-      { path: ROUTES.propertiesByType, element: <SearchPage /> },
-      { path: ROUTES.propertyDetail, element: <PropertyDetailPage /> },
-      { path: ROUTES.contact, element: <ContactPage /> },
-      { path: ROUTES.login, element: <LoginPage /> },
-      { path: ROUTES.publish, element: <PublishPropertyPage /> },
-      { path: ROUTES.pricing, element: <PricingPage /> },
-      { path: '*', element: <NotFoundPage /> },
-    ],
-  },
-])
+export const router = createBrowserRouter(
+  [
+    {
+      element: <MainLayout />,
+      children: [
+        { path: ROUTES.home, element: <HomePage /> },
+        { path: ROUTES.properties, element: <SearchPage /> },
+        { path: ROUTES.propertiesByType, element: <SearchPage /> },
+        { path: ROUTES.propertyDetail, element: <PropertyDetailPage /> },
+        { path: ROUTES.contact, element: <ContactPage /> },
+        { path: ROUTES.login, element: <LoginPage /> },
+        { path: ROUTES.publish, element: <PublishPropertyPage /> },
+        { path: ROUTES.pricing, element: <PricingPage /> },
+        { path: '*', element: <NotFoundPage /> },
+      ],
+    },
+  ],
+  // El sitio puede publicarse bajo un prefijo (GitHub Pages lo sirve en /<repositorio>/).
+  { basename: toRouterBasename(import.meta.env.BASE_URL) },
+)
