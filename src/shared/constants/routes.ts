@@ -2,6 +2,7 @@ export const ROUTES = {
   home: '/',
   properties: '/propiedades',
   propertiesByType: '/propiedades/:tipo',
+  propertyDetail: '/propiedad/:id',
   contact: '/contacto',
   login: '/iniciar-sesion',
   publish: '/publicar',
@@ -10,3 +11,5 @@ export const ROUTES = {
 } as const
 
 export const propertyTypePath = (tipo: string) => `${ROUTES.properties}/${tipo}`
+
+export const propertyDetailPath = (id: string) => `/propiedad/${id}`

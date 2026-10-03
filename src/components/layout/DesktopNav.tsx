@@ -10,8 +10,8 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu'
+import { NAV, PROPERTY_CATEGORIES } from '@/components/layout/navigation'
 import { cn } from '@/lib/utils'
-import { NAV, PROPERTY_CATEGORIES } from '@/shared/constants/navigation'
 
 const itemStyle = cn(
   navigationMenuTriggerStyle(),

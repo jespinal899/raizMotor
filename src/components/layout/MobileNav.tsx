@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Menu, Plus } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import ButtonLink from '@/components/ButtonLink'
 import Logo from '@/components/layout/Logo'
 import NavLabel from '@/components/layout/NavLabel'
+import { NAV, PROPERTY_CATEGORIES } from '@/components/layout/navigation'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -14,7 +16,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { BRAND } from '@/shared/constants/brand'
-import { NAV, PROPERTY_CATEGORIES } from '@/shared/constants/navigation'
 
 const linkStyle =
   'group/nav flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-foreground/80 outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:text-primary'
@@ -67,24 +68,20 @@ const MobileNav = ({ className }: MobileNavProps) => {
         </nav>
 
         <SheetFooter className="border-t">
-          <Button
+          <ButtonLink
+            to={NAV.login.to}
+            markCurrent
+            onClick={close}
             variant="outline"
             size="lg"
-            nativeButton={false}
-            render={<NavLink to={NAV.login.to} onClick={close} />}
             className="group/nav"
           >
             <NavLabel>{NAV.login.label}</NavLabel>
-          </Button>
-          <Button
-            size="lg"
-            nativeButton={false}
-            render={<NavLink to={NAV.publish.to} onClick={close} />}
-            className="group/nav"
-          >
+          </ButtonLink>
+          <ButtonLink to={NAV.publish.to} markCurrent onClick={close} size="lg" className="group/nav">
             <Plus />
             <NavLabel>{NAV.publish.label}</NavLabel>
-          </Button>
+          </ButtonLink>
         </SheetFooter>
       </SheetContent>
     </Sheet>

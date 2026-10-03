@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import MainLayout from '@/components/layout/MainLayout'
 import LoginPage from '@/features/auth/pages/LoginPage'
 import ContactPage from '@/features/contact/pages/ContactPage'
+import PropertyDetailPage from '@/features/properties/pages/PropertyDetailPage'
 import PublishPropertyPage from '@/features/properties/pages/PublishPropertyPage'
 import SearchPage from '@/features/search/pages/SearchPage'
 import PricingPage from '@/features/shop/pages/PricingPage'
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.home, element: <HomePage /> },
       { path: ROUTES.properties, element: <SearchPage /> },
       { path: ROUTES.propertiesByType, element: <SearchPage /> },
+      { path: ROUTES.propertyDetail, element: <PropertyDetailPage /> },
       { path: ROUTES.contact, element: <ContactPage /> },
       { path: ROUTES.login, element: <LoginPage /> },
       { path: ROUTES.publish, element: <PublishPropertyPage /> },
