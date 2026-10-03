@@ -41,7 +41,7 @@ describe('ButtonLink', () => {
       <ButtonLink to="/publicar" markCurrent>
         Publicar
       </ButtonLink>,
-      currentRoute,
+      { route: currentRoute },
     )
 
     // Assert
@@ -57,7 +57,7 @@ describe('ButtonLink', () => {
       <ButtonLink to="/publicar" markCurrent>
         Publicar
       </ButtonLink>,
-      currentRoute,
+      { route: currentRoute },
     )
 
     // Assert
@@ -69,7 +69,7 @@ describe('ButtonLink', () => {
     const currentRoute = '/publicar'
 
     // Act
-    renderWithRouter(<ButtonLink to="/publicar">Publicar</ButtonLink>, currentRoute)
+    renderWithRouter(<ButtonLink to="/publicar">Publicar</ButtonLink>, { route: currentRoute })
 
     // Assert
     expect(screen.getByRole('link', { name: 'Publicar' })).not.toHaveAttribute('aria-current')

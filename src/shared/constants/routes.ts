@@ -1,3 +1,8 @@
+/** Identificadores de secciones a las que se puede enlazar dentro de una página. */
+export const SECTION_IDS = {
+  howItWorks: 'como-funciona',
+} as const
+
 export const ROUTES = {
   home: '/',
   properties: '/propiedades',
@@ -7,9 +12,12 @@ export const ROUTES = {
   login: '/iniciar-sesion',
   publish: '/publicar',
   pricing: '/planes',
-  stories: '/#historias',
+  howItWorks: `/#${SECTION_IDS.howItWorks}`,
 } as const
 
 export const propertyTypePath = (tipo: string) => `${ROUTES.properties}/${tipo}`
 
 export const propertyDetailPath = (id: string) => `/propiedad/${id}`
+
+/** Abre el contacto indicando por qué propiedad se consulta. */
+export const propertyContactPath = (id: string) => `${ROUTES.contact}?propiedad=${encodeURIComponent(id)}`

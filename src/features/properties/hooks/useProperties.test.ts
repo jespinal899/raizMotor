@@ -2,21 +2,14 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { useFeaturedProperties } from '@/features/properties/hooks/useFeaturedProperties'
 import { useProperties } from '@/features/properties/hooks/useProperties'
-import type { PropertyService } from '@/features/properties/services/propertyService'
 import type { PropertyFilters } from '@/features/properties/types/property.types'
-import { buildProperty } from '@/test/factories'
-
-const createFakeService = (overrides: Partial<PropertyService> = {}): PropertyService => ({
-  getFeatured: vi.fn(async () => []),
-  search: vi.fn(async () => []),
-  ...overrides,
-})
+import { buildProperty, buildPropertyService } from '@/test/factories'
 
 describe('useProperties', () => {
   it('pide al servicio las propiedades con los filtros recibidos', async () => {
     // Arrange
     const house = buildProperty({ id: 'casa' })
-    const service = createFakeService({ search: vi.fn(async () => [house]) })
+    const service = buildPropertyService({ search: vi.fn(async () => [house]) })
     const filters: PropertyFilters = { type: 'casa', operation: 'venta' }
 
     // Act
@@ -30,7 +23,7 @@ describe('useProperties', () => {
 
   it('devuelve una lista vacía mientras carga', () => {
     // Arrange
-    const service = createFakeService({ search: () => new Promise(() => {}) })
+    const service = buildPropertyService({ search: () => new Promise(() => {}) })
 
     // Act
     const { result } = renderHook(() => useProperties({}, service))
@@ -41,7 +34,7 @@ describe('useProperties', () => {
 
   it('vuelve a buscar cuando cambian los filtros', async () => {
     // Arrange
-    const service = createFakeService()
+    const service = buildPropertyService()
     const { result, rerender } = renderHook(
       ({ filters }: { filters: PropertyFilters }) => useProperties(filters, service),
       { initialProps: { filters: { type: 'casa' } } },
@@ -58,7 +51,7 @@ describe('useProperties', () => {
 
   it('no repite la búsqueda si los filtros tienen los mismos valores', async () => {
     // Arrange
-    const service = createFakeService()
+    const service = buildPropertyService()
     const { result, rerender } = renderHook(
       ({ filters }: { filters: PropertyFilters }) => useProperties(filters, service),
       { initialProps: { filters: { type: 'casa' } } },
@@ -74,7 +67,7 @@ describe('useProperties', () => {
 
   it('expone el error del servicio', async () => {
     // Arrange
-    const service = createFakeService({ search: () => Promise.reject(new Error('API caída')) })
+    const service = buildPropertyService({ search: () => Promise.reject(new Error('API caída')) })
 
     // Act
     const { result } = renderHook(() => useProperties({}, service))
@@ -89,7 +82,7 @@ describe('useFeaturedProperties', () => {
   it('devuelve las propiedades destacadas del servicio', async () => {
     // Arrange
     const featured = buildProperty({ id: 'destacada', featured: true })
-    const service = createFakeService({ getFeatured: vi.fn(async () => [featured]) })
+    const service = buildPropertyService({ getFeatured: vi.fn(async () => [featured]) })
 
     // Act
     const { result } = renderHook(() => useFeaturedProperties(service))

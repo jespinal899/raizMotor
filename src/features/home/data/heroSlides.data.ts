@@ -19,7 +19,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     title: 'Tu próximo capítulo empieza aquí',
     description: `Miles de familias ya encontraron su hogar con ${BRAND.name}. Propiedades verificadas, vendedores reales, cero comisiones ocultas.`,
     image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600',
-    primaryAction: { label: 'Ver historias', to: ROUTES.stories },
+    primaryAction: { label: 'Cómo funciona', to: ROUTES.howItWorks },
     secondaryAction: { label: 'Agendar asesoría', to: ROUTES.contact },
   },
   {

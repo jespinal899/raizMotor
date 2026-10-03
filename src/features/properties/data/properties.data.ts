@@ -1,12 +1,47 @@
-import type { Property } from '@/features/properties/types/property.types'
+import type { Advertiser, Property } from '@/features/properties/types/property.types'
 
-const photo = (id: string) => `https://images.unsplash.com/${id}?w=800&q=80`
+const COVER_WIDTH = 800
+const GALLERY_WIDTH = 1200
+
+const PHOTOS = {
+  modernHouse: 'photo-1600585154340-be6161a56a0c',
+  poolHouse: 'photo-1512917774080-9991f1c4c750',
+  familyHouse: 'photo-1568605114967-8130f3a36994',
+  suburbanHouse: 'photo-1570129477492-45c003edd2be',
+  whiteHouse: 'photo-1564013799919-ab600027ffc6',
+  villa: 'photo-1613490493576-7fde63acd811',
+  kitchen: 'photo-1600607687939-ce8a6c25118c',
+  brightLiving: 'photo-1522708323590-d24dbb6b0267',
+  loft: 'photo-1502672260266-1c1ef2d93688',
+  livingRoom: 'photo-1560448204-e02f11c3d0e2',
+  cozyRoom: 'photo-1493809842364-78817add7ffb',
+  field: 'photo-1500382017468-9049fed747ef',
+  valley: 'photo-1500076656116-558758c991c1',
+} as const
+
+type PhotoKey = keyof typeof PHOTOS
+
+const photoUrl = (key: PhotoKey, width: number) => `https://images.unsplash.com/${PHOTOS[key]}?w=${width}&q=80`
+
+/** La primera foto es la portada del listado y de la galería. */
+const photos = (...keys: [PhotoKey, ...PhotoKey[]]) => ({
+  image: photoUrl(keys[0], COVER_WIDTH),
+  gallery: keys.map((key) => photoUrl(key, GALLERY_WIDTH)),
+})
+
+const SAMPLE_ADVERTISERS = {
+  particular: { name: 'Propietario de ejemplo', kind: 'particular' },
+  inmobiliaria: { name: 'Inmobiliaria de ejemplo', kind: 'inmobiliaria' },
+  constructora: { name: 'Constructora de ejemplo', kind: 'constructora' },
+} satisfies Record<string, Advertiser>
 
 // Datos de ejemplo mientras no exista la API de propiedades.
 export const PROPERTIES: Property[] = [
   {
     id: 'casa-miraflores-malecon',
     title: 'Casa moderna a pasos del malecón',
+    description:
+      'Casa de dos plantas con acabados contemporáneos y amplios ventanales que llenan de luz la sala y el comedor. El jardín interior y la terraza son ideales para recibir visitas, y el malecón queda a pocos minutos caminando.',
     type: 'casa',
     operation: 'venta',
     price: 420000,
@@ -15,12 +50,17 @@ export const PROPERTIES: Property[] = [
     area: 220,
     bedrooms: 3,
     bathrooms: 3,
-    image: photo('photo-1600585154340-be6161a56a0c'),
+    parking: 2,
+    features: ['Jardín interior', 'Terraza', 'Cocina equipada', 'Cuarto de servicio', 'Cerca al malecón'],
+    ...photos('modernHouse', 'kitchen', 'livingRoom'),
+    advertiser: SAMPLE_ADVERTISERS.inmobiliaria,
     featured: true,
   },
   {
     id: 'casa-la-molina-piscina',
     title: 'Residencia con piscina y jardín',
+    description:
+      'Residencia en una calle tranquila, con piscina, jardín amplio y zona de parrilla. La distribución separa el área social de los dormitorios y cuenta con una sala de estar en el segundo piso.',
     type: 'casa',
     operation: 'venta',
     price: 590000,
@@ -29,12 +69,17 @@ export const PROPERTIES: Property[] = [
     area: 350,
     bedrooms: 4,
     bathrooms: 4,
-    image: photo('photo-1512917774080-9991f1c4c750'),
+    parking: 3,
+    features: ['Piscina', 'Jardín amplio', 'Zona de parrilla', 'Sala de estar', 'Seguridad en la zona'],
+    ...photos('poolHouse', 'villa', 'brightLiving'),
+    advertiser: SAMPLE_ADVERTISERS.inmobiliaria,
     featured: true,
   },
   {
     id: 'casa-cayma-familiar',
     title: 'Casa familiar con vista al Misti',
+    description:
+      'Casa pensada para una familia, con dormitorios amplios y una terraza con vista al volcán Misti. Está cerca de colegios, parques y centros comerciales.',
     type: 'casa',
     operation: 'venta',
     price: 185000,
@@ -43,12 +88,17 @@ export const PROPERTIES: Property[] = [
     area: 180,
     bedrooms: 3,
     bathrooms: 2,
-    image: photo('photo-1568605114967-8130f3a36994'),
+    parking: 1,
+    features: ['Vista al Misti', 'Terraza', 'Patio', 'Cerca a colegios'],
+    ...photos('familyHouse', 'cozyRoom', 'kitchen'),
+    advertiser: SAMPLE_ADVERTISERS.particular,
     featured: true,
   },
   {
     id: 'casa-surco-alquiler',
     title: 'Casa en condominio cerrado',
+    description:
+      'Casa en alquiler dentro de un condominio con vigilancia permanente y áreas verdes compartidas. Ideal para quienes buscan tranquilidad sin alejarse de las vías principales.',
     type: 'casa',
     operation: 'alquiler',
     price: 1400,
@@ -57,12 +107,17 @@ export const PROPERTIES: Property[] = [
     area: 160,
     bedrooms: 3,
     bathrooms: 2,
-    image: photo('photo-1570129477492-45c003edd2be'),
+    parking: 2,
+    features: ['Condominio cerrado', 'Vigilancia permanente', 'Áreas verdes', 'Acepta mascotas'],
+    ...photos('suburbanHouse', 'loft', 'livingRoom'),
+    advertiser: SAMPLE_ADVERTISERS.particular,
     featured: false,
   },
   {
     id: 'casa-victor-larco',
     title: 'Casa amplia cerca de la playa',
+    description:
+      'Casa de un piso con ambientes amplios y patio trasero, a pocas cuadras de la playa. Tiene espacio para ampliar o construir un segundo nivel.',
     type: 'casa',
     operation: 'venta',
     price: 230000,
@@ -71,12 +126,17 @@ export const PROPERTIES: Property[] = [
     area: 240,
     bedrooms: 4,
     bathrooms: 3,
-    image: photo('photo-1564013799919-ab600027ffc6'),
+    parking: 2,
+    features: ['Cerca a la playa', 'Patio trasero', 'Posibilidad de ampliar', 'Lavandería'],
+    ...photos('whiteHouse', 'brightLiving', 'cozyRoom'),
+    advertiser: SAMPLE_ADVERTISERS.inmobiliaria,
     featured: false,
   },
   {
     id: 'apartamento-san-isidro',
     title: 'Apartamento de estreno frente al parque',
+    description:
+      'Apartamento de estreno con vista directa al parque. El edificio cuenta con ascensor, lobby con recepción y áreas comunes en la azotea.',
     type: 'apartamento',
     operation: 'venta',
     price: 265000,
@@ -85,12 +145,17 @@ export const PROPERTIES: Property[] = [
     area: 95,
     bedrooms: 2,
     bathrooms: 2,
-    image: photo('photo-1522708323590-d24dbb6b0267'),
+    parking: 1,
+    features: ['De estreno', 'Vista al parque', 'Ascensor', 'Áreas comunes en azotea', 'Recepción'],
+    ...photos('brightLiving', 'livingRoom', 'kitchen'),
+    advertiser: SAMPLE_ADVERTISERS.constructora,
     featured: true,
   },
   {
     id: 'apartamento-barranco-loft',
     title: 'Loft amoblado en zona bohemia',
+    description:
+      'Loft amoblado y listo para ocupar, a pocas cuadras de cafés, galerías y el malecón de Barranco. Incluye conexión a internet y mantenimiento.',
     type: 'apartamento',
     operation: 'alquiler',
     price: 850,
@@ -99,12 +164,16 @@ export const PROPERTIES: Property[] = [
     area: 60,
     bedrooms: 1,
     bathrooms: 1,
-    image: photo('photo-1502672260266-1c1ef2d93688'),
+    features: ['Amoblado', 'Internet incluido', 'Mantenimiento incluido', 'Cerca al malecón'],
+    ...photos('loft', 'cozyRoom'),
+    advertiser: SAMPLE_ADVERTISERS.particular,
     featured: true,
   },
   {
     id: 'apartamento-miraflores-vista',
     title: 'Apartamento con terraza y vista al mar',
+    description:
+      'Apartamento en piso alto con terraza y vista al mar. Sala y comedor integrados, cocina abierta y dormitorio principal con baño propio.',
     type: 'apartamento',
     operation: 'venta',
     price: 340000,
@@ -113,12 +182,17 @@ export const PROPERTIES: Property[] = [
     area: 130,
     bedrooms: 3,
     bathrooms: 2,
-    image: photo('photo-1560448204-e02f11c3d0e2'),
+    parking: 2,
+    features: ['Vista al mar', 'Terraza', 'Cocina abierta', 'Ascensor', 'Depósito'],
+    ...photos('livingRoom', 'brightLiving', 'loft'),
+    advertiser: SAMPLE_ADVERTISERS.inmobiliaria,
     featured: false,
   },
   {
     id: 'apartamento-san-miguel',
     title: 'Apartamento luminoso cerca de universidades',
+    description:
+      'Apartamento luminoso en un tercer piso, bien conectado con universidades y centros comerciales. Una buena opción para estudiantes o parejas.',
     type: 'apartamento',
     operation: 'alquiler',
     price: 650,
@@ -127,31 +201,41 @@ export const PROPERTIES: Property[] = [
     area: 75,
     bedrooms: 2,
     bathrooms: 1,
-    image: photo('photo-1493809842364-78817add7ffb'),
+    features: ['Cerca a universidades', 'Buena iluminación', 'Lavandería', 'Transporte cercano'],
+    ...photos('cozyRoom', 'loft'),
+    advertiser: SAMPLE_ADVERTISERS.particular,
     featured: false,
   },
   {
     id: 'terreno-cieneguilla',
     title: 'Terreno campestre listo para construir',
+    description:
+      'Terreno plano en zona campestre, con acceso por pista afirmada y servicios de agua y luz en el frente. Apto para casa de campo.',
     type: 'terreno',
     operation: 'venta',
     price: 95000,
     district: 'Cieneguilla',
     city: 'Lima',
     area: 1000,
-    image: photo('photo-1500382017468-9049fed747ef'),
+    features: ['Terreno plano', 'Agua y luz en el frente', 'Acceso vehicular', 'Zona campestre'],
+    ...photos('field', 'valley'),
+    advertiser: SAMPLE_ADVERTISERS.particular,
     featured: true,
   },
   {
     id: 'terreno-urubamba',
     title: 'Terreno en el Valle Sagrado',
+    description:
+      'Terreno rodeado de montañas en el Valle Sagrado, con vistas despejadas y buen acceso desde la carretera principal. Adecuado para un proyecto turístico o una casa de descanso.',
     type: 'terreno',
     operation: 'venta',
     price: 140000,
     district: 'Urubamba',
     city: 'Cusco',
     area: 2500,
-    image: photo('photo-1500076656116-558758c991c1'),
+    features: ['Vista a las montañas', 'Acceso desde la carretera', 'Apto para proyecto turístico'],
+    ...photos('valley', 'field'),
+    advertiser: SAMPLE_ADVERTISERS.inmobiliaria,
     featured: false,
   },
 ]

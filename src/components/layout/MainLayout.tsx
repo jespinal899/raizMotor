@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, ScrollRestoration } from 'react-router-dom'
 import Footer from '@/components/layout/Footer'
 import Navbar from '@/components/layout/Navbar'
 
@@ -10,6 +10,8 @@ const MainLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      {/* Al cambiar de página sube al inicio (o a la sección del enlace) y al volver atrás recupera la posición. */}
+      <ScrollRestoration />
     </div>
   )
 }

@@ -41,4 +41,27 @@ describe('createInMemoryPropertyService', () => {
     expect(result).toEqual(properties)
     expect(result).not.toBe(properties)
   })
+
+  it('getById devuelve la propiedad con ese identificador', async () => {
+    // Arrange
+    const wanted = buildProperty({ id: 'buscada' })
+    const service = createInMemoryPropertyService([buildProperty({ id: 'otra' }), wanted])
+
+    // Act
+    const result = await service.getById('buscada')
+
+    // Assert
+    expect(result).toEqual(wanted)
+  })
+
+  it('getById devuelve undefined cuando el identificador no existe', async () => {
+    // Arrange
+    const service = createInMemoryPropertyService([buildProperty({ id: 'unica' })])
+
+    // Act
+    const result = await service.getById('inexistente')
+
+    // Assert
+    expect(result).toBeUndefined()
+  })
 })

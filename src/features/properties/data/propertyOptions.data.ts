@@ -1,4 +1,8 @@
-import type { PropertyOperation, PropertyType } from '@/features/properties/types/property.types'
+import type {
+  AdvertiserKind,
+  PropertyOperation,
+  PropertyType,
+} from '@/features/properties/types/property.types'
 
 export const PROPERTY_TYPES: Record<PropertyType, { label: string; plural: string; slug: string }> = {
   casa: { label: 'Casa', plural: 'Casas', slug: 'casas' },
@@ -9,6 +13,12 @@ export const PROPERTY_TYPES: Record<PropertyType, { label: string; plural: strin
 export const OPERATIONS: Record<PropertyOperation, { label: string; action: string }> = {
   venta: { label: 'Venta', action: 'Comprar' },
   alquiler: { label: 'Alquiler', action: 'Alquilar' },
+}
+
+export const ADVERTISER_KINDS: Record<AdvertiserKind, string> = {
+  particular: 'Particular',
+  inmobiliaria: 'Inmobiliaria',
+  constructora: 'Constructora',
 }
 
 export const MAX_PRICE_OPTIONS: Record<PropertyOperation, number[]> = {

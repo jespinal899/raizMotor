@@ -1,5 +1,6 @@
 import FeaturedProperties from '@/features/home/components/FeaturedProperties'
 import HeroCarousel from '@/features/home/components/HeroCarousel'
+import HowItWorks from '@/features/home/components/HowItWorks'
 import SearchBar from '@/features/search/components/SearchBar'
 
 const HomePage = () => {
@@ -12,6 +13,7 @@ const HomePage = () => {
         </div>
       </div>
       <FeaturedProperties />
+      <HowItWorks />
     </>
   )
 }

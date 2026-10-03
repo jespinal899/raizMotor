@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { LOGO_PATHS } from '@/components/layout/logoPaths'
 import { cn } from '@/lib/utils'
 import { BRAND } from '@/shared/constants/brand'
 import { ROUTES } from '@/shared/constants/routes'
@@ -30,11 +31,9 @@ const Logo = ({ className, onClick }: LogoProps) => {
           className="size-6"
           aria-hidden="true"
         >
-          <path d="M2.75 10.25 12 2.75l9.25 7.5" />
-          <path d="M5.75 8.5v6h12.5v-6" />
-          <path d="M12 14.5v7" />
-          <path d="M12 16.75c-1 2.1-2.9 3.4-5.5 3.75" />
-          <path d="M12 16.75c1 2.1 2.9 3.4 5.5 3.75" />
+          {LOGO_PATHS.map((path) => (
+            <path key={path} d={path} />
+          ))}
         </svg>
       </span>
       <span className="font-heading text-lg font-semibold tracking-tight text-primary sm:text-xl">

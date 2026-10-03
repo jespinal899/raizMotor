@@ -1,20 +1,20 @@
 import { SearchX } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
+import EmptyState from '@/components/EmptyState'
 import PropertyCollection from '@/features/properties/components/PropertyCollection'
 import type { Property } from '@/features/properties/types/property.types'
 import { ROUTES } from '@/shared/constants/routes'
 
 const NoResults = () => (
-  <div className="grid justify-items-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center">
-    <SearchX className="size-10 text-muted-foreground" aria-hidden="true" />
-    <p className="font-heading text-lg font-medium">No encontramos propiedades con esos filtros</p>
-    <p className="max-w-md text-sm text-muted-foreground">
-      Prueba con otra ubicación, amplía el precio máximo o revisa todas las propiedades disponibles.
-    </p>
+  <EmptyState
+    icon={SearchX}
+    title="No encontramos propiedades con esos filtros"
+    description="Prueba con otra ubicación, amplía el precio máximo o revisa todas las propiedades disponibles."
+  >
     <ButtonLink to={ROUTES.properties} variant="outline">
       Ver todas las propiedades
     </ButtonLink>
-  </div>
+  </EmptyState>
 )
 
 interface SearchResultsProps {

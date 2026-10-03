@@ -5,4 +5,5 @@ import { matchesFilters } from '@/features/properties/utils/matchesFilters'
 export const createInMemoryPropertyService = (properties: readonly Property[]): PropertyService => ({
   getFeatured: async () => properties.filter((property) => property.featured),
   search: async (filters) => properties.filter((property) => matchesFilters(property, filters)),
+  getById: async (id) => properties.find((property) => property.id === id),
 })
