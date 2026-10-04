@@ -1,46 +1,84 @@
 import { describe, expect, it } from 'vitest'
-import { PUBLICATION_STEPS } from '@/features/properties/utils/publicationSteps'
+import { PUBLICATION_SCREENS, PUBLICATION_STEPS } from '@/features/properties/utils/publicationSteps'
 import { buildPublicationValues } from '@/test/factories'
 
+const screensOf = (step: string) =>
+  PUBLICATION_SCREENS.filter((screen) => PUBLICATION_STEPS[screen.step] === step).map(({ title }) => title)
+
 describe('PUBLICATION_STEPS', () => {
-  it('reparte la publicación en tres pasos: propiedad, publicación y últimos detalles', () => {
+  it('la publicación tiene tres pasos: propiedad, publicación y últimos detalles', () => {
     // Arrange
-    const expectedTitles = ['Propiedad', 'Publicación', 'Últimos detalles']
+    const expectedSteps = ['Propiedad', 'Publicación', 'Últimos detalles']
 
     // Act
-    const titles = PUBLICATION_STEPS.map(({ title }) => title)
+    const steps = PUBLICATION_STEPS
 
     // Assert
-    expect(titles).toEqual(expectedTitles)
+    expect(steps).toEqual(expectedSteps)
   })
+})
 
-  it('cada dato del formulario pertenece a un paso, y solo a uno', () => {
+describe('PUBLICATION_SCREENS', () => {
+  it('reparte los pasos en cinco pantallas, en el orden en que se recorren', () => {
     // Arrange
-    const formFields = Object.keys(buildPublicationValues()).sort()
+    const expectedScreens = ['Ubicación', 'Tipo de propiedad', 'Título y descripción', 'Venta o alquiler', 'Fotos']
 
     // Act
-    const stepFields = PUBLICATION_STEPS.flatMap(({ fields }) => fields).sort()
+    const screens = PUBLICATION_SCREENS.map(({ title }) => title)
 
     // Assert
-    expect(stepFields).toEqual(formFields)
+    expect(screens).toEqual(expectedScreens)
   })
 
-  it('la ubicación, el tipo y las medidas van en el primer paso; título y descripción, en el segundo', () => {
+  it('el primer paso pide la ubicación y el tipo en pantallas separadas; el último, la operación y las fotos', () => {
     // Arrange
     const [property, listing, details] = PUBLICATION_STEPS
 
     // Act
-    const placement = {
-      address: property.fields.includes('address'),
-      point: property.fields.includes('coordinates'),
-      type: property.fields.includes('type'),
-      title: listing.fields.includes('title'),
-      description: listing.fields.includes('description'),
-      price: details.fields.includes('price'),
-      photos: details.fields.includes('images'),
+    const screensByStep = {
+      property: screensOf(property),
+      listing: screensOf(listing),
+      details: screensOf(details),
     }
 
     // Assert
-    expect(Object.values(placement).every(Boolean)).toBe(true)
+    expect(screensByStep).toEqual({
+      property: ['Ubicación', 'Tipo de propiedad'],
+      listing: ['Título y descripción'],
+      details: ['Venta o alquiler', 'Fotos'],
+    })
+  })
+
+  it('cada dato del formulario se pide en una pantalla, y solo en una', () => {
+    // Arrange
+    const formFields = Object.keys(buildPublicationValues()).sort()
+
+    // Act
+    const screenFields = PUBLICATION_SCREENS.flatMap(({ fields }) => fields).sort()
+
+    // Assert
+    expect(screenFields).toEqual(formFields)
+  })
+
+  it('la pantalla de ubicación solo pide la dirección y su punto en el mapa', () => {
+    // Arrange
+    const [location] = PUBLICATION_SCREENS
+
+    // Act
+    const fields = [...location.fields].sort()
+
+    // Assert
+    expect(fields).toEqual(['address', 'city', 'coordinates', 'department', 'neighborhood'])
+  })
+
+  it('el precio se pide en la misma pantalla que la operación, y las fotos van solas al final', () => {
+    // Arrange
+    const [pricing, photos] = PUBLICATION_SCREENS.slice(-2)
+
+    // Act
+    const fields = { pricing: pricing.fields, photos: photos.fields }
+
+    // Assert
+    expect(fields).toEqual({ pricing: ['operation', 'price'], photos: ['images'] })
   })
 })

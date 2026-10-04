@@ -6,7 +6,7 @@ import { createLeafletLocationMap } from '@/features/properties/services/locatio
 import { PublicationUnavailableError, publicationService } from '@/features/properties/services/publicationService'
 import { BRAND } from '@/shared/constants/brand'
 import { buildFakeLocationMap } from '@/test/fakeLocationMap'
-import { FILLED_PUBLICATION, fillPublicationForm } from '@/test/publicationForm'
+import { FILLED_PUBLICATION, fillLocationScreen, fillPublicationForm } from '@/test/publicationForm'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
 vi.mock('@/features/properties/services/locationMap', () => ({ createLeafletLocationMap: vi.fn() }))
@@ -46,6 +46,17 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Publica tu propiedad' })).toBeInTheDocument()
     expect(screen.getByRole('form', { name: 'Formulario para publicar una propiedad' })).toBeInTheDocument()
     await waitFor(() => expect(document.title).toBe(`Publicar propiedad | ${BRAND.name}`))
+  })
+
+  it('al confirmar la ubicación muestra un aviso de que se guardó', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+
+    // Act
+    await fillLocationScreen(user, fakeMap)
+
+    // Assert
+    expect(await screen.findByText('Ubicación guardada con éxito.')).toBeInTheDocument()
   })
 
   it('envía el anuncio completo al servicio de publicación y confirma el resultado', async () => {

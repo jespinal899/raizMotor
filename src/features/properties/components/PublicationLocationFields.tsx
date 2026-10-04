@@ -6,15 +6,15 @@ import type { PublicationFieldsProps } from '@/features/properties/hooks/usePubl
 import { getCityOptions, isDepartmentId } from '@/features/properties/utils/departments'
 
 interface PublicationLocationFieldsProps extends PublicationFieldsProps {
-  /** Para devolver el foco a la dirección cuando la persona decide editarla. */
-  addressRef?: Ref<HTMLInputElement>
+  /** Para devolver el foco a estos datos cuando la persona decide editar la ubicación. */
+  ref?: Ref<HTMLDivElement>
 }
 
-const PublicationLocationFields = ({ values, errors, change, addressRef }: PublicationLocationFieldsProps) => {
+const PublicationLocationFields = ({ values, errors, change, ref }: PublicationLocationFieldsProps) => {
   const hasDepartment = isDepartmentId(values.department)
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
+    <div ref={ref} className="grid gap-5 sm:grid-cols-2">
       <FormSelect
         label="Departamento"
         placeholder="Selecciona un departamento"
@@ -41,7 +41,6 @@ const PublicationLocationFields = ({ values, errors, change, addressRef }: Publi
         error={errors.neighborhood}
       />
       <TextField
-        ref={addressRef}
         label="Dirección"
         name="address"
         autoComplete="street-address"

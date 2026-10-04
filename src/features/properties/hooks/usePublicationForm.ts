@@ -38,12 +38,14 @@ type PublicationForm = ReturnType<typeof usePublicationForm>
 /** Lo que necesita cada bloque de campos del formulario. */
 export type PublicationFieldsProps = Pick<PublicationForm, 'values' | 'errors' | 'change'>
 
-/** Lo que recibe cada paso del formulario. */
-export interface PublicationStepProps extends PublicationFieldsProps {
+/** Lo que recibe cada pantalla del formulario. */
+export interface PublicationScreenProps extends PublicationFieldsProps {
   /** Comprueba unos campos, muestra sus errores y dice si son válidos. */
   validate: PublicationForm['validate']
   /** Lleva el foco al primer campo con error. */
   onInvalid: () => void
+  /** La ubicación quedó confirmada en el mapa: se puede pasar a la pantalla siguiente. */
+  onLocationConfirmed: () => void
 }
 
 export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {

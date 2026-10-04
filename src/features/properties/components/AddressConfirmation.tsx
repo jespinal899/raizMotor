@@ -9,19 +9,18 @@ import type { CreateLocationMap } from '@/features/properties/services/locationM
 import type { Coordinates, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { formatAddress } from '@/features/properties/utils/departments'
 
-type FocusTarget = () => HTMLElement | null
-
 interface AddressConfirmationProps {
   location: Pick<PublicationFormValues, 'department' | 'city' | 'neighborhood' | 'address'>
   isConfirmed: boolean
   error?: string
   /** Comprueba que la dirección esté completa antes de buscarla; si no lo está, muestra lo que falta. */
   canSearch: () => boolean
+  /** Recibe el punto en cuanto la persona lo confirma. */
   onConfirm: (point: Coordinates) => void
-  /** A dónde va el foco tras confirmar: al dato que sigue. */
-  focusAfterConfirm?: FocusTarget
-  /** A dónde va el foco al volver a editar: al campo de la dirección. */
-  focusAfterEdit?: FocusTarget
+  /** Se llama después, cuando la ventana del mapa ya se ha cerrado: es el momento de seguir adelante. */
+  onConfirmed?: () => void
+  /** A dónde va el foco al volver a editar: a los datos de la ubicación. */
+  focusAfterEdit?: () => HTMLElement | null
   locate?: GeocodingService['locate']
   createMap?: CreateLocationMap
 }
@@ -33,29 +32,39 @@ const AddressConfirmation = ({
   error,
   canSearch,
   onConfirm,
-  focusAfterConfirm,
+  onConfirmed,
   focusAfterEdit,
   locate,
   createMap,
 }: AddressConfirmationProps) => {
   const { search, start, close } = useAddressSearch(locate)
-  // La ventana pregunta a dónde llevar el foco al cerrarse; depende de si se confirmó o se va a editar.
-  const focusOnClose = useRef(focusAfterEdit)
+  // La ventana se cierra igual al confirmar que al editar; esto recuerda por cuál de las dos fue.
+  const closedByConfirming = useRef(false)
 
   const handleSearch = () => {
     if (canSearch()) void start(location)
   }
 
   const handleConfirm = (point: Coordinates) => {
-    focusOnClose.current = focusAfterConfirm
+    closedByConfirming.current = true
     onConfirm(point)
     close()
   }
 
   const handleEdit = () => {
-    focusOnClose.current = focusAfterEdit
+    closedByConfirming.current = false
     close()
   }
+
+  const handleClosed = () => {
+    if (!closedByConfirming.current) return
+
+    closedByConfirming.current = false
+    onConfirmed?.()
+  }
+
+  // Al editar, el foco vuelve a los datos de la ubicación; al confirmar no se mueve, porque se pasa a otra pantalla.
+  const chooseFocusOnClose = () => (closedByConfirming.current ? false : (focusAfterEdit?.() ?? null))
 
   return (
     <FormGroup label="Ubicación en el mapa" error={error}>
@@ -76,7 +85,7 @@ const AddressConfirmation = ({
           {isConfirmed && (
             <p role="status" className="flex items-center gap-1.5 text-sm font-medium text-primary">
               <CircleCheck className="size-4" aria-hidden="true" />
-              Dirección confirmada en el mapa.
+              Ubicación confirmada en el mapa.
             </p>
           )}
 
@@ -86,7 +95,8 @@ const AddressConfirmation = ({
             review={search.review}
             onConfirm={handleConfirm}
             onEdit={handleEdit}
-            finalFocus={() => focusOnClose.current?.() ?? null}
+            onClosed={handleClosed}
+            finalFocus={chooseFocusOnClose}
             createMap={createMap}
           />
         </div>

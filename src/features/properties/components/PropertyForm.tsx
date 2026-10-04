@@ -1,17 +1,21 @@
 import { useState } from 'react'
 import type { ComponentType, FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, Upload } from 'lucide-react'
+import { toast } from 'sonner'
+import FormSection from '@/components/FormSection'
 import StepIndicator from '@/components/StepIndicator'
 import SubmitButton from '@/components/SubmitButton'
 import { Button } from '@/components/ui/button'
 import PublicationAlert from '@/features/properties/components/PublicationAlert'
-import PublicationDetailsStep from '@/features/properties/components/PublicationDetailsStep'
-import PublicationListingStep from '@/features/properties/components/PublicationListingStep'
-import PublicationPropertyStep from '@/features/properties/components/PublicationPropertyStep'
+import PublicationDetailFields from '@/features/properties/components/PublicationDetailFields'
+import PublicationListingFields from '@/features/properties/components/PublicationListingFields'
+import PublicationLocationScreen from '@/features/properties/components/PublicationLocationScreen'
+import PublicationPhotoFields from '@/features/properties/components/PublicationPhotoFields'
+import PublicationPricingFields from '@/features/properties/components/PublicationPricingFields'
 import { usePublicationForm } from '@/features/properties/hooks/usePublicationForm'
-import type { PublicationStepProps } from '@/features/properties/hooks/usePublicationForm'
+import type { PublicationScreenProps } from '@/features/properties/hooks/usePublicationForm'
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
-import { PUBLICATION_STEPS } from '@/features/properties/utils/publicationSteps'
+import { PUBLICATION_SCREENS, PUBLICATION_STEPS } from '@/features/properties/utils/publicationSteps'
 import { useInvalidFieldFocus } from '@/hooks/useInvalidFieldFocus'
 import { useSteps } from '@/hooks/useSteps'
 import type { StepDirection } from '@/hooks/useSteps'
@@ -19,18 +23,20 @@ import { cn } from '@/lib/utils'
 
 interface PropertyFormProps {
   onSubmit: (publication: PropertyPublication) => Promise<void>
+  /** Muestra un aviso breve a la persona; por defecto, uno flotante. */
+  notify?: (message: string) => void
 }
 
-/** Contenido de cada paso, en el mismo orden que `PUBLICATION_STEPS`. */
-const STEP_CONTENT: ComponentType<PublicationStepProps>[] = [
-  PublicationPropertyStep,
-  PublicationListingStep,
-  PublicationDetailsStep,
+/** Contenido de cada pantalla, en el mismo orden que `PUBLICATION_SCREENS`. */
+const SCREEN_CONTENT: ComponentType<PublicationScreenProps>[] = [
+  PublicationLocationScreen,
+  PublicationDetailFields,
+  PublicationListingFields,
+  PublicationPricingFields,
+  PublicationPhotoFields,
 ]
 
-const STEP_TITLES = PUBLICATION_STEPS.map(({ title }) => title)
-
-/** El paso nuevo entra desde el lado hacia el que se avanza. */
+/** La pantalla nueva entra desde el lado hacia el que se avanza. */
 const SLIDE_IN: Record<StepDirection, string> = {
   forward: 'animate-slide-in-right',
   backward: 'animate-slide-in-left',
@@ -38,33 +44,40 @@ const SLIDE_IN: Record<StepDirection, string> = {
 
 const focusOnMount = (element: HTMLElement | null) => element?.focus()
 
-const PropertyForm = ({ onSubmit }: PropertyFormProps) => {
+const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) => {
   const { values, errors, status, change, validate, submit } = usePublicationForm({ onSubmit })
-  const steps = useSteps(PUBLICATION_STEPS.length)
+  const screens = useSteps(PUBLICATION_SCREENS.length)
   const { containerRef, focusFirstInvalid } = useInvalidFieldFocus<HTMLFormElement>()
-  // Al cargar la página no se toca el foco; al cambiar de paso va a su título, para anunciarlo y subir hasta él.
-  const [hasChangedStep, setHasChangedStep] = useState(false)
+  // Al cargar la página no se toca el foco; al cambiar de pantalla va a su título, para anunciarla y subir hasta él.
+  const [hasChangedScreen, setHasChangedScreen] = useState(false)
 
-  const { title, fields } = PUBLICATION_STEPS[steps.current]
-  const StepContent = STEP_CONTENT[steps.current]
-  const hasStepErrors = fields.some((field) => errors[field])
+  const screen = PUBLICATION_SCREENS[screens.current]
+  const ScreenContent = SCREEN_CONTENT[screens.current]
+  const hasScreenErrors = screen.fields.some((field) => errors[field])
+  // La ubicación no se pasa con «Siguiente»: se avanza al confirmarla en el mapa.
+  const awaitsLocation = screen.fields.includes('coordinates') && values.coordinates === null
 
-  const moveTo = (step: number) => {
-    setHasChangedStep(true)
-    steps.goTo(step)
+  const moveTo = (target: number) => {
+    setHasChangedScreen(true)
+    screens.goTo(target)
   }
 
   const goNext = () => {
-    if (validate(fields)) moveTo(steps.current + 1)
+    if (validate(screen.fields)) moveTo(screens.current + 1)
     else focusFirstInvalid()
   }
 
-  const publish = async () => {
-    // Cada paso se validó al avanzar, pero se pudo volver atrás y dejar algo sin corregir.
-    const firstInvalidStep = PUBLICATION_STEPS.findIndex((step) => !validate(step.fields))
+  const confirmLocation = () => {
+    notify('Ubicación guardada con éxito.')
+    moveTo(screens.current + 1)
+  }
 
-    if (firstInvalidStep !== -1) {
-      moveTo(firstInvalidStep)
+  const publish = async () => {
+    // Cada pantalla se validó al avanzar, pero se pudo volver atrás y dejar algo sin corregir.
+    const firstInvalidScreen = PUBLICATION_SCREENS.findIndex(({ fields }) => !validate(fields))
+
+    if (firstInvalidScreen !== -1) {
+      moveTo(firstInvalidScreen)
       focusFirstInvalid()
       return
     }
@@ -75,7 +88,7 @@ const PropertyForm = ({ onSubmit }: PropertyFormProps) => {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
 
-    if (steps.isLast) void publish()
+    if (screens.isLast) void publish()
     else goNext()
   }
 
@@ -87,58 +100,69 @@ const PropertyForm = ({ onSubmit }: PropertyFormProps) => {
       onSubmit={handleSubmit}
       className="grid gap-8"
     >
-      <StepIndicator label="Pasos para publicar" steps={STEP_TITLES} current={steps.current} />
+      <StepIndicator label="Pasos para publicar" steps={PUBLICATION_STEPS} current={screen.step} />
 
-      {/* La clave reinicia el bloque en cada paso: así se repite la animación de entrada y el título recibe el foco. */}
-      <div key={steps.current} className={cn('grid gap-6', hasChangedStep && SLIDE_IN[steps.direction])}>
-        <h2
-          ref={hasChangedStep ? focusOnMount : undefined}
-          tabIndex={-1}
-          className="scroll-mt-24 font-heading text-2xl font-semibold tracking-tight outline-none"
-        >
-          Paso {steps.current + 1} de {PUBLICATION_STEPS.length}: {title}
-        </h2>
+      {/*
+        Marco de la pantalla: recorta lo que asoma mientras entra deslizándose, para que no ensanche la página
+        en móviles. El margen negativo deja sitio al anillo de foco de los campos.
+      */}
+      <div className="-mx-1 overflow-x-clip px-1">
+        {/* La clave reinicia el bloque en cada pantalla: así se repite la animación y el título recibe el foco. */}
+        <div key={screens.current} className={cn('grid gap-6', hasChangedScreen && SLIDE_IN[screens.direction])}>
+          <h2
+            ref={hasChangedScreen ? focusOnMount : undefined}
+            tabIndex={-1}
+            className="scroll-mt-24 font-heading text-2xl font-semibold tracking-tight outline-none"
+          >
+            Paso {screen.step + 1} de {PUBLICATION_STEPS.length}: {PUBLICATION_STEPS[screen.step]}
+          </h2>
 
-        <StepContent
-          values={values}
-          errors={errors}
-          change={change}
-          validate={validate}
-          onInvalid={focusFirstInvalid}
-        />
+          <FormSection titleAs="h3" title={screen.title} description={screen.description}>
+            <ScreenContent
+              values={values}
+              errors={errors}
+              change={change}
+              validate={validate}
+              onInvalid={focusFirstInvalid}
+              onLocationConfirmed={confirmLocation}
+            />
+          </FormSection>
+        </div>
       </div>
 
       <div className="grid gap-4">
-        {hasStepErrors && (
+        {hasScreenErrors && (
           <p className="text-sm text-destructive">Revisa los campos marcados antes de continuar.</p>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {steps.isFirst ? (
+          {screens.isFirst ? (
             <span />
           ) : (
             <Button
               type="button"
               variant="outline"
               size="lg"
-              onClick={() => moveTo(steps.current - 1)}
+              onClick={() => moveTo(screens.current - 1)}
               className="h-11 px-5 text-base"
             >
               <ArrowLeft />
               Atrás
             </Button>
           )}
-          <SubmitButton
-            isSubmitting={status === 'submitting'}
-            icon={steps.isLast ? Upload : ArrowRight}
-            submittingLabel="Publicando…"
-            className="px-6"
-          >
-            {steps.isLast ? 'Publicar propiedad' : 'Siguiente'}
-          </SubmitButton>
+          {!awaitsLocation && (
+            <SubmitButton
+              isSubmitting={status === 'submitting'}
+              icon={screens.isLast ? Upload : ArrowRight}
+              submittingLabel="Publicando…"
+              className="px-6"
+            >
+              {screens.isLast ? 'Publicar propiedad' : 'Siguiente'}
+            </SubmitButton>
+          )}
         </div>
 
-        {steps.isLast && <PublicationAlert status={status} />}
+        {screens.isLast && <PublicationAlert status={status} />}
       </div>
     </form>
   )

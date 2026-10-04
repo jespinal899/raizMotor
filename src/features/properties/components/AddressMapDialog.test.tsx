@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import AddressMapDialog from '@/features/properties/components/AddressMapDialog'
@@ -77,7 +77,7 @@ describe('AddressMapDialog', () => {
     const { onConfirm, user } = setup()
 
     // Act
-    await user.click(await screen.findByRole('button', { name: 'Confirmar dirección' }))
+    await user.click(await screen.findByRole('button', { name: 'Confirmar ubicación' }))
 
     // Assert
     expect(onConfirm).toHaveBeenCalledExactlyOnceWith(FOUND_POINT)
@@ -91,25 +91,25 @@ describe('AddressMapDialog', () => {
     act(() => fake.moveMarkerTo(corrected))
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Confirmar dirección' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar ubicación' }))
 
     // Assert
     expect(onConfirm).toHaveBeenCalledExactlyOnceWith(corrected)
   })
 
-  it('"Editar dirección" vuelve al formulario sin confirmar ningún punto', async () => {
+  it('"Editar ubicación" vuelve al formulario sin confirmar ningún punto', async () => {
     // Arrange
     const { onConfirm, onEdit, user } = setup()
 
     // Act
-    await user.click(await screen.findByRole('button', { name: 'Editar dirección' }))
+    await user.click(await screen.findByRole('button', { name: 'Editar ubicación' }))
 
     // Assert
     expect(onEdit).toHaveBeenCalledOnce()
     expect(onConfirm).not.toHaveBeenCalled()
   })
 
-  it('cerrarla con la tecla Escape equivale a editar la dirección', async () => {
+  it('cerrarla con la tecla Escape equivale a editar la ubicación', async () => {
     // Arrange
     const { onConfirm, onEdit, user } = setup()
     await screen.findByRole('dialog')
@@ -120,6 +120,21 @@ describe('AddressMapDialog', () => {
     // Assert
     expect(onEdit).toHaveBeenCalledOnce()
     expect(onConfirm).not.toHaveBeenCalled()
+  })
+
+  it('avisa cuando ha terminado de cerrarse', async () => {
+    // Arrange
+    const onClosed = vi.fn()
+    const props = { address: ADDRESS, review: REVIEW, onConfirm: vi.fn(), onEdit: vi.fn(), onClosed }
+    const { rerender } = render(<AddressMapDialog open {...props} createMap={buildFakeLocationMap().createMap} />)
+    await screen.findByRole('dialog')
+
+    // Act
+    rerender(<AddressMapDialog open={false} {...props} createMap={buildFakeLocationMap().createMap} />)
+
+    // Assert
+    await waitFor(() => expect(onClosed).toHaveBeenCalledOnce())
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('mientras está cerrada no muestra nada', () => {

@@ -9,12 +9,15 @@ import { buildFakeLocationMap } from '@/test/fakeLocationMap'
 import {
   FILLED_PUBLICATION,
   chooseOption,
-  confirmAddressOnMap,
+  confirmLocationOnMap,
+  currentScreen,
   fillAddress,
-  fillListingStep,
-  fillPropertyStep,
+  fillLocationScreen,
   fillPublicationForm,
-  goToNextStep,
+  goBack,
+  goNext,
+  goToScreen,
+  openLocationMap,
 } from '@/test/publicationForm'
 
 vi.mock('@/features/properties/services/locationMap', () => ({ createLeafletLocationMap: vi.fn() }))
@@ -27,9 +30,10 @@ type Submit = (publication: PropertyPublication) => Promise<void>
 const setup = (onSubmit: Submit = vi.fn(async () => {})) => {
   const fakeMap = buildFakeLocationMap()
   vi.mocked(createLeafletLocationMap).mockImplementation(fakeMap.createMap)
-  render(<PropertyForm onSubmit={onSubmit} />)
+  const notify = vi.fn()
+  render(<PropertyForm onSubmit={onSubmit} notify={notify} />)
 
-  return { fakeMap, onSubmit, user: userEvent.setup() }
+  return { fakeMap, onSubmit, notify, user: userEvent.setup() }
 }
 
 const stepHeading = () => screen.getByRole('heading', { level: 2 })
@@ -37,12 +41,13 @@ const currentStep = () =>
   within(screen.getByRole('navigation', { name: 'Pasos para publicar' }))
     .getAllByRole('listitem')
     .find((item) => item.getAttribute('aria-current') === 'step')
+const button = (name: string) => screen.queryByRole('button', { name })
 const publishButton = () => screen.getByRole('button', { name: /Publicar propiedad|Publicando/ })
 const city = () => screen.getByRole('combobox', { name: 'Ciudad' })
 
-// Recorrer los tres pasos lleva muchas interacciones: se da más margen que el de una prueba normal.
+// Recorrer las cinco pantallas lleva muchas interacciones: se da más margen que el de una prueba normal.
 describe('PropertyForm', { timeout: 20_000 }, () => {
-  it('reparte la publicación en tres pasos y empieza por la propiedad', () => {
+  it('muestra los tres pasos y empieza por la propiedad', () => {
     // Arrange
     const expectedSteps = ['Propiedad', 'Publicación', 'Últimos detalles']
 
@@ -56,19 +61,18 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
     expect(currentStep()).toHaveTextContent('Propiedad')
   })
 
-  it('el primer paso pide la ubicación y el tipo de propiedad, y aún no ofrece publicar', () => {
-    // Arrange
-    const expectedSections = ['Ubicación', 'Tipo de propiedad']
+  it('la primera pantalla pide solo la ubicación: se avanza buscando la dirección, no con "Siguiente"', () => {
+    // Arrange: formulario recién abierto
 
     // Act
     setup()
 
     // Assert
-    const sections = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)
-    expect(sections).toEqual(expectedSections)
-    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Publicar propiedad' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Atrás' })).not.toBeInTheDocument()
+    expect(currentScreen()).toBe('Ubicación')
+    expect(button('Buscar dirección')).toBeInTheDocument()
+    expect(button('Siguiente')).not.toBeInTheDocument()
+    expect(button('Atrás')).not.toBeInTheDocument()
+    expect(screen.queryByRole('radio', { name: 'Casa' })).not.toBeInTheDocument()
   })
 
   it('la ciudad no se puede elegir hasta indicar el departamento', () => {
@@ -123,37 +127,93 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
       'Selecciona el departamento.',
     )
     expect(screen.getByRole('textbox', { name: 'Dirección' })).toHaveAccessibleDescription('Escribe la dirección.')
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Departamento' })).toHaveFocus())
   })
 
-  it('al confirmar la dirección en el mapa lo indica y sigue con el tipo de propiedad', async () => {
+  it('"Editar ubicación" cierra el mapa y vuelve a los cuatro datos de la ubicación, sin avanzar', async () => {
     // Arrange
-    const { fakeMap, user } = setup()
+    const { notify, user } = setup()
+    await fillAddress(user)
+    await openLocationMap(user)
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Editar ubicación' }))
+
+    // Assert
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Departamento' })).toHaveFocus())
+    expect(currentScreen()).toBe('Ubicación')
+    expect(notify).not.toHaveBeenCalled()
+  })
+
+  it('"Confirmar ubicación" avisa de que se guardó y pasa a la pantalla del tipo de propiedad', async () => {
+    // Arrange
+    const { fakeMap, notify, user } = setup()
     await fillAddress(user)
 
     // Act
-    await confirmAddressOnMap(user, fakeMap)
+    await confirmLocationOnMap(user, fakeMap)
 
     // Assert
-    expect(screen.getByRole('status')).toHaveTextContent('Dirección confirmada en el mapa.')
-    await waitFor(() => expect(screen.getByRole('radio', { name: 'Casa' })).toHaveFocus())
+    expect(notify).toHaveBeenCalledExactlyOnceWith('Ubicación guardada con éxito.')
+    expect(currentScreen()).toBe('Tipo de propiedad')
+    expect(stepHeading()).toHaveTextContent('Paso 1 de 3: Propiedad')
+    expect(stepHeading()).toHaveFocus()
+    expect(button('Atrás')).toBeInTheDocument()
+    expect(button('Siguiente')).toBeInTheDocument()
   })
 
-  it('si se cambia la dirección después de confirmarla, pide confirmarla de nuevo', async () => {
+  it('al volver atrás, la ubicación sigue confirmada y "Siguiente" deja continuar sin repetir el mapa', async () => {
     // Arrange
     const { fakeMap, user } = setup()
-    await fillAddress(user)
-    await confirmAddressOnMap(user, fakeMap)
+    await fillLocationScreen(user, fakeMap)
+    await goBack(user)
+    const confirmed = screen.getByRole('status').textContent
+
+    // Act
+    await goNext(user)
+
+    // Assert
+    expect(confirmed).toBe('Ubicación confirmada en el mapa.')
+    expect(currentScreen()).toBe('Tipo de propiedad')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('si se cambia la ubicación después de confirmarla, hay que confirmarla de nuevo para seguir', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+    await fillLocationScreen(user, fakeMap)
+    await goBack(user)
 
     // Act
     await user.type(screen.getByRole('textbox', { name: 'Dirección' }), ' A')
 
     // Assert
-    expect(screen.queryByText('Dirección confirmada en el mapa.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Ubicación confirmada en el mapa.')).not.toBeInTheDocument()
+    expect(button('Siguiente')).not.toBeInTheDocument()
+  })
+
+  it('la pantalla del tipo no deja seguir sin elegirlo, y lleva el foco a sus opciones', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+    await goToScreen(user, fakeMap, 'Tipo de propiedad')
+
+    // Act
+    await goNext(user)
+
+    // Assert
+    expect(currentScreen()).toBe('Tipo de propiedad')
+    expect(screen.getByRole('radiogroup', { name: '¿Qué tipo de propiedad es?' })).toHaveAccessibleDescription(
+      'Selecciona el tipo de propiedad.',
+    )
+    expect(screen.getByText('Revisa los campos marcados antes de continuar.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'Casa' })).toHaveFocus())
   })
 
   it('para un terreno solo pide su superficie', async () => {
     // Arrange
-    const { user } = setup()
+    const { fakeMap, user } = setup()
+    await goToScreen(user, fakeMap, 'Tipo de propiedad')
 
     // Act
     await user.click(screen.getByRole('radio', { name: 'Terreno' }))
@@ -164,29 +224,12 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
     expect(screen.queryByRole('spinbutton', { name: 'Cuartos' })).not.toBeInTheDocument()
   })
 
-  it('no deja pasar al segundo paso con el primero incompleto, y lleva el foco al primer dato que falta', async () => {
-    // Arrange
-    const { user } = setup()
-
-    // Act
-    await goToNextStep(user)
-
-    // Assert
-    expect(stepHeading()).toHaveTextContent('Paso 1 de 3: Propiedad')
-    expect(screen.getByRole('group', { name: 'Ubicación en el mapa' })).toHaveAccessibleDescription(
-      'Busca la dirección y confírmala en el mapa.',
-    )
-    expect(screen.getByText('Revisa los campos marcados antes de continuar.')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Departamento' })).toHaveFocus())
-  })
-
-  it('con el primer paso completo, "Siguiente" lleva a la publicación: título y descripción', async () => {
+  it('el segundo paso es la publicación: título y descripción', async () => {
     // Arrange
     const { fakeMap, user } = setup()
-    await fillPropertyStep(user, fakeMap)
 
     // Act
-    await goToNextStep(user)
+    await goToScreen(user, fakeMap, 'Título y descripción')
 
     // Assert
     expect(stepHeading()).toHaveTextContent('Paso 2 de 3: Publicación')
@@ -194,76 +237,65 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
     expect(currentStep()).toHaveTextContent('Publicación')
     expect(screen.getByRole('textbox', { name: 'Título de la publicación' })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Descripción' })).toBeInTheDocument()
-    expect(screen.queryByRole('combobox', { name: 'Departamento' })).not.toBeInTheDocument()
   })
 
-  it('"Atrás" vuelve al paso anterior conservando lo escrito', async () => {
+  it('"Atrás" vuelve a la pantalla anterior conservando lo escrito', async () => {
     // Arrange
     const { fakeMap, user } = setup()
-    await fillPropertyStep(user, fakeMap)
-    await goToNextStep(user)
+    await goToScreen(user, fakeMap, 'Título y descripción')
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Atrás' }))
+    await goBack(user)
 
     // Assert
-    expect(stepHeading()).toHaveTextContent('Paso 1 de 3: Propiedad')
-    expect(city()).toHaveTextContent('San Pedro Sula')
-    expect(screen.getByRole('textbox', { name: 'Dirección' })).toHaveValue('10 calle, casa 25')
-    expect(screen.getByRole('status')).toHaveTextContent('Dirección confirmada en el mapa.')
+    expect(currentScreen()).toBe('Tipo de propiedad')
+    expect(screen.getByRole('radio', { name: 'Casa' })).toBeChecked()
+    expect(screen.getByRole('spinbutton', { name: 'Cuartos' })).toHaveValue(3)
   })
 
-  it('el último paso pide la operación, el precio y las fotos, y ofrece publicar', async () => {
+  it('el tercer paso empieza por la operación y el precio, que aclara si es mensual', async () => {
     // Arrange
     const { fakeMap, user } = setup()
-    await fillPropertyStep(user, fakeMap)
-    await goToNextStep(user)
-    await fillListingStep(user)
-
-    // Act
-    await goToNextStep(user)
-
-    // Assert
-    expect(stepHeading()).toHaveTextContent('Paso 3 de 3: Últimos detalles')
-    expect(screen.getByRole('radiogroup', { name: 'Tipo de operación' })).toBeInTheDocument()
-    expect(screen.getByRole('spinbutton', { name: 'Precio (USD)' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Agregar fotos')).toBeInTheDocument()
-    expect(publishButton()).toHaveTextContent('Publicar propiedad')
-  })
-
-  it('aclara que el precio es mensual cuando la operación es alquiler', async () => {
-    // Arrange
-    const { fakeMap, user } = setup()
-    await fillPropertyStep(user, fakeMap)
-    await goToNextStep(user)
-    await fillListingStep(user)
-    await goToNextStep(user)
+    await goToScreen(user, fakeMap, 'Venta o alquiler')
 
     // Act
     await user.click(screen.getByRole('radio', { name: 'Alquiler' }))
 
     // Assert
+    expect(stepHeading()).toHaveTextContent('Paso 3 de 3: Últimos detalles')
     expect(screen.getByRole('spinbutton', { name: 'Precio (USD al mes)' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Agregar fotos')).not.toBeInTheDocument()
+    expect(button('Siguiente')).toBeInTheDocument()
   })
 
-  it('no publica si falta algo en el último paso', async () => {
+  it('la última pantalla pide las fotos y ofrece publicar', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+
+    // Act
+    await goToScreen(user, fakeMap, 'Fotos')
+
+    // Assert
+    expect(stepHeading()).toHaveTextContent('Paso 3 de 3: Últimos detalles')
+    expect(screen.getByLabelText('Agregar fotos')).toBeInTheDocument()
+    expect(publishButton()).toHaveTextContent('Publicar propiedad')
+    expect(button('Siguiente')).not.toBeInTheDocument()
+  })
+
+  it('no publica sin fotos', async () => {
     // Arrange
     const { fakeMap, onSubmit, user } = setup()
-    await fillPropertyStep(user, fakeMap)
-    await goToNextStep(user)
-    await fillListingStep(user)
-    await goToNextStep(user)
+    await goToScreen(user, fakeMap, 'Fotos')
 
     // Act
     await user.click(publishButton())
 
     // Assert
     expect(onSubmit).not.toHaveBeenCalled()
-    expect(screen.getByRole('spinbutton', { name: 'Precio (USD)' })).toHaveAccessibleDescription('Indica el precio.')
     expect(screen.getByRole('group', { name: /^Fotos/ })).toHaveAccessibleDescription('Agrega al menos una foto.')
   })
 
-  it('publica la propiedad con los datos de los tres pasos', async () => {
+  it('publica la propiedad con los datos de todas las pantallas', async () => {
     // Arrange
     const { fakeMap, onSubmit, user } = setup()
     await fillPublicationForm(user, fakeMap)

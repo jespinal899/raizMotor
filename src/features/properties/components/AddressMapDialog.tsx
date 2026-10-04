@@ -12,18 +12,23 @@ interface AddressMapDialogProps {
   onConfirm: (point: Coordinates) => void
   /** Cerrar la ventana sin confirmar (botón, tecla Escape o clic fuera) equivale a volver a editar. */
   onEdit: () => void
-  /** A dónde va el foco al cerrarse; por defecto vuelve al botón que la abrió. */
-  finalFocus?: () => HTMLElement | null
+  /** Se llama cuando la ventana ha terminado de cerrarse, pasada su animación. */
+  onClosed?: () => void
+  /** A dónde va el foco al cerrarse; `false` lo deja donde esté y, sin indicarlo, vuelve al botón que la abrió. */
+  finalFocus?: () => HTMLElement | null | false
   createMap?: CreateLocationMap
 }
 
 /** Ventana emergente con el mapa para confirmar, o corregir, el punto de la dirección. */
-const AddressMapDialog = ({ open, review, onEdit, finalFocus, ...reviewProps }: AddressMapDialogProps) => {
+const AddressMapDialog = ({ open, review, onEdit, onClosed, finalFocus, ...reviewProps }: AddressMapDialogProps) => {
   return (
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
         if (!isOpen) onEdit()
+      }}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) onClosed?.()
       }}
     >
       <DialogContent

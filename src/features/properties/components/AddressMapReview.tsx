@@ -47,10 +47,10 @@ const AddressMapReview = ({ address, review, onConfirm, onEdit, createMap }: Add
 
       <DialogFooter>
         <Button type="button" variant="outline" size="lg" onClick={onEdit}>
-          Editar dirección
+          Editar ubicación
         </Button>
         <Button type="button" size="lg" onClick={() => onConfirm(point)}>
-          Confirmar dirección
+          Confirmar ubicación
         </Button>
       </DialogFooter>
     </>

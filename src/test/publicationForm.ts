@@ -43,7 +43,12 @@ export const chooseOption = async (user: UserEvent, field: string, option: strin
   await user.click(await screen.findByRole('option', { name: option }))
 }
 
-/** Escribe la dirección de la propiedad, sin confirmarla todavía en el mapa. */
+/** Título de la pantalla que se está mostrando (cada pantalla tiene una sola sección). */
+export const currentScreen = () => screen.getByRole('heading', { level: 3 }).textContent
+
+const screenShown = (title: string) => waitFor(() => expect(currentScreen()).toBe(title))
+
+/** Escribe los cuatro datos de la ubicación, sin confirmarla todavía en el mapa. */
 export const fillAddress = async (user: UserEvent) => {
   await chooseOption(user, 'Departamento', 'Cortés')
   await chooseOption(user, 'Ciudad', location.city)
@@ -51,19 +56,28 @@ export const fillAddress = async (user: UserEvent) => {
   await typeIn(user, 'textbox', 'Dirección', location.address)
 }
 
-/** Busca la dirección, corrige el marcador en la ventana del mapa y la confirma. */
-export const confirmAddressOnMap = async (user: UserEvent, fakeMap: FakeLocationMap) => {
+/** Busca la dirección y abre la ventana del mapa. */
+export const openLocationMap = async (user: UserEvent) => {
   await user.click(screen.getByRole('button', { name: 'Buscar dirección' }))
   await screen.findByRole('dialog', { name: '¿La dirección es correcta?' })
-  act(() => fakeMap.moveMarkerTo(location.coordinates))
-  await user.click(screen.getByRole('button', { name: 'Confirmar dirección' }))
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 }
 
-/** Paso 1: una casa en San Pedro Sula, con la dirección confirmada en el mapa. */
-export const fillPropertyStep = async (user: UserEvent, fakeMap: FakeLocationMap) => {
+/** Corrige el marcador en la ventana del mapa y confirma: el formulario pasa solo al tipo de propiedad. */
+export const confirmLocationOnMap = async (user: UserEvent, fakeMap: FakeLocationMap) => {
+  await openLocationMap(user)
+  act(() => fakeMap.moveMarkerTo(location.coordinates))
+  await user.click(screen.getByRole('button', { name: 'Confirmar ubicación' }))
+  await screenShown('Tipo de propiedad')
+}
+
+/** Pantalla 1: la ubicación, confirmada en el mapa. Termina en la pantalla del tipo de propiedad. */
+export const fillLocationScreen = async (user: UserEvent, fakeMap: FakeLocationMap) => {
   await fillAddress(user)
-  await confirmAddressOnMap(user, fakeMap)
+  await confirmLocationOnMap(user, fakeMap)
+}
+
+/** Pantalla 2: una casa con sus medidas. */
+export const fillTypeScreen = async (user: UserEvent) => {
   await user.click(screen.getByRole('radio', { name: 'Casa' }))
   await typeIn(user, 'spinbutton', 'Superficie construida (m²)', listing.builtArea ?? '')
   await typeIn(user, 'spinbutton', 'Superficie del terreno (m²)', listing.landArea ?? '')
@@ -71,26 +85,47 @@ export const fillPropertyStep = async (user: UserEvent, fakeMap: FakeLocationMap
   await typeIn(user, 'spinbutton', 'Baños', listing.bathrooms ?? '')
 }
 
-/** Paso 2: título y descripción del anuncio. */
-export const fillListingStep = async (user: UserEvent) => {
+/** Pantalla 3: título y descripción del anuncio. */
+export const fillListingScreen = async (user: UserEvent) => {
   await typeIn(user, 'textbox', 'Título de la publicación', listing.title)
   await typeIn(user, 'textbox', 'Descripción', listing.description)
 }
 
-/** Paso 3: operación, precio y una foto. */
-export const fillDetailsStep = async (user: UserEvent) => {
+/** Pantalla 4: venta, con su precio. */
+export const fillPricingScreen = async (user: UserEvent) => {
   await user.click(screen.getByRole('radio', { name: 'Venta' }))
   await typeIn(user, 'spinbutton', 'Precio (USD)', listing.price)
-  await user.upload(screen.getByLabelText('Agregar fotos'), PHOTO)
 }
 
-export const goToNextStep = (user: UserEvent) => user.click(screen.getByRole('button', { name: 'Siguiente' }))
+/** Pantalla 5: una foto. */
+export const addPhoto = (user: UserEvent) => user.upload(screen.getByLabelText('Agregar fotos'), PHOTO)
 
-/** Recorre los tres pasos rellenándolos como lo haría una persona; queda en el último, listo para publicar. */
+export const goNext = (user: UserEvent) => user.click(screen.getByRole('button', { name: 'Siguiente' }))
+export const goBack = (user: UserEvent) => user.click(screen.getByRole('button', { name: 'Atrás' }))
+
+/** Rellena las pantallas anteriores a la indicada y se queda en ella, sin rellenarla. */
+export const goToScreen = async (
+  user: UserEvent,
+  fakeMap: FakeLocationMap,
+  target: 'Tipo de propiedad' | 'Título y descripción' | 'Venta o alquiler' | 'Fotos',
+) => {
+  await fillLocationScreen(user, fakeMap)
+  if (target === 'Tipo de propiedad') return
+
+  await fillTypeScreen(user)
+  await goNext(user)
+  if (target === 'Título y descripción') return
+
+  await fillListingScreen(user)
+  await goNext(user)
+  if (target === 'Venta o alquiler') return
+
+  await fillPricingScreen(user)
+  await goNext(user)
+}
+
+/** Recorre las cinco pantallas rellenándolas como lo haría una persona; queda en la última, listo para publicar. */
 export const fillPublicationForm = async (user: UserEvent, fakeMap: FakeLocationMap) => {
-  await fillPropertyStep(user, fakeMap)
-  await goToNextStep(user)
-  await fillListingStep(user)
-  await goToNextStep(user)
-  await fillDetailsStep(user)
+  await goToScreen(user, fakeMap, 'Fotos')
+  await addPhoto(user)
 }

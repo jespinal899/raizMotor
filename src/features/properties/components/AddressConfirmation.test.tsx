@@ -31,26 +31,26 @@ const setup = ({
 }: Overrides = {}) => {
   const fake = buildFakeLocationMap()
   const onConfirm = vi.fn()
+  const onConfirmed = vi.fn()
   render(
     <>
-      <input aria-label="Dirección" />
+      <input aria-label="Departamento" />
       <AddressConfirmation
         location={LOCATION}
         isConfirmed={isConfirmed}
         error={error}
         canSearch={canSearch}
         onConfirm={onConfirm}
+        onConfirmed={onConfirmed}
         // Con la ventana abierta el resto de la página queda oculto a los lectores: por eso `hidden`.
-        focusAfterConfirm={() => screen.queryByRole('button', { name: 'Siguiente dato', hidden: true })}
-        focusAfterEdit={() => screen.queryByRole('textbox', { name: 'Dirección', hidden: true })}
+        focusAfterEdit={() => screen.queryByRole('textbox', { name: 'Departamento', hidden: true })}
         locate={locate}
         createMap={fake.createMap}
       />
-      <button type="button">Siguiente dato</button>
     </>,
   )
 
-  return { fake, onConfirm, locate, user: userEvent.setup() }
+  return { fake, onConfirm, onConfirmed, locate, user: userEvent.setup() }
 }
 
 const searchButton = () => screen.getByRole('button', { name: /Buscar dirección|Buscando/ })
@@ -58,9 +58,10 @@ const openDialog = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(searchButton())
   return screen.findByRole('dialog', { name: '¿La dirección es correcta?' })
 }
+const dialogClosed = () => waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
 describe('AddressConfirmation', () => {
-  it('ofrece buscar la dirección y, mientras no se confirme, no la da por confirmada', () => {
+  it('ofrece buscar la dirección y, mientras no se confirme, no da la ubicación por confirmada', () => {
     // Arrange: dirección escrita y aún sin confirmar
 
     // Act
@@ -68,7 +69,7 @@ describe('AddressConfirmation', () => {
 
     // Assert
     expect(searchButton()).toHaveTextContent('Buscar dirección')
-    expect(screen.queryByText('Dirección confirmada en el mapa.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Ubicación confirmada en el mapa.')).not.toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -84,7 +85,7 @@ describe('AddressConfirmation', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('al buscar abre la ventana con el mapa en el punto encontrado', async () => {
+  it('al buscar abre la ventana con el mapa en el punto encontrado y sus dos opciones', async () => {
     // Arrange
     const { fake, user } = setup()
 
@@ -94,6 +95,8 @@ describe('AddressConfirmation', () => {
     // Assert
     expect(dialog).toHaveTextContent('Avenida República de Chile, casa 12, Colonia Palmira')
     expect(fake.map.showPoint).toHaveBeenCalledExactlyOnceWith({ center: FOUND_POINT, zoom: 16 })
+    expect(screen.getByRole('button', { name: 'Editar ubicación' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirmar ubicación' })).toBeInTheDocument()
   })
 
   it('si el buscador no la encuentra, abre el mapa en la cabecera del departamento', async () => {
@@ -119,37 +122,38 @@ describe('AddressConfirmation', () => {
     expect(searchButton()).toHaveTextContent('Buscando…')
   })
 
-  it('al confirmar avisa con el punto del marcador, cierra la ventana y lleva el foco al dato siguiente', async () => {
+  it('al confirmar guarda el punto del marcador y, con la ventana ya cerrada, avisa para seguir adelante', async () => {
     // Arrange
     const corrected = { lat: 14.1035, lng: -87.1902 }
-    const { fake, onConfirm, user } = setup()
+    const { fake, onConfirm, onConfirmed, user } = setup()
     await openDialog(user)
     act(() => fake.moveMarkerTo(corrected))
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Confirmar dirección' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar ubicación' }))
 
     // Assert
     expect(onConfirm).toHaveBeenCalledExactlyOnceWith(corrected)
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Siguiente dato' })).toHaveFocus())
+    await dialogClosed()
+    await waitFor(() => expect(onConfirmed).toHaveBeenCalledOnce())
   })
 
-  it('"Editar dirección" cierra la ventana sin confirmar y devuelve el foco al campo de la dirección', async () => {
+  it('"Editar ubicación" cierra la ventana sin confirmar y devuelve el foco a los campos de la ubicación', async () => {
     // Arrange
-    const { onConfirm, user } = setup()
+    const { onConfirm, onConfirmed, user } = setup()
     await openDialog(user)
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Editar dirección' }))
+    await user.click(screen.getByRole('button', { name: 'Editar ubicación' }))
 
     // Assert
+    await dialogClosed()
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Departamento' })).toHaveFocus())
     expect(onConfirm).not.toHaveBeenCalled()
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Dirección' })).toHaveFocus())
+    expect(onConfirmed).not.toHaveBeenCalled()
   })
 
-  it('con la dirección confirmada lo indica', () => {
+  it('con la ubicación confirmada lo indica', () => {
     // Arrange
     const isConfirmed = true
 
@@ -157,7 +161,7 @@ describe('AddressConfirmation', () => {
     setup({ isConfirmed })
 
     // Assert
-    expect(screen.getByRole('status')).toHaveTextContent('Dirección confirmada en el mapa.')
+    expect(screen.getByRole('status')).toHaveTextContent('Ubicación confirmada en el mapa.')
   })
 
   it('con error, lo muestra enlazado con el bloque del mapa', () => {
