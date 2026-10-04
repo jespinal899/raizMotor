@@ -1,7 +1,7 @@
 import { useId } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import OptionSelect from '@/components/OptionSelect'
 import SearchField from '@/features/search/components/SearchField'
-import type { SelectOption } from '@/features/search/utils/searchOptions'
+import type { SelectOption } from '@/shared/types/common.types'
 
 interface SelectFieldProps {
   label: string
@@ -15,24 +15,7 @@ const SelectField = ({ label, options, value, onChange }: SelectFieldProps) => {
 
   return (
     <SearchField label={label} labelId={labelId}>
-      <Select
-        items={options}
-        value={value}
-        onValueChange={(selected) => {
-          if (selected !== null) onChange(selected)
-        }}
-      >
-        <SelectTrigger aria-labelledby={labelId} className="w-full data-[size=default]:h-11">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <OptionSelect options={options} value={value} onChange={onChange} triggerProps={{ 'aria-labelledby': labelId }} />
     </SearchField>
   )
 }

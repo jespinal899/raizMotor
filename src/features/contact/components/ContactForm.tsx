@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react'
 import { Send } from 'lucide-react'
 import FormField from '@/components/FormField'
-import { Button } from '@/components/ui/button'
+import SubmitButton from '@/components/SubmitButton'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import ContactFormStatus from '@/features/contact/components/ContactFormStatus'
@@ -87,10 +87,9 @@ const ContactForm = ({ initialDescription, onSubmit }: ContactFormProps) => {
         )}
       </FormField>
 
-      <Button type="submit" size="lg" disabled={isSending} className="h-11 justify-self-start px-5 text-base">
-        <Send />
-        {isSending ? 'Enviando…' : 'Enviar mensaje'}
-      </Button>
+      <SubmitButton isSubmitting={isSending} icon={Send} submittingLabel="Enviando…" className="justify-self-start px-5">
+        Enviar mensaje
+      </SubmitButton>
 
       <ContactFormStatus status={status} />
     </form>

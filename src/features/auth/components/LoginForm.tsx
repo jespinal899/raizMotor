@@ -1,8 +1,8 @@
 import type { FormEvent } from 'react'
-import { LoaderCircle, LogIn } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import FormField from '@/components/FormField'
 import PasswordInput from '@/components/PasswordInput'
-import { Button } from '@/components/ui/button'
+import SubmitButton from '@/components/SubmitButton'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -65,10 +65,9 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
         Recordarme en este dispositivo
       </Label>
 
-      <Button type="submit" size="lg" disabled={isSubmitting} className="h-11 text-base">
-        {isSubmitting ? <LoaderCircle className="animate-spin" /> : <LogIn />}
-        {isSubmitting ? 'Ingresando…' : 'Iniciar sesión'}
-      </Button>
+      <SubmitButton isSubmitting={isSubmitting} icon={LogIn} submittingLabel="Ingresando…">
+        Iniciar sesión
+      </SubmitButton>
 
       <LoginAlert status={status} />
     </form>

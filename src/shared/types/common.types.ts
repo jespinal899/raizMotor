@@ -12,3 +12,9 @@ export interface Paginated<T> {
   pageSize: number
   totalPages: number
 }
+
+/** Opción de un desplegable o de un grupo de opciones. */
+export interface SelectOption {
+  value: string
+  label: string
+}

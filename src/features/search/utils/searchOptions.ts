@@ -1,11 +1,7 @@
 import { MAX_PRICE_OPTIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { PropertyOperation, PropertyType } from '@/features/properties/types/property.types'
+import type { SelectOption } from '@/shared/types/common.types'
 import { formatPrice } from '@/shared/utils/format'
-
-export interface SelectOption {
-  value: string
-  label: string
-}
 
 /** Valor del desplegable que significa "sin filtrar por este campo". */
 export const ANY_OPTION = 'todos'
