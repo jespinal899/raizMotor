@@ -11,6 +11,21 @@ export interface MapView {
   zoom: number
 }
 
+/** Lo que se le pregunta al buscador de direcciones: nombres, no identificadores. */
+export interface AddressQuery {
+  neighborhood: string
+  city: string
+  department: string
+}
+
+/** Hasta dónde llegó el buscador: la colonia, o solo la ciudad. */
+export type AddressPrecision = 'neighborhood' | 'city'
+
+export interface LocatedAddress {
+  point: Coordinates
+  precision: AddressPrecision
+}
+
 /** Datos que dependen del tipo de propiedad: un terreno, por ejemplo, no tiene cuartos. */
 export type DetailField = 'builtArea' | 'landArea' | 'bedrooms' | 'bathrooms'
 

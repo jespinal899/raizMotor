@@ -69,3 +69,40 @@ describe('COUNTRY_VIEW', () => {
     expect(inside).toBe(true)
   })
 })
+
+describe('municipios', () => {
+  it('reúne los 298 municipios de Honduras', () => {
+    // Arrange
+    const expectedTotal = 298
+
+    // Act
+    const total = DEPARTMENTS.reduce((count, { municipalities }) => count + municipalities.length, 0)
+
+    // Assert
+    expect(total).toBe(expectedTotal)
+  })
+
+  it('en cada departamento van en orden alfabético y sin repetirse', () => {
+    // Arrange
+    const sortedWithoutRepeats = (names: string[]) => [...new Set(names)].sort((a, b) => a.localeCompare(b, 'es'))
+
+    // Act
+    const disordered = DEPARTMENTS.filter(
+      ({ municipalities }) => municipalities.join('|') !== sortedWithoutRepeats(municipalities).join('|'),
+    ).map(({ name }) => name)
+
+    // Assert
+    expect(disordered).toEqual([])
+  })
+
+  it('la cabecera de cada departamento figura entre sus municipios', () => {
+    // Arrange
+    const lacksCapital = ({ capital, municipalities }: (typeof DEPARTMENTS)[number]) => !municipalities.includes(capital)
+
+    // Act
+    const withoutCapital = DEPARTMENTS.filter(lacksCapital).map(({ name }) => name)
+
+    // Assert
+    expect(withoutCapital).toEqual([])
+  })
+})
