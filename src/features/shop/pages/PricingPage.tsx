@@ -1,4 +1,5 @@
 import ButtonLink from '@/components/ButtonLink'
+import PageHeader from '@/components/PageHeader'
 import Container from '@/components/layout/Container'
 import PlanList from '@/features/shop/components/PlanList'
 import { PLANS } from '@/features/shop/data/plans.data'
@@ -10,12 +11,10 @@ const PricingPage = () => {
 
   return (
     <Container className="grid gap-10 py-10">
-      <header className="grid max-w-2xl gap-3">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">Planes</h1>
-        <p className="text-muted-foreground">
-          Planes que se adaptan tanto a quien publica una sola propiedad como a quien gestiona cientos.
-        </p>
-      </header>
+      <PageHeader
+        title="Planes"
+        description="Planes que se adaptan tanto a quien publica una sola propiedad como a quien gestiona cientos."
+      />
 
       <PlanList plans={PLANS} />
 
