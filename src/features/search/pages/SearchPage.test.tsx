@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { propertyService } from '@/features/properties/services/propertyService'
@@ -72,7 +72,7 @@ describe('SearchPage', () => {
     expect(await screen.findByText('Mostrando 7–11 de 11 propiedades')).toBeInTheDocument()
     expect(cardTitles()).toEqual(['Propiedad 7', 'Propiedad 8', 'Propiedad 9', 'Propiedad 10', 'Propiedad 11'])
     expect(within(pagination()).getByRole('link', { name: 'Página 2' })).toHaveAttribute('aria-current', 'page')
-    expect(document.title).toBe(`Propiedades, página 2 | ${BRAND.name}`)
+    await waitFor(() => expect(document.title).toBe(`Propiedades, página 2 | ${BRAND.name}`))
   })
 
   it('los enlaces de página conservan los filtros de la búsqueda', async () => {

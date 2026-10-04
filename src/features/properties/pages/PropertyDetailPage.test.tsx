@@ -41,7 +41,7 @@ describe('PropertyDetailPage', () => {
     // Assert
     expect(await screen.findByRole('heading', { level: 1, name: 'Casa con jardín' })).toBeInTheDocument()
     expect(getById).toHaveBeenCalledWith('casa-1')
-    expect(document.title).toBe(`Casa con jardín | ${BRAND.name}`)
+    await waitFor(() => expect(document.title).toBe(`Casa con jardín | ${BRAND.name}`))
   })
 
   it('avisa cuando la propiedad no existe y ofrece ver las demás', async () => {
@@ -56,7 +56,7 @@ describe('PropertyDetailPage', () => {
       await screen.findByRole('heading', { level: 1, name: 'Esta propiedad ya no está disponible' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver todas las propiedades' })).toHaveAttribute('href', '/propiedades')
-    expect(document.title).toBe(`Esta propiedad ya no está disponible | ${BRAND.name}`)
+    await waitFor(() => expect(document.title).toBe(`Esta propiedad ya no está disponible | ${BRAND.name}`))
   })
 
   it('avisa cuando la carga falla', async () => {
