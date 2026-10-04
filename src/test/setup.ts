@@ -7,3 +7,6 @@ afterEach(cleanup)
 // jsdom no implementa las direcciones temporales con las que se muestran las fotos elegidas.
 URL.createObjectURL = (file) => `blob:${file instanceof File ? file.name : 'objeto'}`
 URL.revokeObjectURL = () => {}
+
+// jsdom tampoco implementa el desplazamiento hasta un elemento.
+Element.prototype.scrollIntoView = () => {}

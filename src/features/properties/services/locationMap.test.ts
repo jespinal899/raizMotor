@@ -1,12 +1,13 @@
-import { fireEvent, waitFor } from '@testing-library/react'
+import { fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createLeafletLocationMap } from '@/features/properties/services/locationMap'
 
 const TEGUCIGALPA = { center: { lat: 14.0723, lng: -87.1921 }, zoom: 13 }
 const SAN_PEDRO_SULA = { center: { lat: 15.5042, lng: -88.025 }, zoom: 13 }
+const MARKER_LABEL = 'Ubicación de la propiedad'
 /** Leaflet 1.9 lee el `keyCode` heredado, que `user-event` no rellena: la tecla se envía con él. */
-const ARROW_RIGHT_KEY_CODE = 39
+const ARROW_RIGHT = { key: 'ArrowRight', keyCode: 39 }
 
 /** Leaflet reacciona al cambio de tamaño en el siguiente fotograma y avisa del movimiento 200 ms después. */
 const LEAFLET_RESIZE_WAIT = 400
@@ -21,11 +22,12 @@ const resizeWindow = async (container: HTMLElement, size: { width: number; heigh
 
 const setup = () => {
   const container = document.body.appendChild(document.createElement('div'))
-  const onMove = vi.fn()
-  const map = createLeafletLocationMap(container, { onMove })
-  map.setView(TEGUCIGALPA)
+  const onMarkerMove = vi.fn()
+  const map = createLeafletLocationMap(container, { markerLabel: MARKER_LABEL, onMarkerMove })
+  map.showPoint(TEGUCIGALPA)
+  const marker = () => container.querySelector<HTMLElement>('.leaflet-marker-icon')
 
-  return { container, onMove, map }
+  return { container, onMarkerMove, map, marker }
 }
 
 describe('createLeafletLocationMap', () => {
@@ -33,36 +35,63 @@ describe('createLeafletLocationMap', () => {
     document.body.replaceChildren()
   })
 
-  it('situar el mapa por código no cuenta como un movimiento de la persona', () => {
+  it('al mostrar un punto coloca un único marcador con nombre, que se puede alcanzar con el teclado', () => {
     // Arrange
-    const { map, onMove } = setup()
+    const { container, map, marker } = setup()
 
     // Act
-    map.setView(SAN_PEDRO_SULA)
+    map.showPoint(SAN_PEDRO_SULA)
 
     // Assert
-    expect(onMove).not.toHaveBeenCalled()
+    expect(container.querySelectorAll('.leaflet-marker-icon')).toHaveLength(1)
+    expect(marker()).toHaveAttribute('title', MARKER_LABEL)
+    expect(marker()).toHaveAttribute('tabindex', '0')
   })
 
-  it('cuando la persona desplaza el mapa con el teclado avisa del nuevo punto central', () => {
+  it('mostrar un punto por código no cuenta como un movimiento de la persona', () => {
     // Arrange
-    const { container, onMove } = setup()
+    const { map, onMarkerMove } = setup()
+
+    // Act
+    map.showPoint(SAN_PEDRO_SULA)
+
+    // Assert
+    expect(onMarkerMove).not.toHaveBeenCalled()
+  })
+
+  it('un clic en el mapa lleva el marcador a ese punto y lo avisa', () => {
+    // Arrange
+    const { container, onMarkerMove } = setup()
+
+    // Act
+    fireEvent.click(container, { clientX: 120, clientY: 80 })
+
+    // Assert
+    expect(onMarkerMove).toHaveBeenCalledOnce()
+    const [point] = onMarkerMove.mock.calls[0]
+    expect(point.lng).toBeGreaterThan(TEGUCIGALPA.center.lng)
+    expect(point.lat).toBeLessThan(TEGUCIGALPA.center.lat)
+  })
+
+  it('al desplazar el mapa con las flechas, el marcador lo acompaña en el centro y lo avisa', () => {
+    // Arrange
+    const { container, onMarkerMove } = setup()
     container.focus()
 
     // Act
-    fireEvent.keyDown(container, { keyCode: ARROW_RIGHT_KEY_CODE })
+    fireEvent.keyDown(container, ARROW_RIGHT)
 
     // Assert
-    expect(onMove).toHaveBeenCalledOnce()
-    const [point] = onMove.mock.calls[0]
+    expect(onMarkerMove).toHaveBeenCalledOnce()
+    const [point] = onMarkerMove.mock.calls[0]
     expect(point.lat).toBeCloseTo(TEGUCIGALPA.center.lat, 3)
     expect(point.lng).toBeGreaterThan(TEGUCIGALPA.center.lng)
   })
 
-  it('acercar el mapa sin desplazarlo no marca ningún punto', async () => {
+  it('acercar el mapa no mueve el marcador', async () => {
     // Arrange
     const user = userEvent.setup()
-    const { container, onMove } = setup()
+    const { container, onMarkerMove } = setup()
     const zoomIn = container.querySelector<HTMLElement>('.leaflet-control-zoom-in')
 
     // Act
@@ -70,31 +99,18 @@ describe('createLeafletLocationMap', () => {
 
     // Assert
     expect(zoomIn).not.toBeNull()
-    expect(onMove).not.toHaveBeenCalled()
+    expect(onMarkerMove).not.toHaveBeenCalled()
   })
 
-  it('redimensionar la ventana recoloca el mapa, pero no marca ningún punto', async () => {
+  it('redimensionar la ventana no mueve el marcador', async () => {
     // Arrange
-    const { container, onMove } = setup()
+    const { container, onMarkerMove } = setup()
 
     // Act
     await resizeWindow(container, { width: 640, height: 320 })
 
     // Assert
-    expect(onMove).not.toHaveBeenCalled()
-  })
-
-  it('después de redimensionar, lo que desplaza la persona sigue contando', async () => {
-    // Arrange
-    const { container, onMove } = setup()
-    await resizeWindow(container, { width: 640, height: 320 })
-    container.focus()
-
-    // Act
-    fireEvent.keyDown(container, { keyCode: ARROW_RIGHT_KEY_CODE })
-
-    // Assert
-    await waitFor(() => expect(onMove).toHaveBeenCalledOnce())
+    expect(onMarkerMove).not.toHaveBeenCalled()
   })
 
   it('muestra la atribución de OpenStreetMap, obligatoria al usar sus mapas', () => {

@@ -10,6 +10,9 @@ import { FILLED_PUBLICATION, fillPublicationForm } from '@/test/publicationForm'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
 vi.mock('@/features/properties/services/locationMap', () => ({ createLeafletLocationMap: vi.fn() }))
+vi.mock('@/features/properties/services/geocodingService', () => ({
+  geocodingService: { locate: vi.fn(async () => undefined) },
+}))
 vi.mock('@/features/properties/services/publicationService', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/properties/services/publicationService')>()),
   publicationService: { publish: vi.fn() },
@@ -27,7 +30,8 @@ const setup = () => {
 
 const publishButton = () => screen.getByRole('button', { name: 'Publicar propiedad' })
 
-describe('PublishPropertyPage', () => {
+// Recorrer los tres pasos lleva muchas interacciones: se da más margen que el de una prueba normal.
+describe('PublishPropertyPage', { timeout: 20_000 }, () => {
   beforeEach(() => {
     publish.mockReset()
   })
@@ -55,7 +59,7 @@ describe('PublishPropertyPage', () => {
 
     // Assert
     expect(publish).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION)
-    expect(await screen.findByRole('status')).toHaveTextContent('Tu propiedad se publicó')
+    expect(await screen.findByText('Tu propiedad se publicó')).toBeInTheDocument()
   })
 
   it('si el servicio de publicación aún no está activo, lo avisa en lugar de confirmar', async () => {

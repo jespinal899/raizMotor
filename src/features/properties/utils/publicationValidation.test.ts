@@ -25,10 +25,10 @@ describe('validatePublication', () => {
     // Assert
     expect(errors).toMatchObject({
       department: 'Selecciona el departamento.',
-      city: 'Escribe la ciudad.',
-      neighborhood: 'Escribe la colonia o el barrio.',
+      city: 'Selecciona la ciudad.',
+      neighborhood: 'Escribe la colonia, el barrio o la residencial.',
       address: 'Escribe la dirección.',
-      coordinates: 'Mueve el mapa hasta dejar el marcador sobre la propiedad.',
+      coordinates: 'Busca la dirección y confírmala en el mapa.',
     })
   })
 
@@ -41,6 +41,17 @@ describe('validatePublication', () => {
 
     // Assert
     expect(errors.department).toBe('Selecciona el departamento.')
+  })
+
+  it('rechaza una ciudad que no pertenece al departamento elegido', () => {
+    // Arrange
+    const values = buildPublicationValues({ department: 'cortes', city: 'La Ceiba' })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors.city).toBe('Selecciona la ciudad.')
   })
 
   it('pide más detalle cuando la dirección es demasiado corta', () => {

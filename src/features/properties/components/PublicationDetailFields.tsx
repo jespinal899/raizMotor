@@ -34,7 +34,7 @@ const PublicationDetailFields = ({ values, errors, change }: PublicationFieldsPr
   return (
     <>
       <ChoiceGroup
-        label="Tipo de propiedad"
+        label="¿Qué tipo de propiedad es?"
         options={TYPE_OPTIONS}
         value={values.type}
         onChange={(type) => change('type', type)}

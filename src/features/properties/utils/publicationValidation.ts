@@ -1,5 +1,5 @@
 import type { DetailField, PublicationFormValues } from '@/features/properties/types/publication.types'
-import { isDepartmentId } from '@/features/properties/utils/departments'
+import { isCityOf, isDepartmentId } from '@/features/properties/utils/departments'
 import { getDetailFields } from '@/features/properties/utils/propertyDetailFields'
 import { maxLength, minLength, positiveNumber, required, validate, wholeNumber } from '@/shared/utils/validators'
 import type { FieldErrors, Validator } from '@/shared/utils/validators'
@@ -32,13 +32,13 @@ export const validatePublication = (values: PublicationFormValues): FieldErrors<
 
   return {
     department: isDepartmentId(values.department) ? undefined : 'Selecciona el departamento.',
-    city: validate(values.city, [required('Escribe la ciudad.')]),
-    neighborhood: validate(values.neighborhood, [required('Escribe la colonia o el barrio.')]),
+    city: isCityOf(values.department, values.city) ? undefined : 'Selecciona la ciudad.',
+    neighborhood: validate(values.neighborhood, [required('Escribe la colonia, el barrio o la residencial.')]),
     address: validate(values.address, [
       required('Escribe la dirección.'),
       minLength(MIN_ADDRESS_LENGTH, 'Añade más detalle a la dirección: calle, bloque o número de casa.'),
     ]),
-    coordinates: values.coordinates ? undefined : 'Mueve el mapa hasta dejar el marcador sobre la propiedad.',
+    coordinates: values.coordinates ? undefined : 'Busca la dirección y confírmala en el mapa.',
     type: values.type ? undefined : 'Selecciona el tipo de propiedad.',
     builtArea: validateDetail('builtArea'),
     landArea: validateDetail('landArea'),

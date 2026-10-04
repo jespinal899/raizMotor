@@ -21,7 +21,7 @@ export const buildImageFile = ({ name = 'foto.jpg', type = 'image/jpeg', size }:
 /** Formulario de publicación de una casa con todos sus datos válidos. */
 export const buildPublicationValues = (overrides: Partial<PublicationFormValues> = {}): PublicationFormValues => ({
   department: 'francisco-morazan',
-  city: 'Tegucigalpa',
+  city: 'Tegucigalpa (Distrito Central)',
   neighborhood: 'Colonia Palmira',
   address: 'Avenida República de Chile, casa 12',
   coordinates: { lat: 14.1, lng: -87.19 },

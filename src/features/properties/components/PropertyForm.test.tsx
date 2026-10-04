@@ -1,15 +1,26 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import PropertyForm from '@/features/properties/components/PropertyForm'
 import { createLeafletLocationMap } from '@/features/properties/services/locationMap'
 import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
-import { getDepartmentView } from '@/features/properties/utils/departments'
 import { buildFakeLocationMap } from '@/test/fakeLocationMap'
-import { FILLED_PUBLICATION, fillPublicationForm } from '@/test/publicationForm'
+import {
+  FILLED_PUBLICATION,
+  chooseOption,
+  confirmAddressOnMap,
+  fillAddress,
+  fillListingStep,
+  fillPropertyStep,
+  fillPublicationForm,
+  goToNextStep,
+} from '@/test/publicationForm'
 
 vi.mock('@/features/properties/services/locationMap', () => ({ createLeafletLocationMap: vi.fn() }))
+vi.mock('@/features/properties/services/geocodingService', () => ({
+  geocodingService: { locate: vi.fn(async () => undefined) },
+}))
 
 type Submit = (publication: PropertyPublication) => Promise<void>
 
@@ -21,47 +32,123 @@ const setup = (onSubmit: Submit = vi.fn(async () => {})) => {
   return { fakeMap, onSubmit, user: userEvent.setup() }
 }
 
+const stepHeading = () => screen.getByRole('heading', { level: 2 })
+const currentStep = () =>
+  within(screen.getByRole('navigation', { name: 'Pasos para publicar' }))
+    .getAllByRole('listitem')
+    .find((item) => item.getAttribute('aria-current') === 'step')
 const publishButton = () => screen.getByRole('button', { name: /Publicar propiedad|Publicando/ })
-const department = () => screen.getByRole('combobox', { name: 'Departamento' })
-const chooseType = (user: ReturnType<typeof userEvent.setup>, name: string) =>
-  user.click(screen.getByRole('radio', { name }))
+const city = () => screen.getByRole('combobox', { name: 'Ciudad' })
 
-describe('PropertyForm', () => {
-  it('organiza los datos en ubicación, características, anuncio y fotos', () => {
+// Recorrer los tres pasos lleva muchas interacciones: se da más margen que el de una prueba normal.
+describe('PropertyForm', { timeout: 20_000 }, () => {
+  it('reparte la publicación en tres pasos y empieza por la propiedad', () => {
     // Arrange
-    const expectedSections = ['Ubicación', 'Características', 'Anuncio', 'Fotos']
+    const expectedSteps = ['Propiedad', 'Publicación', 'Últimos detalles']
 
     // Act
     setup()
 
     // Assert
-    const sections = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
-    expect(sections).toEqual(expectedSections)
+    const steps = within(screen.getByRole('navigation', { name: 'Pasos para publicar' })).getAllByRole('listitem')
+    expect(steps.map((step, index) => step.textContent?.includes(expectedSteps[index]))).toEqual([true, true, true])
+    expect(stepHeading()).toHaveTextContent('Paso 1 de 3: Propiedad')
+    expect(currentStep()).toHaveTextContent('Propiedad')
   })
 
-  it('no pide medidas hasta que se elige el tipo de propiedad', () => {
+  it('el primer paso pide la ubicación y el tipo de propiedad, y aún no ofrece publicar', () => {
+    // Arrange
+    const expectedSections = ['Ubicación', 'Tipo de propiedad']
+
+    // Act
+    setup()
+
+    // Assert
+    const sections = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)
+    expect(sections).toEqual(expectedSections)
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Publicar propiedad' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Atrás' })).not.toBeInTheDocument()
+  })
+
+  it('la ciudad no se puede elegir hasta indicar el departamento', () => {
     // Arrange: formulario recién abierto
 
     // Act
     setup()
 
     // Assert
-    expect(screen.queryByRole('spinbutton', { name: 'Cuartos' })).not.toBeInTheDocument()
-    expect(screen.getByText('Elige el tipo de propiedad para indicar sus medidas.')).toBeInTheDocument()
+    expect(city()).toBeDisabled()
+    expect(city()).toHaveTextContent('Elige primero el departamento')
   })
 
-  it('para una casa pide superficies, cuartos y baños', async () => {
+  it('al elegir el departamento ofrece como ciudades sus municipios', async () => {
+    // Arrange
+    const { user } = setup()
+    await chooseOption(user, 'Departamento', 'Cortés')
+
+    // Act
+    await user.click(city())
+
+    // Assert
+    const options = (await screen.findAllByRole('option')).map((option) => option.textContent)
+    expect(options).toHaveLength(12)
+    expect(options).toContain('San Pedro Sula')
+    expect(options).not.toContain('Tegucigalpa (Distrito Central)')
+  })
+
+  it('al cambiar de departamento descarta la ciudad elegida', async () => {
+    // Arrange
+    const { user } = setup()
+    await chooseOption(user, 'Departamento', 'Cortés')
+    await chooseOption(user, 'Ciudad', 'Choloma')
+
+    // Act
+    await chooseOption(user, 'Departamento', 'Yoro')
+
+    // Assert
+    expect(city()).toHaveTextContent('Selecciona una ciudad')
+  })
+
+  it('no busca la dirección si está incompleta, y señala lo que falta', async () => {
     // Arrange
     const { user } = setup()
 
     // Act
-    await chooseType(user, 'Casa')
+    await user.click(screen.getByRole('button', { name: 'Buscar dirección' }))
 
     // Assert
-    expect(screen.getByRole('spinbutton', { name: 'Superficie construida (m²)' })).toBeInTheDocument()
-    expect(screen.getByRole('spinbutton', { name: 'Superficie del terreno (m²)' })).toBeInTheDocument()
-    expect(screen.getByRole('spinbutton', { name: 'Cuartos' })).toBeInTheDocument()
-    expect(screen.getByRole('spinbutton', { name: 'Baños' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Departamento' })).toHaveAccessibleDescription(
+      'Selecciona el departamento.',
+    )
+    expect(screen.getByRole('textbox', { name: 'Dirección' })).toHaveAccessibleDescription('Escribe la dirección.')
+  })
+
+  it('al confirmar la dirección en el mapa lo indica y sigue con el tipo de propiedad', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+    await fillAddress(user)
+
+    // Act
+    await confirmAddressOnMap(user, fakeMap)
+
+    // Assert
+    expect(screen.getByRole('status')).toHaveTextContent('Dirección confirmada en el mapa.')
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'Casa' })).toHaveFocus())
+  })
+
+  it('si se cambia la dirección después de confirmarla, pide confirmarla de nuevo', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+    await fillAddress(user)
+    await confirmAddressOnMap(user, fakeMap)
+
+    // Act
+    await user.type(screen.getByRole('textbox', { name: 'Dirección' }), ' A')
+
+    // Assert
+    expect(screen.queryByText('Dirección confirmada en el mapa.')).not.toBeInTheDocument()
   })
 
   it('para un terreno solo pide su superficie', async () => {
@@ -69,7 +156,7 @@ describe('PropertyForm', () => {
     const { user } = setup()
 
     // Act
-    await chooseType(user, 'Terreno')
+    await user.click(screen.getByRole('radio', { name: 'Terreno' }))
 
     // Assert
     expect(screen.getByRole('spinbutton', { name: 'Superficie del terreno (m²)' })).toBeInTheDocument()
@@ -77,32 +164,80 @@ describe('PropertyForm', () => {
     expect(screen.queryByRole('spinbutton', { name: 'Cuartos' })).not.toBeInTheDocument()
   })
 
-  it('al elegir el departamento acerca el mapa a su cabecera', async () => {
+  it('no deja pasar al segundo paso con el primero incompleto, y lleva el foco al primer dato que falta', async () => {
     // Arrange
-    const { fakeMap, user } = setup()
-    await user.click(department())
+    const { user } = setup()
 
     // Act
-    await user.click(await screen.findByRole('option', { name: 'Cortés' }))
+    await goToNextStep(user)
 
     // Assert
-    expect(fakeMap.map.setView).toHaveBeenLastCalledWith(getDepartmentView('cortes'))
+    expect(stepHeading()).toHaveTextContent('Paso 1 de 3: Propiedad')
+    expect(screen.getByRole('group', { name: 'Ubicación en el mapa' })).toHaveAccessibleDescription(
+      'Busca la dirección y confírmala en el mapa.',
+    )
+    expect(screen.getByText('Revisa los campos marcados antes de continuar.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Departamento' })).toHaveFocus())
   })
 
-  it('al mover el mapa muestra el punto marcado', () => {
+  it('con el primer paso completo, "Siguiente" lleva a la publicación: título y descripción', async () => {
     // Arrange
-    const { fakeMap } = setup()
+    const { fakeMap, user } = setup()
+    await fillPropertyStep(user, fakeMap)
 
     // Act
-    act(() => fakeMap.moveTo({ lat: 15.5, lng: -88.03 }))
+    await goToNextStep(user)
 
     // Assert
-    expect(screen.getByText('Punto marcado: 15.50000, -88.03000')).toBeInTheDocument()
+    expect(stepHeading()).toHaveTextContent('Paso 2 de 3: Publicación')
+    expect(stepHeading()).toHaveFocus()
+    expect(currentStep()).toHaveTextContent('Publicación')
+    expect(screen.getByRole('textbox', { name: 'Título de la publicación' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Descripción' })).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'Departamento' })).not.toBeInTheDocument()
+  })
+
+  it('"Atrás" vuelve al paso anterior conservando lo escrito', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+    await fillPropertyStep(user, fakeMap)
+    await goToNextStep(user)
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Atrás' }))
+
+    // Assert
+    expect(stepHeading()).toHaveTextContent('Paso 1 de 3: Propiedad')
+    expect(city()).toHaveTextContent('San Pedro Sula')
+    expect(screen.getByRole('textbox', { name: 'Dirección' })).toHaveValue('10 calle, casa 25')
+    expect(screen.getByRole('status')).toHaveTextContent('Dirección confirmada en el mapa.')
+  })
+
+  it('el último paso pide la operación, el precio y las fotos, y ofrece publicar', async () => {
+    // Arrange
+    const { fakeMap, user } = setup()
+    await fillPropertyStep(user, fakeMap)
+    await goToNextStep(user)
+    await fillListingStep(user)
+
+    // Act
+    await goToNextStep(user)
+
+    // Assert
+    expect(stepHeading()).toHaveTextContent('Paso 3 de 3: Últimos detalles')
+    expect(screen.getByRole('radiogroup', { name: 'Tipo de operación' })).toBeInTheDocument()
+    expect(screen.getByRole('spinbutton', { name: 'Precio (USD)' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Agregar fotos')).toBeInTheDocument()
+    expect(publishButton()).toHaveTextContent('Publicar propiedad')
   })
 
   it('aclara que el precio es mensual cuando la operación es alquiler', async () => {
     // Arrange
-    const { user } = setup()
+    const { fakeMap, user } = setup()
+    await fillPropertyStep(user, fakeMap)
+    await goToNextStep(user)
+    await fillListingStep(user)
+    await goToNextStep(user)
 
     // Act
     await user.click(screen.getByRole('radio', { name: 'Alquiler' }))
@@ -111,7 +246,24 @@ describe('PropertyForm', () => {
     expect(screen.getByRole('spinbutton', { name: 'Precio (USD al mes)' })).toBeInTheDocument()
   })
 
-  it('publica la propiedad con todos los datos escritos', async () => {
+  it('no publica si falta algo en el último paso', async () => {
+    // Arrange
+    const { fakeMap, onSubmit, user } = setup()
+    await fillPropertyStep(user, fakeMap)
+    await goToNextStep(user)
+    await fillListingStep(user)
+    await goToNextStep(user)
+
+    // Act
+    await user.click(publishButton())
+
+    // Assert
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByRole('spinbutton', { name: 'Precio (USD)' })).toHaveAccessibleDescription('Indica el precio.')
+    expect(screen.getByRole('group', { name: /^Fotos/ })).toHaveAccessibleDescription('Agrega al menos una foto.')
+  })
+
+  it('publica la propiedad con los datos de los tres pasos', async () => {
     // Arrange
     const { fakeMap, onSubmit, user } = setup()
     await fillPublicationForm(user, fakeMap)
@@ -121,22 +273,7 @@ describe('PropertyForm', () => {
 
     // Assert
     expect(onSubmit).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION)
-    expect(await screen.findByRole('status')).toHaveTextContent('Tu propiedad se publicó')
-  })
-
-  it('no publica un formulario vacío: señala los campos y lleva el foco al primero', async () => {
-    // Arrange
-    const { onSubmit, user } = setup()
-
-    // Act
-    await user.click(publishButton())
-
-    // Assert
-    expect(onSubmit).not.toHaveBeenCalled()
-    expect(department()).toHaveAccessibleDescription('Selecciona el departamento.')
-    expect(screen.getByRole('textbox', { name: 'Ciudad' })).toHaveAccessibleDescription('Escribe la ciudad.')
-    expect(screen.getByText('Revisa los campos marcados antes de publicar.')).toBeInTheDocument()
-    await waitFor(() => expect(department()).toHaveFocus())
+    expect(await screen.findByText('Tu propiedad se publicó')).toBeInTheDocument()
   })
 
   it('mientras publica desactiva el botón para evitar anuncios duplicados', async () => {

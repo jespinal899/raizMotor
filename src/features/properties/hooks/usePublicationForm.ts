@@ -5,6 +5,7 @@ import type {
   PublicationFormValues,
   PublicationStatus,
 } from '@/features/properties/types/publication.types'
+import { ADDRESS_FIELDS } from '@/features/properties/utils/publicationSteps'
 import { validatePublication } from '@/features/properties/utils/publicationValidation'
 import { toPublication } from '@/features/properties/utils/toPublication'
 import { useFormFields } from '@/hooks/useFormFields'
@@ -32,8 +33,18 @@ const EMPTY_PUBLICATION: PublicationFormValues = {
   images: [],
 }
 
+type PublicationForm = ReturnType<typeof usePublicationForm>
+
 /** Lo que necesita cada bloque de campos del formulario. */
-export type PublicationFieldsProps = Pick<ReturnType<typeof usePublicationForm>, 'values' | 'errors' | 'change'>
+export type PublicationFieldsProps = Pick<PublicationForm, 'values' | 'errors' | 'change'>
+
+/** Lo que recibe cada paso del formulario. */
+export interface PublicationStepProps extends PublicationFieldsProps {
+  /** Comprueba unos campos, muestra sus errores y dice si son válidos. */
+  validate: PublicationForm['validate']
+  /** Lleva el foco al primer campo con error. */
+  onInvalid: () => void
+}
 
 export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {
   const {
@@ -46,8 +57,10 @@ export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {
 
   const change: typeof changeField = (field, value) => {
     changeField(field, value)
-    // El punto marcado pertenecía al departamento anterior: hay que volver a colocarlo.
-    if (field === 'department') changeField('coordinates', null)
+    // La ciudad elegida pertenecía al departamento anterior.
+    if (field === 'department') changeField('city', '')
+    // El punto se confirmó para la dirección anterior: hay que volver a buscarla en el mapa.
+    if (ADDRESS_FIELDS.includes(field)) changeField('coordinates', null)
     // Editar retira el aviso del intento anterior, pero no reactiva un envío que sigue en curso.
     setStatus((current) => (current === 'submitting' ? current : 'idle'))
   }
@@ -64,5 +77,5 @@ export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {
     }
   }
 
-  return { values, errors, status, change, submit }
+  return { values, errors, status, change, validate: validateFields, submit }
 }

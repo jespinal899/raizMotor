@@ -138,10 +138,11 @@ describe('usePublicationForm', () => {
     expect(result.current.errors.address).toBe('Escribe la dirección.')
   })
 
-  it('al cambiar de departamento descarta el punto marcado, que era del anterior', () => {
+  it('al cambiar de departamento descarta la ciudad y el punto confirmado, que eran del anterior', () => {
     // Arrange
     const { result } = setup()
     setField(result, 'department', 'cortes')
+    setField(result, 'city', 'San Pedro Sula')
     setField(result, 'coordinates', { lat: 15.5, lng: -88.03 })
 
     // Act
@@ -149,7 +150,53 @@ describe('usePublicationForm', () => {
 
     // Assert
     expect(result.current.values.department).toBe('yoro')
+    expect(result.current.values.city).toBe('')
     expect(result.current.values.coordinates).toBeNull()
+  })
+
+  it.each([
+    { field: 'city', value: 'Choloma' },
+    { field: 'neighborhood', value: 'Colonia Trejo' },
+    { field: 'address', value: '10 calle, casa 25' },
+  ] as const)('al cambiar "$field" hay que volver a confirmar la dirección en el mapa', ({ field, value }) => {
+    // Arrange
+    const { result } = setup()
+    fillForm(result)
+
+    // Act
+    setField(result, field, value)
+
+    // Assert
+    expect(result.current.values.coordinates).toBeNull()
+  })
+
+  it('cambiar un dato que no es de la dirección conserva el punto confirmado', () => {
+    // Arrange
+    const values = buildPublicationValues()
+    const { result } = setup()
+    fillForm(result, values)
+
+    // Act
+    setField(result, 'title', 'Casa con jardín en Palmira')
+
+    // Assert
+    expect(result.current.values.coordinates).toEqual(values.coordinates)
+  })
+
+  it('puede validar solo los datos de un paso', () => {
+    // Arrange
+    const { result } = setup()
+
+    // Act
+    let isValid = true
+    act(() => {
+      isValid = result.current.validate(['title', 'description'])
+    })
+
+    // Assert
+    expect(isValid).toBe(false)
+    expect(result.current.errors.title).toBe('Escribe un título para el anuncio.')
+    expect(result.current.errors.department).toBeUndefined()
   })
 
   it('al editar después de un intento retira el aviso', async () => {
