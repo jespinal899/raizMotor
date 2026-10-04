@@ -10,9 +10,11 @@ interface FormSelectProps {
   value: string
   onChange: (value: string) => void
   error?: string
+  /** Para desplegables que dependen de otro dato, mientras ese dato falte. */
+  disabled?: boolean
 }
 
-const FormSelect = ({ label, placeholder, options, value, onChange, error }: FormSelectProps) => {
+const FormSelect = ({ label, placeholder, options, value, onChange, error, disabled }: FormSelectProps) => {
   return (
     <FormField label={label} error={error}>
       {(control) => (
@@ -21,6 +23,7 @@ const FormSelect = ({ label, placeholder, options, value, onChange, error }: For
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          disabled={disabled}
           triggerProps={control}
         />
       )}

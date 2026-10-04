@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import BusyButton from '@/components/BusyButton'
 import { cn } from '@/lib/utils'
 
 interface SubmitButtonProps {
@@ -14,12 +13,18 @@ interface SubmitButtonProps {
 }
 
 /** Botón de envío de un formulario: mientras envía se desactiva para evitar envíos duplicados. */
-const SubmitButton = ({ isSubmitting, icon: Icon, submittingLabel, children, className }: SubmitButtonProps) => {
+const SubmitButton = ({ isSubmitting, icon, submittingLabel, children, className }: SubmitButtonProps) => {
   return (
-    <Button type="submit" size="lg" disabled={isSubmitting} className={cn('h-11 text-base', className)}>
-      {isSubmitting ? <LoaderCircle className="animate-spin" /> : <Icon />}
-      {isSubmitting ? submittingLabel : children}
-    </Button>
+    <BusyButton
+      type="submit"
+      size="lg"
+      isBusy={isSubmitting}
+      icon={icon}
+      busyLabel={submittingLabel}
+      className={cn('h-11 text-base', className)}
+    >
+      {children}
+    </BusyButton>
   )
 }
 

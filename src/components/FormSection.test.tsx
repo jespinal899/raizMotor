@@ -35,3 +35,21 @@ describe('FormSection', () => {
     expect(screen.getByText(description)).toBeInTheDocument()
   })
 })
+
+describe('FormSection dentro de un paso', () => {
+  it('puede titularse con un encabezado de tercer nivel, por debajo del título del paso', () => {
+    // Arrange
+    const title = 'Ubicación'
+
+    // Act
+    render(
+      <FormSection title={title} titleAs="h3">
+        <input aria-label="Ciudad" />
+      </FormSection>,
+    )
+
+    // Assert
+    expect(screen.getByRole('heading', { level: 3, name: title })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: title })).toBeInTheDocument()
+  })
+})

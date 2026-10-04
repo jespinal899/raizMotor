@@ -76,3 +76,18 @@ describe('FormSelect', () => {
     expect(trigger()).toHaveAccessibleDescription(error)
   })
 })
+
+describe('FormSelect deshabilitado', () => {
+  it('no se puede abrir mientras no tenga sentido elegir, y lo explica con su texto de ayuda', () => {
+    // Arrange
+    const placeholder = 'Elige primero el departamento'
+
+    // Act
+    render(<FormSelect label="Ciudad" placeholder={placeholder} options={[]} value="" onChange={vi.fn()} disabled />)
+
+    // Assert
+    const select = screen.getByRole('combobox', { name: 'Ciudad' })
+    expect(select).toBeDisabled()
+    expect(select).toHaveTextContent(placeholder)
+  })
+})

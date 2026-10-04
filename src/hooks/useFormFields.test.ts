@@ -87,3 +87,55 @@ describe('useFormFields', () => {
     expect(result.current.errors).toEqual({ name: undefined, subscribed: 'Acepta para continuar.' })
   })
 })
+
+describe('useFormFields: validar solo una parte', () => {
+  const invalidEverywhere = (): FieldErrors<Values> => ({
+    name: 'Escribe tu nombre.',
+    subscribed: 'Acepta para continuar.',
+  })
+
+  it('marca solo los campos pedidos y avisa de que esa parte tiene errores', () => {
+    // Arrange
+    const { result } = setup(invalidEverywhere)
+
+    // Act
+    let isValid = true
+    act(() => {
+      isValid = result.current.validateFields(['name'])
+    })
+
+    // Assert
+    expect(isValid).toBe(false)
+    expect(result.current.errors).toEqual({ name: 'Escribe tu nombre.' })
+  })
+
+  it('da por buena una parte sin errores aunque el resto del formulario los tenga', () => {
+    // Arrange
+    const { result } = setup(requireName)
+
+    // Act
+    let isValid = false
+    act(() => {
+      isValid = result.current.validateFields(['subscribed'])
+    })
+
+    // Assert
+    expect(isValid).toBe(true)
+  })
+
+  it('conserva los errores ya mostrados de los campos que no se están validando', () => {
+    // Arrange
+    const { result } = setup(invalidEverywhere)
+    act(() => {
+      result.current.validateFields(['name'])
+    })
+
+    // Act
+    act(() => {
+      result.current.validateFields(['subscribed'])
+    })
+
+    // Assert
+    expect(result.current.errors).toEqual({ name: 'Escribe tu nombre.', subscribed: 'Acepta para continuar.' })
+  })
+})

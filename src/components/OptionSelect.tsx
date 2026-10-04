@@ -14,16 +14,18 @@ interface OptionSelectProps {
   onChange: (value: string) => void
   /** Texto que se muestra mientras no hay nada elegido. */
   placeholder?: string
+  disabled?: boolean
   /** Enlazan el botón del desplegable con su etiqueta y su error. */
   triggerProps?: TriggerProps
 }
 
 /** Desplegable de una lista de opciones. La etiqueta la pone quien lo usa. */
-const OptionSelect = ({ options, value, onChange, placeholder, triggerProps }: OptionSelectProps) => {
+const OptionSelect = ({ options, value, onChange, placeholder, disabled, triggerProps }: OptionSelectProps) => {
   return (
     <Select
       items={options}
       value={value === '' ? null : value}
+      disabled={disabled}
       onValueChange={(selected) => {
         if (selected !== null) onChange(selected)
       }}

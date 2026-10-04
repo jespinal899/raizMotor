@@ -17,12 +17,23 @@ export const useFormFields = <Values extends object>({ initialValues, validate }
     setErrors((current) => ({ ...current, [field]: undefined }))
   }
 
-  /** Comprueba todos los campos, muestra sus errores y dice si el formulario puede enviarse. */
-  const validateFields = (): boolean => {
+  /**
+   * Comprueba los campos, muestra sus errores y dice si son válidos. Sin lista comprueba el
+   * formulario entero; con ella, solo esos campos (p. ej. los de un paso) y conserva los demás errores.
+   */
+  const validateFields = (fields?: (keyof Values)[]): boolean => {
     const found = validate(values)
-    setErrors(found)
 
-    return !hasErrors(found)
+    if (!fields) {
+      setErrors(found)
+      return !hasErrors(found)
+    }
+
+    const scoped: FieldErrors<Values> = {}
+    for (const field of fields) scoped[field] = found[field]
+    setErrors((current) => ({ ...current, ...scoped }))
+
+    return !hasErrors(scoped)
   }
 
   return { values, errors, change, validateFields }
