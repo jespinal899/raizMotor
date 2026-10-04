@@ -15,9 +15,19 @@ export const ROUTES = {
   howItWorks: `/#${SECTION_IDS.howItWorks}`,
 } as const
 
+/** Parámetros con los que la página de contacto sabe sobre qué se consulta. */
+export const CONTACT_PARAMS = {
+  property: 'propiedad',
+  plan: 'plan',
+} as const
+
 export const propertyTypePath = (tipo: string) => `${ROUTES.properties}/${tipo}`
 
 export const propertyDetailPath = (id: string) => `/propiedad/${id}`
 
 /** Abre el contacto indicando por qué propiedad se consulta. */
-export const propertyContactPath = (id: string) => `${ROUTES.contact}?propiedad=${encodeURIComponent(id)}`
+export const propertyContactPath = (id: string) =>
+  `${ROUTES.contact}?${CONTACT_PARAMS.property}=${encodeURIComponent(id)}`
+
+/** Abre el contacto indicando qué plan interesa. */
+export const planContactPath = (id: string) => `${ROUTES.contact}?${CONTACT_PARAMS.plan}=${encodeURIComponent(id)}`
