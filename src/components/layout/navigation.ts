@@ -1,4 +1,4 @@
-import { Building2, House, LandPlot, type LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { PropertyType } from '@/features/properties/types/property.types'
 import { ROUTES, propertyTypePath } from '@/shared/constants/routes'
@@ -30,16 +30,17 @@ export const NAV = {
 
 const CATEGORY_ORDER: PropertyType[] = ['terreno', 'casa', 'apartamento']
 
-const CATEGORY_DETAILS: Record<PropertyType, Pick<PropertyCategory, 'description' | 'icon'>> = {
-  terreno: { description: 'Lotes para construir o invertir', icon: LandPlot },
-  casa: { description: 'Viviendas listas para tu familia', icon: House },
-  apartamento: { description: 'En edificios y condominios', icon: Building2 },
+const CATEGORY_DESCRIPTIONS: Record<PropertyType, string> = {
+  terreno: 'Lotes para construir o invertir',
+  casa: 'Viviendas listas para tu familia',
+  apartamento: 'En edificios y condominios',
 }
 
 export const PROPERTY_CATEGORIES: PropertyCategory[] = CATEGORY_ORDER.map((type) => ({
   label: PROPERTY_TYPES[type].plural,
   to: propertyTypePath(PROPERTY_TYPES[type].slug),
-  ...CATEGORY_DETAILS[type],
+  description: CATEGORY_DESCRIPTIONS[type],
+  icon: PROPERTY_TYPES[type].icon,
 }))
 
 export const FOOTER_SECTIONS: FooterSection[] = [

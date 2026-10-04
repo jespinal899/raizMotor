@@ -1,0 +1,184 @@
+import { act, renderHook } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { usePublicationForm } from '@/features/properties/hooks/usePublicationForm'
+import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
+import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
+import { toPublication } from '@/features/properties/utils/toPublication'
+import { buildPublicationValues } from '@/test/factories'
+
+type Submit = (publication: PropertyPublication) => Promise<void>
+type Result = ReturnType<typeof setup>['result']
+
+const setup = (onSubmit: Submit = vi.fn(async () => {})) => {
+  const view = renderHook(() => usePublicationForm({ onSubmit }))
+  return { onSubmit, ...view }
+}
+
+const setField = <Field extends keyof PublicationFormValues>(
+  result: Result,
+  field: Field,
+  value: PublicationFormValues[Field],
+) => act(() => result.current.change(field, value))
+
+/** Rellena campo a campo. El departamento va primero porque cambiarlo borra el punto del mapa. */
+const fillForm = (result: Result, values: PublicationFormValues = buildPublicationValues()) => {
+  const { department, ...rest } = values
+
+  setField(result, 'department', department)
+  for (const field of Object.keys(rest) as (keyof typeof rest)[]) setField(result, field, rest[field])
+}
+
+describe('usePublicationForm', () => {
+  it('empieza vacío, sin punto en el mapa, sin fotos, sin errores y sin resultado', () => {
+    // Arrange: formulario recién abierto
+
+    // Act
+    const { result } = setup()
+
+    // Assert
+    expect(result.current.values).toEqual({
+      department: '',
+      city: '',
+      neighborhood: '',
+      address: '',
+      coordinates: null,
+      type: '',
+      builtArea: '',
+      landArea: '',
+      bedrooms: '',
+      bathrooms: '',
+      title: '',
+      description: '',
+      operation: '',
+      price: '',
+      images: [],
+    })
+    expect(result.current.errors).toEqual({})
+    expect(result.current.status).toBe('idle')
+  })
+
+  it('no publica y muestra los errores si faltan datos', async () => {
+    // Arrange
+    const { result, onSubmit } = setup()
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(result.current.errors.department).toBe('Selecciona el departamento.')
+    expect(result.current.errors.images).toBe('Agrega al menos una foto.')
+    expect(result.current.status).toBe('idle')
+  })
+
+  it('envía la publicación ya convertida y queda como publicada', async () => {
+    // Arrange
+    const values = buildPublicationValues()
+    const { result, onSubmit } = setup()
+    fillForm(result, values)
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(toPublication(values))
+    expect(result.current.status).toBe('published')
+  })
+
+  it('mientras la publicación está en curso lo indica', async () => {
+    // Arrange
+    let finish: () => void = () => {}
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    const { result } = setup(() => pending)
+    fillForm(result)
+
+    // Act
+    let submission: Promise<void> = Promise.resolve()
+    act(() => {
+      submission = result.current.submit()
+    })
+    const statusWhileSubmitting = result.current.status
+    await act(async () => {
+      finish()
+      await submission
+    })
+
+    // Assert
+    expect(statusWhileSubmitting).toBe('submitting')
+    expect(result.current.status).toBe('published')
+  })
+
+  it.each([
+    { reason: new PublicationUnavailableError(), status: 'unavailable', when: 'la publicación aún no está activa' },
+    { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
+  ])('queda como "$status" cuando $when', async ({ reason, status }) => {
+    // Arrange
+    const { result } = setup(() => Promise.reject(reason))
+    fillForm(result)
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(result.current.status).toBe(status)
+  })
+
+  it('al corregir un campo quita solo su error', async () => {
+    // Arrange
+    const { result } = setup()
+    await act(() => result.current.submit())
+
+    // Act
+    setField(result, 'city', 'Tegucigalpa')
+
+    // Assert
+    expect(result.current.errors.city).toBeUndefined()
+    expect(result.current.errors.address).toBe('Escribe la dirección.')
+  })
+
+  it('al cambiar de departamento descarta el punto marcado, que era del anterior', () => {
+    // Arrange
+    const { result } = setup()
+    setField(result, 'department', 'cortes')
+    setField(result, 'coordinates', { lat: 15.5, lng: -88.03 })
+
+    // Act
+    setField(result, 'department', 'yoro')
+
+    // Assert
+    expect(result.current.values.department).toBe('yoro')
+    expect(result.current.values.coordinates).toBeNull()
+  })
+
+  it('al editar después de un intento retira el aviso', async () => {
+    // Arrange
+    const { result } = setup(() => Promise.reject(new PublicationUnavailableError()))
+    fillForm(result)
+    await act(() => result.current.submit())
+
+    // Act
+    setField(result, 'price', '150000')
+
+    // Assert
+    expect(result.current.status).toBe('idle')
+  })
+})
+
+describe('usePublicationForm: durante el envío', () => {
+  it('editar un campo mientras se publica no reactiva el envío', async () => {
+    // Arrange
+    const { result } = setup(() => new Promise<void>(() => {}))
+    fillForm(result)
+    act(() => {
+      void result.current.submit()
+    })
+
+    // Act
+    setField(result, 'price', '150000')
+
+    // Assert
+    expect(result.current.status).toBe('submitting')
+  })
+})

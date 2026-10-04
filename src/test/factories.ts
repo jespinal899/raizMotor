@@ -1,7 +1,42 @@
 import { vi } from 'vitest'
 import type { PropertyService } from '@/features/properties/services/propertyService'
 import type { Property } from '@/features/properties/types/property.types'
+import type { PublicationFormValues } from '@/features/properties/types/publication.types'
 import type { Paginated } from '@/shared/types/common.types'
+
+interface ImageFileOptions {
+  name?: string
+  type?: string
+  /** Peso simulado en bytes, para no reservar memoria con un archivo grande de verdad. */
+  size?: number
+}
+
+export const buildImageFile = ({ name = 'foto.jpg', type = 'image/jpeg', size }: ImageFileOptions = {}): File => {
+  const file = new File(['contenido'], name, { type })
+  if (size !== undefined) Object.defineProperty(file, 'size', { value: size })
+
+  return file
+}
+
+/** Formulario de publicación de una casa con todos sus datos válidos. */
+export const buildPublicationValues = (overrides: Partial<PublicationFormValues> = {}): PublicationFormValues => ({
+  department: 'francisco-morazan',
+  city: 'Tegucigalpa',
+  neighborhood: 'Colonia Palmira',
+  address: 'Avenida República de Chile, casa 12',
+  coordinates: { lat: 14.1, lng: -87.19 },
+  type: 'casa',
+  builtArea: '180',
+  landArea: '250',
+  bedrooms: '3',
+  bathrooms: '2',
+  title: 'Casa amplia con patio en Palmira',
+  description: 'Casa de dos plantas con patio amplio, cochera techada y cuarto de servicio.',
+  operation: 'venta',
+  price: '145000',
+  images: [buildImageFile()],
+  ...overrides,
+})
 
 export const buildProperty = (overrides: Partial<Property> = {}): Property => ({
   id: 'propiedad-de-prueba',
