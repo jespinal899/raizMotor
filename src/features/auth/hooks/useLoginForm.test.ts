@@ -1,0 +1,129 @@
+import { act, renderHook } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { useLoginForm } from '@/features/auth/hooks/useLoginForm'
+import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authService'
+import type { LoginCredentials } from '@/features/auth/types/auth.types'
+
+type Submit = (credentials: LoginCredentials) => Promise<void>
+
+const setup = (onSubmit: Submit = vi.fn(async () => {})) => {
+  const view = renderHook(() => useLoginForm({ onSubmit }))
+  return { onSubmit, ...view }
+}
+
+const fillCredentials = (result: ReturnType<typeof setup>['result']) => {
+  act(() => result.current.change('email', 'ana@gmail.com'))
+  act(() => result.current.change('password', 'secreta123'))
+}
+
+describe('useLoginForm', () => {
+  it('empieza vacío, sin recordar la sesión, sin errores y sin resultado', () => {
+    // Arrange: formulario recién abierto
+
+    // Act
+    const { result } = setup()
+
+    // Assert
+    expect(result.current.values).toEqual({ email: '', password: '', remember: false })
+    expect(result.current.errors).toEqual({})
+    expect(result.current.status).toBe('idle')
+  })
+
+  it('no envía y muestra los errores si faltan datos', async () => {
+    // Arrange
+    const { result, onSubmit } = setup()
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(result.current.errors).toEqual({ email: 'Escribe tu correo.', password: 'Escribe tu contraseña.' })
+    expect(result.current.status).toBe('idle')
+  })
+
+  it('envía el correo sin espacios sobrantes y la contraseña tal como se escribió', async () => {
+    // Arrange
+    const { result, onSubmit } = setup()
+    act(() => result.current.change('email', '  ana@gmail.com '))
+    act(() => result.current.change('password', ' secreta 123 '))
+    act(() => result.current.change('remember', true))
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+      email: 'ana@gmail.com',
+      password: ' secreta 123 ',
+      remember: true,
+    })
+  })
+
+  it('mientras el inicio de sesión está en curso lo indica, y al terminar bien no deja ningún aviso', async () => {
+    // Arrange
+    let finish: () => void = () => {}
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    const { result } = setup(() => pending)
+    fillCredentials(result)
+
+    // Act
+    let submission: Promise<void> = Promise.resolve()
+    act(() => {
+      submission = result.current.submit()
+    })
+    const statusWhileSubmitting = result.current.status
+    await act(async () => {
+      finish()
+      await submission
+    })
+
+    // Assert
+    expect(statusWhileSubmitting).toBe('submitting')
+    expect(result.current.status).toBe('idle')
+  })
+
+  it.each([
+    { reason: new AuthUnavailableError(), status: 'unavailable', when: 'las cuentas aún no están activas' },
+    { reason: new InvalidCredentialsError(), status: 'rejected', when: 'las credenciales no son correctas' },
+    { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
+  ])('queda como "$status" cuando $when', async ({ reason, status }) => {
+    // Arrange
+    const { result } = setup(() => Promise.reject(reason))
+    fillCredentials(result)
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(result.current.status).toBe(status)
+  })
+
+  it('al corregir un campo quita solo su error', async () => {
+    // Arrange
+    const { result } = setup()
+    await act(() => result.current.submit())
+
+    // Act
+    act(() => result.current.change('email', 'ana@gmail.com'))
+
+    // Assert
+    expect(result.current.errors.email).toBeUndefined()
+    expect(result.current.errors.password).toBe('Escribe tu contraseña.')
+  })
+
+  it('al editar después de un intento fallido retira el aviso', async () => {
+    // Arrange
+    const { result } = setup(() => Promise.reject(new InvalidCredentialsError()))
+    fillCredentials(result)
+    await act(() => result.current.submit())
+
+    // Act
+    act(() => result.current.change('password', 'otra-clave'))
+
+    // Assert
+    expect(result.current.status).toBe('idle')
+  })
+})
