@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { email, hasErrors, minLength, optional, phone, required, validate } from '@/shared/utils/validators'
+import {
+  email,
+  hasErrors,
+  maxLength,
+  minLength,
+  optional,
+  phone,
+  positiveNumber,
+  required,
+  validate,
+  wholeNumber,
+} from '@/shared/utils/validators'
 
 describe('required', () => {
   it('acepta un valor con texto', () => {
@@ -167,5 +178,77 @@ describe('hasErrors', () => {
 
     // Assert
     expect(result).toBe(false)
+  })
+})
+
+describe('maxLength', () => {
+  it('acepta un valor con exactamente la longitud máxima, sin contar los espacios de los extremos', () => {
+    // Arrange
+    const validator = maxLength(5, 'Muy largo')
+
+    // Act
+    const error = validator('  abcde  ')
+
+    // Assert
+    expect(error).toBeUndefined()
+  })
+
+  it('rechaza un valor más largo', () => {
+    // Arrange
+    const validator = maxLength(5, 'Muy largo')
+
+    // Act
+    const error = validator('abcdef')
+
+    // Assert
+    expect(error).toBe('Muy largo')
+  })
+})
+
+describe('positiveNumber', () => {
+  it.each(['1', '120', '85.5', ' 300 '])('acepta el número %j', (value) => {
+    // Arrange
+    const validator = positiveNumber('Debe ser mayor que 0')
+
+    // Act
+    const error = validator(value)
+
+    // Assert
+    expect(error).toBeUndefined()
+  })
+
+  it.each(['0', '-5', 'abc', '12abc', '', '   ', 'Infinity'])('rechaza %j', (value) => {
+    // Arrange
+    const validator = positiveNumber('Debe ser mayor que 0')
+
+    // Act
+    const error = validator(value)
+
+    // Assert
+    expect(error).toBe('Debe ser mayor que 0')
+  })
+})
+
+describe('wholeNumber', () => {
+  it.each(['0', '3', ' 12 '])('acepta el entero %j', (value) => {
+    // Arrange
+    const validator = wholeNumber('Debe ser un número entero')
+
+    // Act
+    const error = validator(value)
+
+    // Assert
+    expect(error).toBeUndefined()
+  })
+
+  it.each(['-1', '2.5', 'tres', '', '   '])('rechaza %j', (value) => {
+    // Arrange
+    const validator = wholeNumber('Debe ser un número entero')
+
+    // Act
+    const error = validator(value)
+
+    // Assert
+    expect(error).toBe('Debe ser un número entero')
   })
 })

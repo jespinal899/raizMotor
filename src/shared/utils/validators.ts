@@ -51,3 +51,28 @@ export const validate = (value: string, validators: Validator[]): string | undef
 export type FieldErrors<Values> = Partial<Record<keyof Values, string>>
 
 export const hasErrors = (errors: Partial<Record<string, string>>): boolean => Object.values(errors).some(Boolean)
+
+export const maxLength =
+  (max: number, message: string): Validator =>
+  (value) =>
+    value.trim().length <= max ? undefined : message
+
+/** Un campo vacío no es un número: `Number('')` daría 0. */
+const toNumber = (value: string): number => (value.trim() === '' ? Number.NaN : Number(value))
+
+export const positiveNumber =
+  (message: string): Validator =>
+  (value) => {
+    const number = toNumber(value)
+
+    return Number.isFinite(number) && number > 0 ? undefined : message
+  }
+
+/** Entero desde cero: sirve para cantidades como cuartos o baños. */
+export const wholeNumber =
+  (message: string): Validator =>
+  (value) => {
+    const number = toNumber(value)
+
+    return Number.isInteger(number) && number >= 0 ? undefined : message
+  }
