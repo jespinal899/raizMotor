@@ -1,11 +1,8 @@
 import { useState } from 'react'
 import { ContactUnavailableError } from '@/features/contact/services/contactService'
-import type {
-  ContactFormErrors,
-  ContactFormStatus,
-  ContactFormValues,
-} from '@/features/contact/types/contact.types'
-import { hasErrors, validateContactForm } from '@/features/contact/utils/contactValidation'
+import type { ContactFormStatus, ContactFormValues } from '@/features/contact/types/contact.types'
+import { validateContactForm } from '@/features/contact/utils/contactValidation'
+import { useFormFields } from '@/hooks/useFormFields'
 
 interface ContactFormOptions {
   initialDescription?: string
@@ -20,25 +17,24 @@ const trimValues = (values: ContactFormValues): ContactFormValues => ({
 })
 
 export const useContactForm = ({ initialDescription = '', onSubmit }: ContactFormOptions) => {
-  const [values, setValues] = useState<ContactFormValues>({
-    name: '',
-    email: '',
-    phone: '',
-    description: initialDescription,
+  const {
+    values,
+    errors,
+    change: changeField,
+    validateFields,
+  } = useFormFields<ContactFormValues>({
+    initialValues: { name: '', email: '', phone: '', description: initialDescription },
+    validate: validateContactForm,
   })
-  const [errors, setErrors] = useState<ContactFormErrors>({})
   const [status, setStatus] = useState<ContactFormStatus>('idle')
 
-  const change = (field: keyof ContactFormValues, value: string) => {
-    setValues((current) => ({ ...current, [field]: value }))
-    setErrors((current) => ({ ...current, [field]: undefined }))
+  const change: typeof changeField = (field, value) => {
+    changeField(field, value)
     setStatus('idle')
   }
 
   const submit = async () => {
-    const found = validateContactForm(values)
-    setErrors(found)
-    if (hasErrors(found)) return
+    if (!validateFields()) return
 
     setStatus('sending')
     try {

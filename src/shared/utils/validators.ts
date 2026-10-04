@@ -46,3 +46,8 @@ export const validate = (value: string, validators: Validator[]): string | undef
   }
   return undefined
 }
+
+/** Errores de un formulario: el mensaje de cada campo inválido. */
+export type FieldErrors<Values> = Partial<Record<keyof Values, string>>
+
+export const hasErrors = (errors: Partial<Record<string, string>>): boolean => Object.values(errors).some(Boolean)

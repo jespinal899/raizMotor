@@ -19,5 +19,3 @@ export const validateContactForm = (values: ContactFormValues): ContactFormError
     minLength(MIN_DESCRIPTION_LENGTH, 'Cuéntanos un poco más: al menos 10 caracteres.'),
   ]),
 })
-
-export const hasErrors = (errors: ContactFormErrors): boolean => Object.values(errors).some(Boolean)

@@ -1,3 +1,5 @@
+import type { FieldErrors } from '@/shared/utils/validators'
+
 export interface ContactFormValues {
   name: string
   email: string
@@ -6,7 +8,7 @@ export interface ContactFormValues {
   description: string
 }
 
-export type ContactFormErrors = Partial<Record<keyof ContactFormValues, string>>
+export type ContactFormErrors = FieldErrors<ContactFormValues>
 
 export interface ContactMessage extends ContactFormValues {
   /** Enlace a aquello por lo que se consulta, p. ej. la página de una propiedad. */

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ContactFormValues } from '@/features/contact/types/contact.types'
-import { hasErrors, validateContactForm } from '@/features/contact/utils/contactValidation'
+import { validateContactForm } from '@/features/contact/utils/contactValidation'
+import { hasErrors } from '@/shared/utils/validators'
 
 const validValues = (overrides: Partial<ContactFormValues> = {}): ContactFormValues => ({
   name: 'Ana',

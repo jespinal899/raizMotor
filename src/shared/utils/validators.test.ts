@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { email, minLength, optional, phone, required, validate } from '@/shared/utils/validators'
+import { email, hasErrors, minLength, optional, phone, required, validate } from '@/shared/utils/validators'
 
 describe('required', () => {
   it('acepta un valor con texto', () => {
@@ -144,5 +144,28 @@ describe('validate', () => {
 
     // Assert
     expect(error).toBeUndefined()
+  })
+})
+
+describe('hasErrors', () => {
+  it('detecta un formulario con algún campo inválido', () => {
+    // Arrange
+    const errors = { name: undefined, email: 'Correo inválido' }
+
+    // Act
+    const result = hasErrors(errors)
+
+    // Assert
+    expect(result).toBe(true)
+  })
+
+  it.each([{}, { name: undefined, email: undefined }])('da por válido el formulario sin mensajes %j', (errors) => {
+    // Arrange: ningún campo tiene mensaje de error
+
+    // Act
+    const result = hasErrors(errors)
+
+    // Assert
+    expect(result).toBe(false)
   })
 })
