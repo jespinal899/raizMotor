@@ -10,6 +10,9 @@ export interface SelectOption {
 /** Valor del desplegable que significa "sin filtrar por este campo". */
 export const ANY_OPTION = 'todos'
 
+/** Dos filas completas en la grilla de tres columnas. */
+export const RESULTS_PER_PAGE = 6
+
 const DEFAULT_PRICE_OPERATION: PropertyOperation = 'venta'
 
 export const TYPE_OPTIONS: SelectOption[] = [

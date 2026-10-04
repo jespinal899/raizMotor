@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { PropertyFilters } from '@/features/properties/types/property.types'
-import { buildSearchPath, parseSearchFilters } from '@/features/search/utils/buildSearchQuery'
+import { buildSearchPath, parseSearchFilters, parseSearchPage } from '@/features/search/utils/buildSearchQuery'
 
 describe('buildSearchPath', () => {
   it('devuelve la ruta base cuando no hay filtros', () => {
@@ -42,6 +42,74 @@ describe('buildSearchPath', () => {
     // Assert
     expect(blankPath).toBe('/propiedades')
     expect(paddedPath).toBe('/propiedades?ubicacion=Cusco')
+  })
+
+  it('añade la página a partir de la segunda, conservando los filtros', () => {
+    // Arrange
+    const filters: PropertyFilters = { type: 'casa', operation: 'venta' }
+
+    // Act
+    const path = buildSearchPath(filters, 2)
+
+    // Assert
+    expect(path).toBe('/propiedades/casas?operacion=venta&pagina=2')
+  })
+
+  it('no escribe la primera página en la URL', () => {
+    // Arrange
+    const filters: PropertyFilters = { operation: 'alquiler' }
+
+    // Act
+    const path = buildSearchPath(filters, 1)
+
+    // Assert
+    expect(path).toBe('/propiedades?operacion=alquiler')
+  })
+})
+
+describe('parseSearchPage', () => {
+  it('lee el número de página de la consulta', () => {
+    // Arrange
+    const params = new URLSearchParams('operacion=venta&pagina=3')
+
+    // Act
+    const page = parseSearchPage(params)
+
+    // Assert
+    expect(page).toBe(3)
+  })
+
+  it('usa la primera página cuando la consulta no la indica', () => {
+    // Arrange
+    const params = new URLSearchParams('operacion=venta')
+
+    // Act
+    const page = parseSearchPage(params)
+
+    // Assert
+    expect(page).toBe(1)
+  })
+
+  it.each(['0', '-2', '2.5', 'abc', ''])('usa la primera página si el valor es "%s"', (value) => {
+    // Arrange
+    const params = new URLSearchParams({ pagina: value })
+
+    // Act
+    const page = parseSearchPage(params)
+
+    // Assert
+    expect(page).toBe(1)
+  })
+
+  it('recupera la página con la que se construyó la URL', () => {
+    // Arrange
+    const url = new URL(buildSearchPath({ type: 'terreno' }, 4), 'https://ejemplo.test')
+
+    // Act
+    const page = parseSearchPage(url.searchParams)
+
+    // Assert
+    expect(page).toBe(4)
   })
 })
 
