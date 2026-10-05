@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { PropertyFilters, PropertyOperation } from '@/features/properties/types/property.types'
 import { buildSearchPath } from '@/features/search/utils/buildSearchQuery'
 
 export const useSearch = (initialFilters: PropertyFilters) => {
   const navigate = useNavigate()
+  const { pathname, search } = useLocation()
   const [filters, setFilters] = useState(initialFilters)
 
   const update = (changes: Partial<PropertyFilters>) => setFilters((current) => ({ ...current, ...changes }))
@@ -13,7 +14,12 @@ export const useSearch = (initialFilters: PropertyFilters) => {
   const changeOperation = (operation: PropertyOperation | undefined) =>
     update({ operation, maxPrice: undefined })
 
-  const submit = () => navigate(buildSearchPath(filters))
+  const submit = () => {
+    const results = buildSearchPath(filters)
+
+    // Repetir la búsqueda que ya se está viendo no apila otra entrada: «atrás» sigue saliendo a la primera.
+    return navigate(results, { replace: results === pathname + search })
+  }
 
   return { filters, update, changeOperation, submit }
 }

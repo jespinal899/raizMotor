@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router-dom'
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { PropertyFilters } from '@/features/properties/types/property.types'
 import { useSearch } from '@/features/search/hooks/useSearch'
@@ -8,7 +8,12 @@ const renderSearch = (initialFilters: PropertyFilters) =>
   renderHook(
     () => {
       const location = useLocation()
-      return { search: useSearch(initialFilters), path: location.pathname + location.search }
+      const navigate = useNavigate()
+      return {
+        search: useSearch(initialFilters),
+        path: location.pathname + location.search,
+        goBack: () => navigate(-1),
+      }
     },
     { wrapper: MemoryRouter },
   )
@@ -61,5 +66,33 @@ describe('useSearch', () => {
 
     // Assert
     expect(result.current.path).toBe('/propiedades/terrenos?operacion=venta&precioMax=100000')
+  })
+
+  it('repetir la misma búsqueda no apila otra entrada en el historial: «atrás» sale de los resultados a la primera', async () => {
+    // Arrange
+    const { result } = renderSearch({ operation: 'venta', type: 'terreno' })
+    const startingPath = result.current.path
+    act(() => result.current.search.submit())
+    act(() => result.current.search.submit())
+
+    // Act
+    await act(() => result.current.goBack())
+
+    // Assert
+    expect(result.current.path).toBe(startingPath)
+  })
+
+  it('una búsqueda distinta sí queda en el historial, para poder volver a la anterior', async () => {
+    // Arrange
+    const { result } = renderSearch({ operation: 'venta', type: 'terreno' })
+    act(() => result.current.search.submit())
+    act(() => result.current.search.update({ location: 'Tela' }))
+    act(() => result.current.search.submit())
+
+    // Act
+    await act(() => result.current.goBack())
+
+    // Assert
+    expect(result.current.path).toBe('/propiedades/terrenos?operacion=venta')
   })
 })
