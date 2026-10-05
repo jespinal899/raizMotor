@@ -1,11 +1,12 @@
 # Arquitectura de DomusRaíz
 
-Este documento describe la arquitectura con el [modelo C4](https://c4model.com/): cuatro niveles que van de lo general a lo concreto, más el despliegue. Refleja el código tal como está en `master`. Si cambias una funcionalidad o un servicio, actualiza el diagrama que lo muestra.
+Este documento describe la arquitectura con el [modelo C4](https://c4model.com/): cuatro niveles que van de lo general a lo concreto, más las reglas de idempotencia y el despliegue. Refleja el código tal como está en `master`. Si cambias una funcionalidad o un servicio, actualiza el diagrama que lo muestra.
 
 - [Nivel 1 · Contexto](#nivel-1--contexto): quién usa el sistema y de qué servicios externos depende.
 - [Nivel 2 · Contenedores](#nivel-2--contenedores): qué piezas se despliegan.
 - [Nivel 3 · Componentes](#nivel-3--componentes-de-la-aplicación-web): cómo se organiza la aplicación web por dentro.
 - [Nivel 4 · Código](#nivel-4--código-las-capas-de-una-funcionalidad): las capas que sigue cada funcionalidad.
+- [Idempotencia](#idempotencia): qué pasa cuando una acción se repite.
 - [Despliegue](#despliegue): cómo llega un cambio al sitio publicado.
 
 ## Cómo leer los diagramas
@@ -187,12 +188,12 @@ La página de publicar se carga de forma diferida, para que la biblioteca del ma
 
 ### Servicios
 
-Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno declara un contrato (`interface`) y elige su implementación en una sola línea, al final del archivo.
+Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno declara un contrato (`interface`) y elige su implementación en una sola línea, al final del archivo. Los que escriben reciben además una [clave de operación](#la-clave-de-operación).
 
 | Servicio | Qué hace hoy |
 | --- | --- |
 | `propertyService` | Devuelve las propiedades de ejemplo desde la memoria, con filtros y paginación. |
-| `geocodingService` | Consulta Nominatim, como mucho una vez por segundo, para situar una dirección. |
+| `geocodingService` | Consulta Nominatim, como mucho una vez por segundo, para situar una dirección, y recuerda las respuestas. |
 | `locationMap` | Encapsula Leaflet: es el único archivo que conoce la biblioteca del mapa. |
 | `publicationService` | Provisional: rechaza con `PublicationUnavailableError`. |
 | `contactService` | Provisional: rechaza con `ContactUnavailableError`. |
@@ -230,6 +231,35 @@ flowchart LR
 - **El hook depende del contrato, no de la implementación.** Recibe el servicio como parámetro con un valor por defecto, y por eso las pruebas pueden pasarle uno falso.
 - **La implementación se elige en un solo sitio.** Por ejemplo, `export const propertyService: PropertyService = createInMemoryPropertyService(PROPERTIES)`. Para conectar una API real se cambia esa línea.
 - **La lógica pura vive en `utils`.** Validaciones, filtros y formatos se prueban sin React.
+
+## Idempotencia
+
+Repetir una acción deja el mismo resultado que hacerla una vez. Vale para quien usa el sitio (doble clic, reintento, recarga) y para quien lo desarrolla (volver a instalar, compilar o desplegar).
+
+| Si se repite… | Qué pasa | Dónde está |
+| --- | --- | --- |
+| Un envío mientras el anterior sigue en curso | Sale una sola petición: el segundo se une al primero. | `src/hooks/useAttempt.ts` |
+| Un envío que ya terminó bien, sin cambiar nada | No se envía otra vez, y el botón queda desactivado hasta que cambie algún dato. | `useAttempt`, `ContactForm`, `PropertyForm` |
+| Un envío que falló | El reintento lleva la misma clave de operación que el intento anterior. | `useAttempt`, `src/shared/utils/operationKey.ts` |
+| La misma búsqueda del catálogo | No apila otra entrada en el historial: «atrás» sale de los resultados a la primera. | `useSearch` |
+| La búsqueda de una misma dirección | No se vuelve a consultar Nominatim. Un fallo no se recuerda, para poder reintentar. | `geocodingService` |
+| Una búsqueda de dirección antes de que termine otra | Cuenta la última pedida, aunque la anterior responda después. | `useAddressSearch` |
+| La misma foto en un anuncio | Se rechaza como duplicada. | `imageFiles` |
+| El cierre del mapa | La segunda vez no hace nada. | `locationMap` |
+| Una lectura del catálogo | Devuelve lo mismo y no cambia nada; las respuestas de peticiones anteriores se descartan. | `propertyService`, `useAsyncData` |
+| La instalación, la compilación o el despliegue | `npm ci` instala exactamente lo que fija `package-lock.json`, dos compilaciones del mismo código producen los mismos archivos y relanzar el pipeline publica lo mismo. | `.github/workflows/ci-cd.yml` |
+
+### La clave de operación
+
+Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: repetidas sin control, dejarían dos cuentas, dos anuncios o dos mensajes. Por eso `register`, `publish` y `send` reciben, junto con los datos, una clave que identifica la operación:
+
+- **Se mantiene al reintentar.** Si un envío falla, o no se sabe si llegó, el reintento lleva la misma clave.
+- **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
+- **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
+
+La clave solo evita duplicados si el servicio la respeta. La implementación real de cada servicio debe guardar la clave junto con el resultado y, si le llega una que ya atendió, devolver ese mismo resultado sin repetir el efecto. Las implementaciones provisionales de hoy rechazan todas las operaciones, así que todavía no hay nada que duplicar.
+
+Iniciar sesión no lleva clave: repetirlo deja la misma sesión.
 
 ## Despliegue
 

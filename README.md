@@ -37,11 +37,11 @@ Necesitas Node.js 24, la versión indicada en `.nvmrc`.
 ```bash
 git clone https://github.com/jespinal899/raizMotor.git
 cd raizMotor
-npm install
+npm ci
 npm run dev
 ```
 
-La aplicación queda en http://localhost:5173.
+La aplicación queda en http://localhost:5173. `npm ci` instala exactamente las versiones de `package-lock.json` y no lo modifica; usa `npm install` solo para añadir o actualizar una dependencia.
 
 ## Comandos
 
@@ -62,6 +62,7 @@ La aplicación es una SPA sin servidor propio, organizada por funcionalidades. E
 - **Contenedores:** el sitio estático en GitHub Pages y la aplicación que se ejecuta en el navegador.
 - **Componentes:** las funcionalidades de `src/features` y cómo se relacionan.
 - **Código:** las capas que sigue cada funcionalidad.
+- **Idempotencia:** qué pasa cuando una acción se repite.
 - **Despliegue:** el recorrido de un cambio hasta el sitio publicado.
 
 ## Estructura del proyecto
@@ -94,6 +95,7 @@ Cada funcionalidad usa, según lo que necesite, las mismas carpetas: `pages`, `c
 - **Código por funcionalidad.** Lo nuevo va en su carpeta de `src/features`. Solo pasa a `src/components`, `src/hooks` o `src/shared` cuando lo usan varias funcionalidades.
 - **Capas.** El componente pinta, el hook decide y el servicio habla con el exterior. La lógica pura vive en `utils`.
 - **Servicios intercambiables.** Cada servicio declara un contrato y elige su implementación en una sola línea. Si el servicio real no existe, la implementación provisional rechaza la operación y la pantalla lo avisa.
+- **Idempotencia.** Repetir una acción no la duplica: un envío en curso o ya hecho no se repite, y toda escritura lleva una clave de operación. Las reglas están en [docs/arquitectura.md](docs/arquitectura.md#idempotencia).
 - **Pruebas primero.** Cada comportamiento se escribe con su prueba, junto al código (`Componente.test.tsx`), con los bloques `// Arrange`, `// Act` y `// Assert` a la vista.
 - **Componentes.** Función flecha con `export default`. Los de interfaz base se añaden con `npx shadcn@latest add <nombre>`.
 - **Idioma.** Identificadores en inglés; textos de la interfaz, comentarios y pruebas en español.
