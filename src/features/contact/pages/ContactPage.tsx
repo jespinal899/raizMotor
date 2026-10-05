@@ -30,7 +30,9 @@ const ContactPage = () => {
             <ContactForm
               key={topic?.id ?? 'general'}
               initialDescription={topic?.defaultDescription}
-              onSubmit={(values) => contactService.send({ ...values, reference: topic?.reference })}
+              onSubmit={(values, operationKey) =>
+                contactService.send({ ...values, reference: topic?.reference }, operationKey)
+              }
             />
           )}
         </div>

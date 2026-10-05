@@ -5,8 +5,11 @@ import { validateRegistration } from '@/features/auth/utils/registerValidation'
 import { toInternationalPhone } from '@/shared/utils/honduranPhone'
 
 interface RegisterFormOptions {
-  /** Se resuelve cuando la cuenta queda creada; quien usa el formulario decide qué pasa después. */
-  onSubmit: (credentials: RegistrationCredentials) => Promise<void>
+  /**
+   * Se resuelve cuando la cuenta queda creada; quien usa el formulario decide qué pasa después.
+   * La clave identifica el registro, para no crear la cuenta dos veces.
+   */
+  onSubmit: (credentials: RegistrationCredentials, operationKey: string) => Promise<void>
   /** Crea la cuenta con la de Google; se resuelve y se rechaza igual que `onSubmit`. */
   onGoogleSignUp: () => Promise<void>
 }
@@ -47,7 +50,7 @@ export const useRegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormOption
   const submit = async () => {
     if (!validateFields()) return
 
-    await attempt('submitting', () => onSubmit(toCredentials(values)))
+    await attempt('submitting', (operationKey) => onSubmit(toCredentials(values), operationKey))
   }
 
   // Google ya conoce el nombre y el correo, así que los campos del formulario no se validan.

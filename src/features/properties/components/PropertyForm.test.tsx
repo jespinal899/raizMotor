@@ -6,6 +6,7 @@ import { createLeafletLocationMap } from '@/features/properties/services/locatio
 import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
 import { buildFakeLocationMap } from '@/test/fakeLocationMap'
+import { anyOperationKey } from '@/test/operationKey'
 import {
   FILLED_PUBLICATION,
   chooseOption,
@@ -304,8 +305,23 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
     await user.click(publishButton())
 
     // Assert
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION)
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION, anyOperationKey())
     expect(await screen.findByText('Tu propiedad se publicó')).toBeInTheDocument()
+  })
+
+  it('una vez publicada no deja publicarla otra vez', async () => {
+    // Arrange
+    const { fakeMap, onSubmit, user } = setup()
+    await fillPublicationForm(user, fakeMap)
+    await user.click(publishButton())
+    await screen.findByText('Tu propiedad se publicó')
+
+    // Act
+    await user.click(publishButton())
+
+    // Assert
+    expect(publishButton()).toBeDisabled()
+    expect(onSubmit).toHaveBeenCalledOnce()
   })
 
   it('mientras publica desactiva el botón para evitar anuncios duplicados', async () => {

@@ -7,6 +7,7 @@ import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 import { MAX_NAME_LENGTH, MIN_PASSWORD_LENGTH } from '@/features/auth/utils/registerValidation'
 import { buildRegistration } from '@/test/factories'
 import { fillRegistrationForm, registrationForm } from '@/test/registrationForm'
+import { anyOperationKey } from '@/test/operationKey'
 
 type Submit = (credentials: RegistrationCredentials) => Promise<void>
 type GoogleSignUp = () => Promise<void>
@@ -72,7 +73,7 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
     // Assert
     expect(screen.getByText('+504')).toBeInTheDocument()
     expect(phone()).toHaveValue('8915-0271')
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(buildRegistration({ phone: '+50489150271' }))
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(buildRegistration({ phone: '+50489150271' }), anyOperationKey())
   })
 
   it('rechaza un teléfono incompleto sin llegar a enviarlo', async () => {
@@ -98,7 +99,7 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
     await user.click(submitButton())
 
     // Assert
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(registration)
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(registration, anyOperationKey())
   })
 
   it('se puede enviar con la tecla Enter desde la contraseña', async () => {

@@ -28,7 +28,7 @@ const RegisterPage = () => {
         description="Este formulario todavía no enviará ni guardará tus datos."
       />
       <RegisterForm
-        onSubmit={(credentials) => enter(() => authService.register(credentials))}
+        onSubmit={(credentials, operationKey) => enter(() => authService.register(credentials, operationKey))}
         // Con Google, registrarse e iniciar sesión son la misma operación: la cuenta se crea al entrar por primera vez.
         onGoogleSignUp={() => enter(() => authService.loginWithGoogle())}
       />

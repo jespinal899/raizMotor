@@ -8,6 +8,7 @@ import {
 } from '@/features/auth/services/authService'
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
 import { buildRegistration } from '@/test/factories'
+import { TEST_OPERATION_KEY } from '@/test/operationKey'
 
 const CREDENTIALS: LoginCredentials = { email: 'ana@gmail.com', password: 'secreta123', remember: false }
 
@@ -84,7 +85,7 @@ describe('crear una cuenta', () => {
     const service = createPendingAuthService()
 
     // Act
-    const registration = service.register(buildRegistration())
+    const registration = service.register(buildRegistration(), TEST_OPERATION_KEY)
 
     // Assert
     await expect(registration).rejects.toBeInstanceOf(RegistrationUnavailableError)
@@ -95,7 +96,7 @@ describe('crear una cuenta', () => {
     const service = authService
 
     // Act
-    const registration = service.register(buildRegistration())
+    const registration = service.register(buildRegistration(), TEST_OPERATION_KEY)
 
     // Assert
     await expect(registration).rejects.toBeInstanceOf(RegistrationUnavailableError)

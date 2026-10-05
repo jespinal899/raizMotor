@@ -14,7 +14,7 @@ import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 import { MAX_NAME_LENGTH, MIN_PASSWORD_LENGTH } from '@/features/auth/utils/registerValidation'
 
 interface RegisterFormProps {
-  onSubmit: (credentials: RegistrationCredentials) => Promise<void>
+  onSubmit: (credentials: RegistrationCredentials, operationKey: string) => Promise<void>
   onGoogleSignUp: () => Promise<void>
 }
 

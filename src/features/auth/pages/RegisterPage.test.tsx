@@ -11,6 +11,7 @@ import { BRAND } from '@/shared/constants/brand'
 import { buildRegistration } from '@/test/factories'
 import { fillRegistrationForm, registrationForm } from '@/test/registrationForm'
 import { renderWithRouter } from '@/test/renderWithRouter'
+import { anyOperationKey } from '@/test/operationKey'
 
 vi.mock('@/features/auth/services/authService', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/auth/services/authService')>()),
@@ -81,7 +82,7 @@ describe('RegisterPage', { timeout: 20_000 }, () => {
     await user.click(submitButton())
 
     // Assert
-    expect(register).toHaveBeenCalledExactlyOnceWith(registration)
+    expect(register).toHaveBeenCalledExactlyOnceWith(registration, anyOperationKey())
     await waitFor(() => expect(currentPath()).toBe('/'))
   })
 

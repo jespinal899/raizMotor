@@ -10,7 +10,7 @@ import type { ContactFormValues } from '@/features/contact/types/contact.types'
 
 interface ContactFormProps {
   initialDescription?: string
-  onSubmit: (values: ContactFormValues) => Promise<void>
+  onSubmit: (values: ContactFormValues, operationKey: string) => Promise<void>
 }
 
 const ContactForm = ({ initialDescription, onSubmit }: ContactFormProps) => {
@@ -87,7 +87,14 @@ const ContactForm = ({ initialDescription, onSubmit }: ContactFormProps) => {
         )}
       </FormField>
 
-      <SubmitButton isSubmitting={isSending} icon={Send} submittingLabel="Enviando…" className="justify-self-start px-5">
+      {/* Ya enviado, repetirlo no mandaría nada: el botón vuelve a activarse al cambiar el mensaje. */}
+      <SubmitButton
+        isSubmitting={isSending}
+        disabled={status === 'sent'}
+        icon={Send}
+        submittingLabel="Enviando…"
+        className="justify-self-start px-5"
+      >
         Enviar mensaje
       </SubmitButton>
 

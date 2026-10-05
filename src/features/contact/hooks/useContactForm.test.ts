@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { useContactForm } from '@/features/contact/hooks/useContactForm'
 import { ContactUnavailableError } from '@/features/contact/services/contactService'
 import type { ContactFormValues } from '@/features/contact/types/contact.types'
+import { deferred } from '@/test/deferred'
+import { anyOperationKey } from '@/test/operationKey'
 
-type Submit = (values: ContactFormValues) => Promise<void>
+type Submit = (values: ContactFormValues, operationKey: string) => Promise<void>
 
 const setup = (onSubmit: Submit = vi.fn(async () => {}), initialDescription?: string) => {
   const view = renderHook(() => useContactForm({ initialDescription, onSubmit }))
@@ -70,7 +72,7 @@ describe('useContactForm', () => {
       email: 'ana@gmail.com',
       phone: '8915-0271',
       description: 'Quiero publicar mi casa.',
-    })
+    }, anyOperationKey())
     expect(result.current.status).toBe('sent')
   })
 
@@ -147,5 +149,81 @@ describe('useContactForm', () => {
 
     // Assert
     expect(result.current.status).toBe('idle')
+  })
+})
+
+describe('useContactForm: repetir el envío no lo duplica', () => {
+  const keysOf = (onSubmit: ReturnType<typeof vi.fn<Submit>>) => onSubmit.mock.calls.map(([, operationKey]) => operationKey)
+
+  it('enviar dos veces seguidas, con el primer envío aún en curso, manda un solo mensaje', async () => {
+    // Arrange
+    const { promise, finish } = deferred()
+    const onSubmit = vi.fn<Submit>(() => promise)
+    const { result } = setup(onSubmit)
+    fillValidForm(result)
+
+    // Act
+    let first: Promise<void> = Promise.resolve()
+    let second: Promise<void> = Promise.resolve()
+    act(() => {
+      first = result.current.submit()
+      second = result.current.submit()
+    })
+    await act(async () => {
+      finish()
+      await Promise.all([first, second])
+    })
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledOnce()
+    expect(result.current.status).toBe('sent')
+  })
+
+  it('una vez hecho, repetirlo sin cambiar nada no manda otro mensaje', async () => {
+    // Arrange
+    const onSubmit = vi.fn<Submit>(async () => {})
+    const { result } = setup(onSubmit)
+    fillValidForm(result)
+    await act(() => result.current.submit())
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledOnce()
+    expect(result.current.status).toBe('sent')
+  })
+
+  it('si después se cambia algún dato, es un mensaje nuevo y lleva otra clave', async () => {
+    // Arrange
+    const onSubmit = vi.fn<Submit>(async () => {})
+    const { result } = setup(onSubmit)
+    fillValidForm(result)
+    await act(() => result.current.submit())
+
+    // Act
+    act(() => result.current.change('description', 'Quiero publicar dos casas.'))
+    await act(() => result.current.submit())
+
+    // Assert
+    const [first, second] = keysOf(onSubmit)
+    expect(onSubmit).toHaveBeenCalledTimes(2)
+    expect(second).not.toBe(first)
+  })
+
+  it('reintentar tras un fallo lleva la misma clave, para que el servicio reconozca el reintento', async () => {
+    // Arrange
+    const onSubmit = vi.fn<Submit>(() => Promise.reject(new Error('sin conexión')))
+    const { result } = setup(onSubmit)
+    fillValidForm(result)
+    await act(() => result.current.submit())
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    const [first, second] = keysOf(onSubmit)
+    expect(onSubmit).toHaveBeenCalledTimes(2)
+    expect(second).toBe(first)
   })
 })

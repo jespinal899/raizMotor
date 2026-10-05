@@ -5,8 +5,9 @@ import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/a
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 import { deferred } from '@/test/deferred'
 import { buildRegistration } from '@/test/factories'
+import { anyOperationKey } from '@/test/operationKey'
 
-type Submit = (credentials: RegistrationCredentials) => Promise<void>
+type Submit = (credentials: RegistrationCredentials, operationKey: string) => Promise<void>
 type GoogleSignUp = () => Promise<void>
 
 interface Handlers {
@@ -76,7 +77,7 @@ describe('useRegisterForm', () => {
       email: 'ana@gmail.com',
       phone: '+50499998888',
       password: ' secreta 123 ',
-    })
+    }, anyOperationKey())
   })
 
   it('mientras se crea la cuenta lo indica, y al terminar bien no deja ningún aviso', async () => {
@@ -177,5 +178,67 @@ describe('useRegisterForm: registrarse con Google', () => {
 
     // Assert
     expect(result.current.status).toBe(status)
+  })
+})
+
+describe('useRegisterForm: repetir no crea dos cuentas', () => {
+  it('enviar dos veces seguidas, con el primer envío aún en curso, pide crear la cuenta una sola vez', async () => {
+    // Arrange
+    const { promise, finish } = deferred()
+    const onSubmit = vi.fn<Submit>(() => promise)
+    const { result } = setup({ onSubmit })
+    fill(result)
+
+    // Act
+    let first: Promise<void> = Promise.resolve()
+    let second: Promise<void> = Promise.resolve()
+    act(() => {
+      first = result.current.submit()
+      second = result.current.submit()
+    })
+    await act(async () => {
+      finish()
+      await Promise.all([first, second])
+    })
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledOnce()
+  })
+
+  it('reintentar tras un fallo lleva la misma clave, para que el servicio reconozca el reintento', async () => {
+    // Arrange
+    const onSubmit = vi.fn<Submit>(() => Promise.reject(new Error('sin conexión')))
+    const { result } = setup({ onSubmit })
+    fill(result)
+    await act(() => result.current.submit())
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    const [[, first], [, second]] = onSubmit.mock.calls
+    expect(second).toBe(first)
+  })
+
+  it('pulsar dos veces el registro con Google abre una sola conexión', async () => {
+    // Arrange
+    const { promise, finish } = deferred()
+    const onGoogleSignUp = vi.fn<GoogleSignUp>(() => promise)
+    const { result } = setup({ onGoogleSignUp })
+
+    // Act
+    let first: Promise<void> = Promise.resolve()
+    let second: Promise<void> = Promise.resolve()
+    act(() => {
+      first = result.current.signUpWithGoogle()
+      second = result.current.signUpWithGoogle()
+    })
+    await act(async () => {
+      finish()
+      await Promise.all([first, second])
+    })
+
+    // Assert
+    expect(onGoogleSignUp).toHaveBeenCalledOnce()
   })
 })

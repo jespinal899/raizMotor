@@ -4,9 +4,11 @@ import { usePublicationForm } from '@/features/properties/hooks/usePublicationFo
 import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
 import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { toPublication } from '@/features/properties/utils/toPublication'
+import { deferred } from '@/test/deferred'
 import { buildPublicationValues } from '@/test/factories'
+import { anyOperationKey } from '@/test/operationKey'
 
-type Submit = (publication: PropertyPublication) => Promise<void>
+type Submit = (publication: PropertyPublication, operationKey: string) => Promise<void>
 type Result = ReturnType<typeof setup>['result']
 
 const setup = (onSubmit: Submit = vi.fn(async () => {})) => {
@@ -81,7 +83,7 @@ describe('usePublicationForm', () => {
     await act(() => result.current.submit())
 
     // Assert
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(toPublication(values))
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(toPublication(values), anyOperationKey())
     expect(result.current.status).toBe('published')
   })
 
@@ -227,5 +229,81 @@ describe('usePublicationForm: durante el envío', () => {
 
     // Assert
     expect(result.current.status).toBe('submitting')
+  })
+})
+
+describe('usePublicationForm: repetir el envío no lo duplica', () => {
+  const keysOf = (onSubmit: ReturnType<typeof vi.fn<Submit>>) => onSubmit.mock.calls.map(([, operationKey]) => operationKey)
+
+  it('enviar dos veces seguidas, con el primer envío aún en curso, publica un solo anuncio', async () => {
+    // Arrange
+    const { promise, finish } = deferred()
+    const onSubmit = vi.fn<Submit>(() => promise)
+    const { result } = setup(onSubmit)
+    fillForm(result)
+
+    // Act
+    let first: Promise<void> = Promise.resolve()
+    let second: Promise<void> = Promise.resolve()
+    act(() => {
+      first = result.current.submit()
+      second = result.current.submit()
+    })
+    await act(async () => {
+      finish()
+      await Promise.all([first, second])
+    })
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledOnce()
+    expect(result.current.status).toBe('published')
+  })
+
+  it('una vez hecho, repetirlo sin cambiar nada no publica otro anuncio', async () => {
+    // Arrange
+    const onSubmit = vi.fn<Submit>(async () => {})
+    const { result } = setup(onSubmit)
+    fillForm(result)
+    await act(() => result.current.submit())
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledOnce()
+    expect(result.current.status).toBe('published')
+  })
+
+  it('si después se cambia algún dato, es otra publicación y lleva otra clave', async () => {
+    // Arrange
+    const onSubmit = vi.fn<Submit>(async () => {})
+    const { result } = setup(onSubmit)
+    fillForm(result)
+    await act(() => result.current.submit())
+
+    // Act
+    setField(result, 'title', 'Casa amplia con patio y cochera')
+    await act(() => result.current.submit())
+
+    // Assert
+    const [first, second] = keysOf(onSubmit)
+    expect(onSubmit).toHaveBeenCalledTimes(2)
+    expect(second).not.toBe(first)
+  })
+
+  it('reintentar tras un fallo lleva la misma clave, para que el servicio reconozca el reintento', async () => {
+    // Arrange
+    const onSubmit = vi.fn<Submit>(() => Promise.reject(new Error('sin conexión')))
+    const { result } = setup(onSubmit)
+    fillForm(result)
+    await act(() => result.current.submit())
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    const [first, second] = keysOf(onSubmit)
+    expect(onSubmit).toHaveBeenCalledTimes(2)
+    expect(second).toBe(first)
   })
 })

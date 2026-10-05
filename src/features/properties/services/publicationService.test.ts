@@ -6,6 +6,7 @@ import {
 } from '@/features/properties/services/publicationService'
 import { toPublication } from '@/features/properties/utils/toPublication'
 import { buildPublicationValues } from '@/test/factories'
+import { TEST_OPERATION_KEY } from '@/test/operationKey'
 
 const PUBLICATION = toPublication(buildPublicationValues())
 
@@ -15,7 +16,7 @@ describe('createPendingPublicationService', () => {
     const service = createPendingPublicationService()
 
     // Act
-    const publishing = service.publish(PUBLICATION)
+    const publishing = service.publish(PUBLICATION, TEST_OPERATION_KEY)
 
     // Assert
     await expect(publishing).rejects.toBeInstanceOf(PublicationUnavailableError)
@@ -41,7 +42,7 @@ describe('publicationService', () => {
     const service = publicationService
 
     // Act
-    const publishing = service.publish(PUBLICATION)
+    const publishing = service.publish(PUBLICATION, TEST_OPERATION_KEY)
 
     // Assert
     await expect(publishing).rejects.toBeInstanceOf(PublicationUnavailableError)

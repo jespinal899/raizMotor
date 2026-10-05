@@ -5,6 +5,7 @@ import {
   createPendingContactService,
 } from '@/features/contact/services/contactService'
 import type { ContactMessage } from '@/features/contact/types/contact.types'
+import { TEST_OPERATION_KEY } from '@/test/operationKey'
 
 const MESSAGE: ContactMessage = {
   name: 'Ana',
@@ -19,7 +20,7 @@ describe('createPendingContactService', () => {
     const service = createPendingContactService()
 
     // Act
-    const sending = service.send(MESSAGE)
+    const sending = service.send(MESSAGE, TEST_OPERATION_KEY)
 
     // Assert
     await expect(sending).rejects.toBeInstanceOf(ContactUnavailableError)
@@ -45,7 +46,7 @@ describe('contactService', () => {
     const service = contactService
 
     // Act
-    const sending = service.send(MESSAGE)
+    const sending = service.send(MESSAGE, TEST_OPERATION_KEY)
 
     // Assert
     await expect(sending).rejects.toBeInstanceOf(ContactUnavailableError)

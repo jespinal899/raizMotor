@@ -22,7 +22,7 @@ import type { StepDirection } from '@/hooks/useSteps'
 import { cn } from '@/lib/utils'
 
 interface PropertyFormProps {
-  onSubmit: (publication: PropertyPublication) => Promise<void>
+  onSubmit: (publication: PropertyPublication, operationKey: string) => Promise<void>
   /** Muestra un aviso breve a la persona; por defecto, uno flotante. */
   notify?: (message: string) => void
 }
@@ -153,6 +153,8 @@ const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) =
           {!awaitsLocation && (
             <SubmitButton
               isSubmitting={status === 'submitting'}
+              // Ya publicada, repetirlo no crearía nada: el botón vuelve a activarse al cambiar algún dato.
+              disabled={screens.isLast && status === 'published'}
               icon={screens.isLast ? Upload : ArrowRight}
               submittingLabel="Publicando…"
               className="px-6"

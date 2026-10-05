@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import ContactForm from '@/features/contact/components/ContactForm'
 import { ContactUnavailableError } from '@/features/contact/services/contactService'
+import { anyOperationKey } from '@/test/operationKey'
 
 const nameField = () => screen.getByRole('textbox', { name: 'Nombre' })
 const emailField = () => screen.getByRole('textbox', { name: 'Correo' })
@@ -61,7 +62,7 @@ describe('ContactForm', () => {
       email: 'ana@gmail.com',
       phone: '',
       description: 'Quiero publicar mi casa.',
-    })
+    }, anyOperationKey())
   })
 
   it('incluye el teléfono cuando se indica', async () => {
@@ -76,7 +77,7 @@ describe('ContactForm', () => {
     await user.click(submitButton())
 
     // Assert
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ phone: '8915-0271' }))
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ phone: '8915-0271' }), anyOperationKey())
   })
 
   it('confirma la recepción cuando el envío termina bien', async () => {
@@ -90,6 +91,25 @@ describe('ContactForm', () => {
 
     // Assert
     expect(await screen.findByRole('status')).toHaveTextContent('Recibimos tu mensaje. Te responderemos pronto.')
+  })
+
+  it('una vez enviado no deja repetir el envío hasta que se cambie el mensaje', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const onSubmit = sent()
+    render(<ContactForm onSubmit={onSubmit} />)
+    await fillRequiredFields(user)
+    await user.click(submitButton())
+    await screen.findByRole('status')
+    const wasDisabledAfterSending = submitButton().hasAttribute('disabled')
+
+    // Act
+    await user.type(descriptionField(), ' Gracias.')
+
+    // Assert
+    expect(wasDisabledAfterSending).toBe(true)
+    expect(submitButton()).toBeEnabled()
+    expect(onSubmit).toHaveBeenCalledOnce()
   })
 
   it('si el correo aún no está configurado lo avisa, sin confirmar ningún envío', async () => {

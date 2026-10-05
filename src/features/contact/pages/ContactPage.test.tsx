@@ -7,6 +7,7 @@ import { propertyService } from '@/features/properties/services/propertyService'
 import { BRAND } from '@/shared/constants/brand'
 import { buildProperty } from '@/test/factories'
 import { renderWithRouter } from '@/test/renderWithRouter'
+import { anyOperationKey } from '@/test/operationKey'
 
 vi.mock('@/features/contact/services/contactService', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/contact/services/contactService')>()),
@@ -65,7 +66,7 @@ describe('ContactPage', () => {
       phone: '',
       description: 'Quiero publicar mi casa.',
       reference: undefined,
-    })
+    }, anyOperationKey())
   })
 
   it('al llegar desde una propiedad la muestra, propone la descripción y envía su enlace', async () => {
@@ -84,6 +85,7 @@ describe('ContactPage', () => {
     expect(description).toHaveValue('Me interesa la propiedad "Casa con jardín" en Barranco, Lima. ¿Sigue disponible?')
     expect(send).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({ reference: `${window.location.origin}/propiedad/casa-1` }),
+      anyOperationKey(),
     )
   })
 

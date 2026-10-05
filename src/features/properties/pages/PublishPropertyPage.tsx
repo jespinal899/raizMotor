@@ -14,7 +14,9 @@ const PublishPropertyPage = () => {
         title="Publica tu propiedad"
         description="Completa los datos del anuncio: ubicación, características, descripción, precio y fotos."
       />
-      <PropertyForm onSubmit={(publication) => publicationService.publish(publication)} />
+      <PropertyForm
+        onSubmit={(publication, operationKey) => publicationService.publish(publication, operationKey)}
+      />
       {/* Avisos flotantes del formulario, como el de la ubicación guardada. */}
       <Toaster />
     </Container>

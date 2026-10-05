@@ -8,6 +8,7 @@ import { BRAND } from '@/shared/constants/brand'
 import { buildFakeLocationMap } from '@/test/fakeLocationMap'
 import { FILLED_PUBLICATION, fillLocationScreen, fillPublicationForm } from '@/test/publicationForm'
 import { renderWithRouter } from '@/test/renderWithRouter'
+import { anyOperationKey } from '@/test/operationKey'
 
 vi.mock('@/features/properties/services/locationMap', () => ({ createLeafletLocationMap: vi.fn() }))
 vi.mock('@/features/properties/services/geocodingService', () => ({
@@ -69,7 +70,7 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
     await user.click(publishButton())
 
     // Assert
-    expect(publish).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION)
+    expect(publish).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION, anyOperationKey())
     expect(await screen.findByText('Tu propiedad se publicó')).toBeInTheDocument()
   })
 

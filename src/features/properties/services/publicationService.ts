@@ -9,8 +9,11 @@ export class PublicationUnavailableError extends Error {
 }
 
 export interface PublicationService {
-  /** Se resuelve cuando el anuncio queda publicado y se rechaza si no se pudo publicar. */
-  publish(publication: PropertyPublication): Promise<void>
+  /**
+   * Se resuelve cuando el anuncio queda publicado y se rechaza si no se pudo publicar. Es idempotente: si
+   * llega dos veces con la misma clave, por un reintento o un doble envío, se publica un solo anuncio.
+   */
+  publish(publication: PropertyPublication, operationKey: string): Promise<void>
 }
 
 /** Implementación provisional mientras no exista el servicio de anuncios: nunca finge una publicación. */

@@ -1,12 +1,13 @@
-import { useState } from 'react'
 import { ContactUnavailableError } from '@/features/contact/services/contactService'
-import type { ContactFormStatus, ContactFormValues } from '@/features/contact/types/contact.types'
+import type { ContactFormValues } from '@/features/contact/types/contact.types'
 import { validateContactForm } from '@/features/contact/utils/contactValidation'
+import { useAttempt } from '@/hooks/useAttempt'
 import { useFormFields } from '@/hooks/useFormFields'
 
 interface ContactFormOptions {
   initialDescription?: string
-  onSubmit: (values: ContactFormValues) => Promise<void>
+  /** Se resuelve cuando el mensaje queda entregado. La clave identifica el envío, para no entregarlo dos veces. */
+  onSubmit: (values: ContactFormValues, operationKey: string) => Promise<void>
 }
 
 const trimValues = (values: ContactFormValues): ContactFormValues => ({
@@ -15,6 +16,8 @@ const trimValues = (values: ContactFormValues): ContactFormValues => ({
   phone: values.phone.trim(),
   description: values.description.trim(),
 })
+
+const toFailureStatus = (reason: unknown) => (reason instanceof ContactUnavailableError ? 'unavailable' : 'failed')
 
 export const useContactForm = ({ initialDescription = '', onSubmit }: ContactFormOptions) => {
   const {
@@ -26,23 +29,21 @@ export const useContactForm = ({ initialDescription = '', onSubmit }: ContactFor
     initialValues: { name: '', email: '', phone: '', description: initialDescription },
     validate: validateContactForm,
   })
-  const [status, setStatus] = useState<ContactFormStatus>('idle')
+  const { status, attempt, reset } = useAttempt<'sending', 'unavailable' | 'failed', 'sent'>({
+    toFailure: toFailureStatus,
+    succeeded: 'sent',
+  })
 
+  // Con un dato distinto es otro mensaje: se retira el aviso del anterior y se podrá enviar de nuevo.
   const change: typeof changeField = (field, value) => {
     changeField(field, value)
-    setStatus('idle')
+    reset()
   }
 
   const submit = async () => {
     if (!validateFields()) return
 
-    setStatus('sending')
-    try {
-      await onSubmit(trimValues(values))
-      setStatus('sent')
-    } catch (reason) {
-      setStatus(reason instanceof ContactUnavailableError ? 'unavailable' : 'failed')
-    }
+    await attempt('sending', (operationKey) => onSubmit(trimValues(values), operationKey))
   }
 
   return { values, errors, status, change, submit }

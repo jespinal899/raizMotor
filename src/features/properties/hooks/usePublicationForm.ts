@@ -1,18 +1,14 @@
-import { useState } from 'react'
 import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
-import type {
-  PropertyPublication,
-  PublicationFormValues,
-  PublicationStatus,
-} from '@/features/properties/types/publication.types'
+import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { ADDRESS_FIELDS } from '@/features/properties/utils/publicationSteps'
 import { validatePublication } from '@/features/properties/utils/publicationValidation'
 import { toPublication } from '@/features/properties/utils/toPublication'
+import { useAttempt } from '@/hooks/useAttempt'
 import { useFormFields } from '@/hooks/useFormFields'
 
 interface PublicationFormOptions {
-  /** Se resuelve cuando el anuncio queda publicado. */
-  onSubmit: (publication: PropertyPublication) => Promise<void>
+  /** Se resuelve cuando el anuncio queda publicado. La clave identifica la publicación, para no crearla dos veces. */
+  onSubmit: (publication: PropertyPublication, operationKey: string) => Promise<void>
 }
 
 const EMPTY_PUBLICATION: PublicationFormValues = {
@@ -32,6 +28,8 @@ const EMPTY_PUBLICATION: PublicationFormValues = {
   price: '',
   images: [],
 }
+
+const toFailureStatus = (reason: unknown) => (reason instanceof PublicationUnavailableError ? 'unavailable' : 'failed')
 
 type PublicationForm = ReturnType<typeof usePublicationForm>
 
@@ -55,7 +53,10 @@ export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {
     change: changeField,
     validateFields,
   } = useFormFields({ initialValues: EMPTY_PUBLICATION, validate: validatePublication })
-  const [status, setStatus] = useState<PublicationStatus>('idle')
+  const { status, attempt, reset } = useAttempt<'submitting', 'unavailable' | 'failed', 'published'>({
+    toFailure: toFailureStatus,
+    succeeded: 'published',
+  })
 
   const change: typeof changeField = (field, value) => {
     changeField(field, value)
@@ -64,19 +65,13 @@ export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {
     // El punto se confirmó para la dirección anterior: hay que volver a buscarla en el mapa.
     if (ADDRESS_FIELDS.includes(field)) changeField('coordinates', null)
     // Editar retira el aviso del intento anterior, pero no reactiva un envío que sigue en curso.
-    setStatus((current) => (current === 'submitting' ? current : 'idle'))
+    reset()
   }
 
   const submit = async () => {
     if (!validateFields()) return
 
-    setStatus('submitting')
-    try {
-      await onSubmit(toPublication(values))
-      setStatus('published')
-    } catch (reason) {
-      setStatus(reason instanceof PublicationUnavailableError ? 'unavailable' : 'failed')
-    }
+    await attempt('submitting', (operationKey) => onSubmit(toPublication(values), operationKey))
   }
 
   return { values, errors, status, change, validate: validateFields, submit }

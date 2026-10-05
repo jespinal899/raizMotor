@@ -184,3 +184,51 @@ describe('useLoginForm: entrar con Google', () => {
     expect(result.current.status).toBe(status)
   })
 })
+
+describe('useLoginForm: repetir no inicia dos sesiones', () => {
+  it('enviar dos veces seguidas, con el primer envío aún en curso, pide entrar una sola vez', async () => {
+    // Arrange
+    const { promise, finish } = deferred()
+    const onSubmit = vi.fn<Submit>(() => promise)
+    const { result } = setup({ onSubmit })
+    fillCredentials(result)
+
+    // Act
+    let first: Promise<void> = Promise.resolve()
+    let second: Promise<void> = Promise.resolve()
+    act(() => {
+      first = result.current.submit()
+      second = result.current.submit()
+    })
+    await act(async () => {
+      finish()
+      await Promise.all([first, second])
+    })
+
+    // Assert
+    expect(onSubmit).toHaveBeenCalledOnce()
+  })
+
+  it('pulsar Google mientras se entra con correo no abre una segunda vía', async () => {
+    // Arrange
+    const { promise, finish } = deferred()
+    const onGoogleSignIn = vi.fn<GoogleSignIn>(async () => {})
+    const { result } = setup({ onSubmit: () => promise, onGoogleSignIn })
+    fillCredentials(result)
+
+    // Act
+    let submission: Promise<void> = Promise.resolve()
+    let connection: Promise<void> = Promise.resolve()
+    act(() => {
+      submission = result.current.submit()
+      connection = result.current.signInWithGoogle()
+    })
+    await act(async () => {
+      finish()
+      await Promise.all([submission, connection])
+    })
+
+    // Assert
+    expect(onGoogleSignIn).not.toHaveBeenCalled()
+  })
+})

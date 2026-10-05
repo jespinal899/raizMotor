@@ -9,8 +9,11 @@ export class ContactUnavailableError extends Error {
 }
 
 export interface ContactService {
-  /** Se resuelve cuando el mensaje se entrega y se rechaza si no se pudo enviar. */
-  send(message: ContactMessage): Promise<void>
+  /**
+   * Se resuelve cuando el mensaje se entrega y se rechaza si no se pudo enviar. Es idempotente: si llega
+   * dos veces con la misma clave, por un reintento o un doble envío, el mensaje se entrega una sola vez.
+   */
+  send(message: ContactMessage, operationKey: string): Promise<void>
 }
 
 /** Implementación provisional mientras no exista el servicio de correo: nunca finge un envío. */

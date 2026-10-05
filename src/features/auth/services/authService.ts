@@ -25,12 +25,15 @@ export class RegistrationUnavailableError extends Error {
 }
 
 export interface AuthService {
-  /** Se resuelve cuando la sesión queda iniciada y se rechaza si no se pudo entrar. */
+  /** Se resuelve cuando la sesión queda iniciada y se rechaza si no se pudo entrar. Repetirlo deja la misma sesión. */
   login(credentials: LoginCredentials): Promise<void>
   /** Inicia sesión con la cuenta de Google de la persona; se resuelve y se rechaza igual que `login`. */
   loginWithGoogle(): Promise<void>
-  /** Se resuelve cuando la cuenta queda creada y se rechaza si no se pudo registrar. */
-  register(credentials: RegistrationCredentials): Promise<void>
+  /**
+   * Se resuelve cuando la cuenta queda creada y se rechaza si no se pudo registrar. Es idempotente: si
+   * llega dos veces con la misma clave, por un reintento o un doble envío, se crea una sola cuenta.
+   */
+  register(credentials: RegistrationCredentials, operationKey: string): Promise<void>
 }
 
 /** Implementación provisional mientras no exista el servicio de cuentas: nunca finge una sesión o un registro. */

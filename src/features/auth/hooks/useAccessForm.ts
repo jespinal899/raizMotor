@@ -20,7 +20,7 @@ export const useAccessForm = <Values extends object, Failure extends string>({
   toFailure,
 }: AccessFormOptions<Values, Failure>) => {
   const { values, errors, change: changeField, validateFields } = useFormFields({ initialValues, validate })
-  const { status, attempt, reset } = useAttempt<AccessInProgress, Failure>(toFailure)
+  const { status, attempt, reset } = useAttempt<AccessInProgress, Failure>({ toFailure })
 
   // El aviso de un intento fallido habla de lo que se envió: al editar, deja de corresponder.
   const change: typeof changeField = (field, value) => {
