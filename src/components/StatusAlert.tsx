@@ -6,11 +6,14 @@ export interface StatusAlertContent {
   title: string
   description: string
   variant?: 'default' | 'destructive'
-  /** `alert` interrumpe para avisar de un problema; `status` informa sin interrumpir. */
-  role?: 'alert' | 'status'
+  /**
+   * `alert` interrumpe para avisar de un problema y `status` informa sin interrumpir. `note` no es un
+   * resultado: es una advertencia que ya está en la página antes de que la persona haga nada.
+   */
+  role?: 'alert' | 'status' | 'note'
 }
 
-/** Resultado de una acción (enviar, entrar, publicar) con título y explicación. */
+/** Aviso con título y explicación: el resultado de una acción (enviar, entrar, publicar) o una nota previa. */
 const StatusAlert = ({ icon: Icon, title, description, variant = 'default', role = 'alert' }: StatusAlertContent) => {
   return (
     <Alert variant={variant} role={role}>

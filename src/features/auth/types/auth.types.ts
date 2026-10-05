@@ -5,6 +5,15 @@ export interface LoginCredentials {
   remember: boolean
 }
 
+export interface RegistrationCredentials {
+  firstName: string
+  lastName: string
+  /** Con él se inicia sesión después. */
+  email: string
+  phone: string
+  password: string
+}
+
 /** Vía por la que se está intentando acceder: `submitting` con el formulario, `connecting` con Google. */
 export type AccessInProgress = 'submitting' | 'connecting'
 
@@ -15,3 +24,8 @@ export type AccessInProgress = 'submitting' | 'connecting'
 export type LoginFailure = 'unavailable' | 'rejected' | 'failed'
 
 export type LoginStatus = 'idle' | AccessInProgress | LoginFailure
+
+/** Por qué no se pudo crear la cuenta: `unavailable` significa que el registro aún no está activo. */
+export type RegistrationFailure = 'unavailable' | 'failed'
+
+export type RegistrationStatus = 'idle' | AccessInProgress | RegistrationFailure

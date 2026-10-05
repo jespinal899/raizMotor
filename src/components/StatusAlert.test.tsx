@@ -40,4 +40,16 @@ describe('StatusAlert', () => {
     // Assert
     expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
   })
+
+  it('una advertencia previa, que no es el resultado de ninguna acción, se presenta como nota', () => {
+    // Arrange
+    const title = 'El registro está en construcción'
+
+    // Act
+    render(<StatusAlert icon={Info} title={title} description="Aún no guarda tus datos." role="note" />)
+
+    // Assert
+    expect(screen.getByRole('note')).toHaveTextContent(title)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
 })

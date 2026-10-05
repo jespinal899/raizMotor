@@ -6,6 +6,8 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_CHARACTERS = /^[\d\s()+-]+$/
 const MIN_PHONE_DIGITS = 8
 const MAX_PHONE_DIGITS = 15
+/** Aviso de un teléfono mal escrito: nombra los mismos límites que comprueba `phone`. */
+export const INVALID_PHONE_MESSAGE = `Escribe un teléfono válido, de ${MIN_PHONE_DIGITS} a ${MAX_PHONE_DIGITS} dígitos.`
 
 export const required =
   (message: string): Validator =>
@@ -16,6 +18,15 @@ export const minLength =
   (min: number, message: string): Validator =>
   (value) =>
     value.trim().length >= min ? undefined : message
+
+/**
+ * Como `minLength`, pero cuenta también los espacios de los extremos. Es la regla de los valores que
+ * se envían tal cual se escriben, como una contraseña: lo que se comprueba es lo mismo que se guarda.
+ */
+export const minCharacters =
+  (min: number, message: string): Validator =>
+  (value) =>
+    value.length >= min ? undefined : message
 
 export const email =
   (message: string): Validator =>

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  INVALID_PHONE_MESSAGE,
   email,
   hasErrors,
   maxLength,
+  minCharacters,
   minLength,
   optional,
   phone,
@@ -250,5 +252,47 @@ describe('wholeNumber', () => {
 
     // Assert
     expect(error).toBe('Debe ser un número entero')
+  })
+})
+
+describe('minCharacters', () => {
+  it('cuenta los espacios de los extremos: en una contraseña son parte de ella', () => {
+    // Arrange
+    const validator = minCharacters(8, 'Muy corta')
+
+    // Act
+    const error = validator('abcdefg ')
+
+    // Assert
+    expect(error).toBeUndefined()
+  })
+
+  it('rechaza un valor con menos caracteres de los pedidos', () => {
+    // Arrange
+    const validator = minCharacters(8, 'Muy corta')
+
+    // Act
+    const error = validator('abcdefg')
+
+    // Assert
+    expect(error).toBe('Muy corta')
+  })
+})
+
+describe('INVALID_PHONE_MESSAGE', () => {
+  it('nombra los mismos límites de dígitos que comprueba el validador', () => {
+    // Arrange
+    const shortest = '1'.repeat(8)
+    const longest = '1'.repeat(15)
+
+    // Act
+    const validator = phone(INVALID_PHONE_MESSAGE)
+
+    // Assert
+    expect(INVALID_PHONE_MESSAGE).toBe('Escribe un teléfono válido, de 8 a 15 dígitos.')
+    expect(validator(shortest)).toBeUndefined()
+    expect(validator(longest)).toBeUndefined()
+    expect(validator(shortest.slice(1))).toBe(INVALID_PHONE_MESSAGE)
+    expect(validator(`${longest}1`)).toBe(INVALID_PHONE_MESSAGE)
   })
 })

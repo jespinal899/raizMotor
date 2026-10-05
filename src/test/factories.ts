@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 import type { PropertyService } from '@/features/properties/services/propertyService'
 import type { Property } from '@/features/properties/types/property.types'
 import type { PublicationFormValues } from '@/features/properties/types/publication.types'
@@ -35,6 +36,16 @@ export const buildPublicationValues = (overrides: Partial<PublicationFormValues>
   operation: 'venta',
   price: '145000',
   images: [buildImageFile()],
+  ...overrides,
+})
+
+/** Datos de registro válidos, tal como salen del formulario. */
+export const buildRegistration = (overrides: Partial<RegistrationCredentials> = {}): RegistrationCredentials => ({
+  firstName: 'Ana',
+  lastName: 'Mejía',
+  email: 'ana@gmail.com',
+  phone: '+504 9999-9999',
+  password: 'secreta123',
   ...overrides,
 })
 
