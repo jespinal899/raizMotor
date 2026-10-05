@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm'
 import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authService'
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
+import { deferred } from '@/test/deferred'
 
 type Submit = (credentials: LoginCredentials) => Promise<void>
 type GoogleSignIn = () => Promise<void>
@@ -23,16 +24,6 @@ const setup = ({
 const fillCredentials = (result: ReturnType<typeof setup>['result']) => {
   act(() => result.current.change('email', 'ana@gmail.com'))
   act(() => result.current.change('password', 'secreta123'))
-}
-
-/** Promesa que la prueba resuelve cuando quiere, para observar el estado mientras está pendiente. */
-const deferred = () => {
-  let finish: () => void = () => {}
-  const promise = new Promise<void>((resolve) => {
-    finish = resolve
-  })
-
-  return { promise, finish }
 }
 
 describe('useLoginForm', () => {

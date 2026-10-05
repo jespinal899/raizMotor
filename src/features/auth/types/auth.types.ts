@@ -5,9 +5,13 @@ export interface LoginCredentials {
   remember: boolean
 }
 
+/** Vía por la que se está intentando acceder: `submitting` con el formulario, `connecting` con Google. */
+export type AccessInProgress = 'submitting' | 'connecting'
+
 /**
- * Estado de un intento de inicio de sesión. Mientras está en curso: `submitting` con correo y
- * contraseña, `connecting` con Google. Si no se pudo entrar: `unavailable` significa que las cuentas
- * aún no están activas y `rejected`, que el correo o la contraseña no son correctos.
+ * Por qué no se pudo iniciar sesión: `unavailable` significa que las cuentas aún no están activas y
+ * `rejected`, que el correo o la contraseña no son correctos.
  */
-export type LoginStatus = 'idle' | 'submitting' | 'connecting' | 'unavailable' | 'rejected' | 'failed'
+export type LoginFailure = 'unavailable' | 'rejected' | 'failed'
+
+export type LoginStatus = 'idle' | AccessInProgress | LoginFailure

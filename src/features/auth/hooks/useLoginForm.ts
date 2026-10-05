@@ -1,8 +1,7 @@
-import { useState } from 'react'
+import { useAccessForm } from '@/features/auth/hooks/useAccessForm'
 import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authService'
-import type { LoginCredentials, LoginStatus } from '@/features/auth/types/auth.types'
+import type { LoginCredentials, LoginFailure } from '@/features/auth/types/auth.types'
 import { validateLogin } from '@/features/auth/utils/loginValidation'
-import { useFormFields } from '@/hooks/useFormFields'
 
 interface LoginFormOptions {
   /** Se resuelve cuando la sesión queda iniciada; quien usa el formulario decide qué pasa después. */
@@ -13,7 +12,7 @@ interface LoginFormOptions {
 
 const EMPTY_CREDENTIALS: LoginCredentials = { email: '', password: '', remember: false }
 
-const toFailureStatus = (reason: unknown): LoginStatus => {
+const toFailureStatus = (reason: unknown): LoginFailure => {
   if (reason instanceof AuthUnavailableError) return 'unavailable'
   if (reason instanceof InvalidCredentialsError) return 'rejected'
 
@@ -21,29 +20,11 @@ const toFailureStatus = (reason: unknown): LoginStatus => {
 }
 
 export const useLoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormOptions) => {
-  const {
-    values,
-    errors,
-    change: changeField,
-    validateFields,
-  } = useFormFields({ initialValues: EMPTY_CREDENTIALS, validate: validateLogin })
-  const [status, setStatus] = useState<LoginStatus>('idle')
-
-  const change: typeof changeField = (field, value) => {
-    changeField(field, value)
-    setStatus('idle')
-  }
-
-  /** Las dos formas de entrar comparten lo que pasa mientras se intenta y cuando falla. */
-  const attempt = async (inProgress: 'submitting' | 'connecting', signIn: () => Promise<void>) => {
-    setStatus(inProgress)
-    try {
-      await signIn()
-      setStatus('idle')
-    } catch (reason) {
-      setStatus(toFailureStatus(reason))
-    }
-  }
+  const { values, errors, status, change, validateFields, attempt } = useAccessForm({
+    initialValues: EMPTY_CREDENTIALS,
+    validate: validateLogin,
+    toFailure: toFailureStatus,
+  })
 
   const submit = async () => {
     if (!validateFields()) return
