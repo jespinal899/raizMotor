@@ -120,42 +120,43 @@ GitHub Pages no reescribe rutas. Por eso el sitio incluye una copia de `index.ht
 La aplicación se organiza por funcionalidades. Cada carpeta de `src/features` reúne sus páginas, componentes, hooks, servicios, tipos y utilidades.
 
 ```mermaid
-%%{init: {"flowchart": {"wrappingWidth": 230}}}%%
+%%{init: {"flowchart": {"wrappingWidth": 190}}}%%
 flowchart TB
     accTitle: Componentes de la aplicación web
-    accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Las funcionalidades usan las piezas compartidas, y Propiedades e Inicio consultan los sistemas externos.
+    accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Inicio usa Búsqueda y Propiedades, Búsqueda usa Propiedades y Contacto usa Propiedades y Planes. Propiedades consulta los sistemas externos. Todas usan las piezas compartidas.
 
     router["<b>Enrutador</b><br/>[React Router]<br/>Asocia cada dirección con su página"]
-    layout["<b>Estructura común</b><br/>[src/components/layout]<br/>Cabecera, menú y pie de todas las páginas"]
+    layout["<b>Estructura común</b><br/>[src/components/layout]<br/>Cabecera, menú y pie"]
 
     subgraph features ["Funcionalidades · src/features"]
         home["<b>Inicio</b> · home<br/>Carrusel, destacadas, Quiénes somos y Cómo funciona"]
-        search["<b>Búsqueda</b> · search<br/>Filtros y resultados paginados"]
-        properties["<b>Propiedades</b> · properties<br/>Catálogo, ficha y formulario de publicar"]
         contact["<b>Contacto</b> · contact<br/>Consulta sobre una propiedad o un plan"]
-        shop["<b>Planes</b> · shop<br/>Planes para cada tipo de anunciante"]
         auth["<b>Acceso</b> · auth<br/>Iniciar sesión, registro y recuperación"]
+        search["<b>Búsqueda</b> · search<br/>Filtros y resultados paginados"]
+        shop["<b>Planes</b> · shop<br/>Planes para cada tipo de anunciante"]
         admin["<b>Administración</b> · admin<br/>Sin implementar"]
-    end
+        properties["<b>Propiedades</b> · properties<br/>Catálogo, ficha y formulario de publicar"]
 
-    shared["<b>Piezas compartidas</b><br/>[src/components, src/hooks, src/shared]<br/>Campos de formulario, interfaz de shadcn/ui, hooks y validadores"]
+        home --> search --> properties
+        home --> properties
+        contact --> shop
+        contact --> properties
+        %% Enlaces invisibles: solo ordenan las cajas en tres columnas para que el diagrama no se ensanche.
+        contact ~~~ search
+        auth ~~~ admin
+    end
 
     tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]"]
     nominatim["<b>Nominatim</b><br/>[Sistema externo]"]
     unsplash["<b>Unsplash</b><br/>[Sistema externo]"]
+    shared["<b>Piezas compartidas</b><br/>[src/components, src/hooks, src/shared]<br/>Las usan todas las funcionalidades: campos de formulario, interfaz de shadcn/ui, hooks y validadores"]
 
     router -- "Envuelve cada página" --> layout
     layout -- "Muestra la página de la dirección" --> features
-    home -- "Muestra el buscador" --> search
-    home -- "Muestra las destacadas" --> properties
-    search -- "Lista el catálogo" --> properties
-    contact -- "Sabe qué propiedad se consulta" --> properties
-    contact -- "Sabe qué plan interesa" --> shop
-    features -- "Usan" --> shared
     properties -- "Mapa" --> tiles
-    properties -- "Buscar dirección" --> nominatim
+    properties -- "Direcciones" --> nominatim
     properties -- "Fotos" --> unsplash
-    home -- "Fotos" --> unsplash
+    nominatim ~~~ shared
 
     classDef componente fill:#cfe3f7,stroke:#1f6fb5,color:#0b2a45
     classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
@@ -165,6 +166,12 @@ flowchart TB
     class admin pendiente
     style features fill:none,stroke:#8c959f,stroke-dasharray:4 4
 ```
+
+Una flecha entre dos funcionalidades significa que la primera usa piezas de la segunda:
+
+- **Inicio** muestra el buscador de Búsqueda y las propiedades destacadas de Propiedades. Las fotos de su carrusel también vienen de Unsplash.
+- **Búsqueda** lista el catálogo de Propiedades.
+- **Contacto** lee de Propiedades y de Planes sobre qué propiedad o plan se consulta.
 
 | Funcionalidad | Carpeta | Páginas | Servicios |
 | --- | --- | --- | --- |
