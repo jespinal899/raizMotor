@@ -1,0 +1,270 @@
+# Arquitectura de DomusRaíz
+
+Este documento describe la arquitectura con el [modelo C4](https://c4model.com/): cuatro niveles que van de lo general a lo concreto, más el despliegue. Refleja el código tal como está en `master`. Si cambias una funcionalidad o un servicio, actualiza el diagrama que lo muestra.
+
+- [Nivel 1 · Contexto](#nivel-1--contexto): quién usa el sistema y de qué servicios externos depende.
+- [Nivel 2 · Contenedores](#nivel-2--contenedores): qué piezas se despliegan.
+- [Nivel 3 · Componentes](#nivel-3--componentes-de-la-aplicación-web): cómo se organiza la aplicación web por dentro.
+- [Nivel 4 · Código](#nivel-4--código-las-capas-de-una-funcionalidad): las capas que sigue cada funcionalidad.
+- [Despliegue](#despliegue): cómo llega un cambio al sitio publicado.
+
+## Cómo leer los diagramas
+
+Los diagramas son de Mermaid, que GitHub dibuja directamente. Usan diagramas de flujo con los colores del modelo C4, porque la notación C4 propia de Mermaid superpone textos y flechas.
+
+```mermaid
+flowchart LR
+    persona(["Persona"]) ~~~ sistema["Sistema"] ~~~ contenedor["Contenedor"] ~~~ componente["Componente"] ~~~ externo["Sistema externo"] ~~~ pendiente["Sin implementar"]
+
+    classDef persona fill:#08304f,stroke:#041d30,color:#fff
+    classDef sistema fill:#0f4c81,stroke:#08304f,color:#fff
+    classDef contenedor fill:#1f6fb5,stroke:#0f4c81,color:#fff
+    classDef componente fill:#cfe3f7,stroke:#1f6fb5,color:#0b2a45
+    classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
+    classDef pendiente fill:#fff,stroke:#6b6b6b,color:#333,stroke-dasharray:6 4
+    class persona persona
+    class sistema sistema
+    class contenedor contenedor
+    class componente componente
+    class externo externo
+    class pendiente pendiente
+```
+
+## Nivel 1 · Contexto
+
+DomusRaíz es una plataforma web inmobiliaria para Honduras. La usan dos tipos de persona y, hoy, depende de tres servicios externos.
+
+```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 260}}}%%
+flowchart TB
+    accTitle: Contexto de DomusRaíz
+    accDescr: El visitante y el anunciante usan DomusRaíz, que a su vez consulta las teselas de OpenStreetMap, el buscador Nominatim y las fotos de Unsplash.
+
+    visitante(["<b>Visitante</b><br/>[Persona]<br/>Busca casas, apartamentos y terrenos, y contacta a quien los anuncia"])
+    anunciante(["<b>Anunciante</b><br/>[Persona]<br/>Propietario, agente o inmobiliaria que publica propiedades"])
+
+    domus["<b>DomusRaíz</b><br/>[Sistema]<br/>Plataforma web para buscar, publicar y contactar propiedades"]
+
+    tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]<br/>Imágenes del mapa donde se marca la ubicación"]
+    nominatim["<b>Nominatim</b><br/>[Sistema externo]<br/>Buscador de direcciones de OpenStreetMap"]
+    unsplash["<b>Unsplash</b><br/>[Sistema externo]<br/>Aloja las fotos del catálogo de ejemplo"]
+
+    visitante -- "Busca propiedades y pide información" --> domus
+    anunciante -- "Publica sus propiedades" --> domus
+    domus -- "Pide las imágenes del mapa [HTTPS]" --> tiles
+    domus -- "Busca la zona de una dirección [HTTPS, JSON]" --> nominatim
+    domus -- "Carga las fotos de ejemplo [HTTPS]" --> unsplash
+
+    classDef persona fill:#08304f,stroke:#041d30,color:#fff
+    classDef sistema fill:#0f4c81,stroke:#08304f,color:#fff
+    classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
+    class visitante,anunciante persona
+    class domus sistema
+    class tiles,nominatim,unsplash externo
+```
+
+Al buscador de direcciones solo se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa.
+
+### Lo que todavía no está conectado
+
+Todavía no hay servidor propio ni base de datos. Estas funciones tienen la interfaz terminada, pero su servicio es provisional: rechaza la operación con un error de "no disponible" y la pantalla lo avisa. Ninguna simula un resultado que no ocurrió.
+
+| Función | Qué falta | Dónde se conecta |
+| --- | --- | --- |
+| Iniciar sesión, registro y acceso con Google | Servicio de cuentas | Última línea de `src/features/auth/services/authService.ts` |
+| Publicar una propiedad | Servicio de anuncios | Última línea de `src/features/properties/services/publicationService.ts` |
+| Enviar el formulario de contacto | Servicio de correo | Última línea de `src/features/contact/services/contactService.ts` |
+| Catálogo real | Hoy se sirven propiedades de ejemplo desde la memoria | Última línea de `src/features/properties/services/propertyService.ts` |
+
+## Nivel 2 · Contenedores
+
+El sistema tiene dos contenedores: el sitio estático que entrega los archivos y la aplicación que se ejecuta en el navegador. El catálogo de ejemplo viaja dentro de la propia aplicación.
+
+```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 280}}}%%
+flowchart TB
+    accTitle: Contenedores de DomusRaíz
+    accDescr: La persona abre el sitio estático de GitHub Pages, que entrega la aplicación web al navegador. La aplicación consulta OpenStreetMap, Nominatim y Unsplash.
+
+    usuario(["<b>Visitante o anunciante</b><br/>[Persona]"])
+
+    subgraph domus ["DomusRaíz [Sistema]"]
+        pages["<b>Sitio estático</b><br/>[Contenedor: GitHub Pages]<br/>Entrega el HTML, el JavaScript y los estilos ya compilados"]
+        spa["<b>Aplicación web</b><br/>[Contenedor: React 19, TypeScript, Vite]<br/>Aplicación de una sola página que se ejecuta en el navegador: catálogo, búsqueda, publicación, contacto y acceso"]
+    end
+
+    tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]"]
+    nominatim["<b>Nominatim</b><br/>[Sistema externo]"]
+    unsplash["<b>Unsplash</b><br/>[Sistema externo]"]
+
+    usuario -- "Abre el sitio [HTTPS]" --> pages
+    pages -- "Entrega la aplicación al navegador" --> spa
+    usuario -- "Navega, busca y rellena formularios" --> spa
+    spa -- "Pide las imágenes del mapa [HTTPS]" --> tiles
+    spa -- "Busca la zona de una dirección [HTTPS, JSON]" --> nominatim
+    spa -- "Carga las fotos de ejemplo [HTTPS]" --> unsplash
+
+    classDef persona fill:#08304f,stroke:#041d30,color:#fff
+    classDef contenedor fill:#1f6fb5,stroke:#0f4c81,color:#fff
+    classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
+    class usuario persona
+    class pages,spa contenedor
+    class tiles,nominatim,unsplash externo
+    style domus fill:none,stroke:#0f4c81,stroke-dasharray:4 4
+```
+
+GitHub Pages no reescribe rutas. Por eso el sitio incluye una copia de `index.html` como `404.html`: al entrar por un enlace directo, como `/propiedades`, Pages devuelve esa copia y la aplicación muestra la página correcta.
+
+## Nivel 3 · Componentes de la aplicación web
+
+La aplicación se organiza por funcionalidades. Cada carpeta de `src/features` reúne sus páginas, componentes, hooks, servicios, tipos y utilidades.
+
+```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 230}}}%%
+flowchart TB
+    accTitle: Componentes de la aplicación web
+    accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Las funcionalidades usan las piezas compartidas, y Propiedades e Inicio consultan los sistemas externos.
+
+    router["<b>Enrutador</b><br/>[React Router]<br/>Asocia cada dirección con su página"]
+    layout["<b>Estructura común</b><br/>[src/components/layout]<br/>Cabecera, menú y pie de todas las páginas"]
+
+    subgraph features ["Funcionalidades · src/features"]
+        home["<b>Inicio</b> · home<br/>Carrusel, destacadas, Quiénes somos y Cómo funciona"]
+        search["<b>Búsqueda</b> · search<br/>Filtros y resultados paginados"]
+        properties["<b>Propiedades</b> · properties<br/>Catálogo, ficha y formulario de publicar"]
+        contact["<b>Contacto</b> · contact<br/>Consulta sobre una propiedad o un plan"]
+        shop["<b>Planes</b> · shop<br/>Planes para cada tipo de anunciante"]
+        auth["<b>Acceso</b> · auth<br/>Iniciar sesión, registro y recuperación"]
+        admin["<b>Administración</b> · admin<br/>Sin implementar"]
+    end
+
+    shared["<b>Piezas compartidas</b><br/>[src/components, src/hooks, src/shared]<br/>Campos de formulario, interfaz de shadcn/ui, hooks y validadores"]
+
+    tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]"]
+    nominatim["<b>Nominatim</b><br/>[Sistema externo]"]
+    unsplash["<b>Unsplash</b><br/>[Sistema externo]"]
+
+    router -- "Envuelve cada página" --> layout
+    layout -- "Muestra la página de la dirección" --> features
+    home -- "Muestra el buscador" --> search
+    home -- "Muestra las destacadas" --> properties
+    search -- "Lista el catálogo" --> properties
+    contact -- "Sabe qué propiedad se consulta" --> properties
+    contact -- "Sabe qué plan interesa" --> shop
+    features -- "Usan" --> shared
+    properties -- "Mapa" --> tiles
+    properties -- "Buscar dirección" --> nominatim
+    properties -- "Fotos" --> unsplash
+    home -- "Fotos" --> unsplash
+
+    classDef componente fill:#cfe3f7,stroke:#1f6fb5,color:#0b2a45
+    classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
+    classDef pendiente fill:#fff,stroke:#6b6b6b,color:#333,stroke-dasharray:6 4
+    class router,layout,home,search,properties,contact,shop,auth,shared componente
+    class tiles,nominatim,unsplash externo
+    class admin pendiente
+    style features fill:none,stroke:#8c959f,stroke-dasharray:4 4
+```
+
+| Funcionalidad | Carpeta | Páginas | Servicios |
+| --- | --- | --- | --- |
+| Inicio | `src/features/home` | `/` (la compone `src/pages/HomePage.tsx`) | Ninguno propio |
+| Búsqueda | `src/features/search` | `/propiedades`, `/propiedades/:tipo` | Usa `propertyService` |
+| Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar` | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
+| Contacto | `src/features/contact` | `/contacto` | `contactService` |
+| Planes | `src/features/shop` | `/planes` | Ninguno |
+| Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena` | `authService` |
+| Administración | `src/features/admin` | Ninguna todavía | Ninguno |
+
+La página de publicar se carga de forma diferida, para que la biblioteca del mapa (Leaflet) no pese en la portada.
+
+### Servicios
+
+Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno declara un contrato (`interface`) y elige su implementación en una sola línea, al final del archivo.
+
+| Servicio | Qué hace hoy |
+| --- | --- |
+| `propertyService` | Devuelve las propiedades de ejemplo desde la memoria, con filtros y paginación. |
+| `geocodingService` | Consulta Nominatim, como mucho una vez por segundo, para situar una dirección. |
+| `locationMap` | Encapsula Leaflet: es el único archivo que conoce la biblioteca del mapa. |
+| `publicationService` | Provisional: rechaza con `PublicationUnavailableError`. |
+| `contactService` | Provisional: rechaza con `ContactUnavailableError`. |
+| `authService` | Provisional: rechaza con `AuthUnavailableError` o `RegistrationUnavailableError`. |
+
+## Nivel 4 · Código: las capas de una funcionalidad
+
+Todas las funcionalidades siguen las mismas capas. El ejemplo es la búsqueda del catálogo.
+
+```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 220}}}%%
+flowchart LR
+    accTitle: Capas de una funcionalidad
+    accDescr: La página compone componentes y llama a un hook. El hook depende del contrato del servicio, que una implementación cumple. Componentes y hooks usan lógica pura.
+
+    page["<b>Página</b><br/>SearchPage<br/>Lee la dirección y compone la pantalla"]
+    component["<b>Componentes</b><br/>SearchResults, PropertyCard<br/>Pintan lo que reciben"]
+    hook["<b>Hook</b><br/>useProperties<br/>Pide los datos y decide el estado"]
+    contract["<b>Contrato</b><br/>interface PropertyService"]
+    impl["<b>Implementación</b><br/>createInMemoryPropertyService<br/>Catálogo de ejemplo"]
+    utils["<b>Lógica pura</b><br/>utils y types<br/>Filtros y formatos, sin React"]
+
+    page --> component
+    page --> hook
+    hook -- "Depende de" --> contract
+    impl -. "Cumple" .-> contract
+    component --> utils
+    hook --> utils
+
+    classDef componente fill:#cfe3f7,stroke:#1f6fb5,color:#0b2a45
+    class page,component,hook,contract,impl,utils componente
+```
+
+- **El componente pinta y el hook decide.** Los componentes no piden datos ni conocen servicios.
+- **El hook depende del contrato, no de la implementación.** Recibe el servicio como parámetro con un valor por defecto, y por eso las pruebas pueden pasarle uno falso.
+- **La implementación se elige en un solo sitio.** Por ejemplo, `export const propertyService: PropertyService = createInMemoryPropertyService(PROPERTIES)`. Para conectar una API real se cambia esa línea.
+- **La lógica pura vive en `utils`.** Validaciones, filtros y formatos se prueban sin React.
+
+## Despliegue
+
+Cada cambio en `master` pasa por el mismo pipeline, definido en `.github/workflows/ci-cd.yml`. Si un paso falla, el sitio publicado no cambia.
+
+```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 170}}}%%
+flowchart TB
+    accTitle: Despliegue de DomusRaíz
+    accDescr: Un push a master activa GitHub Actions, que ejecuta el linter, las pruebas y la compilación, prepara la copia 404 y publica el resultado en GitHub Pages, desde donde lo abre el navegador.
+
+    dev(["<b>Quien desarrolla</b>"])
+    repo["<b>Repositorio</b><br/>GitHub, rama master"]
+
+    subgraph ci ["GitHub Actions · ci-cd.yml"]
+        direction LR
+        lint["<b>Linter</b><br/>oxlint"]
+        test["<b>Pruebas</b><br/>vitest"]
+        build["<b>Compilación</b><br/>tsc y vite build, con la base /raizMotor/"]
+        fallback["<b>Rutas</b><br/>Copia index.html como 404.html"]
+        lint --> test --> build --> fallback
+    end
+
+    pages["<b>GitHub Pages</b><br/>jespinal899.github.io/raizMotor"]
+    browser(["<b>Navegador</b>"])
+
+    dev -- "git push" --> repo
+    repo -- "Activa" --> ci
+    ci -- "Publica dist/" --> pages
+    pages -- "HTTPS" --> browser
+
+    classDef persona fill:#08304f,stroke:#041d30,color:#fff
+    classDef contenedor fill:#1f6fb5,stroke:#0f4c81,color:#fff
+    classDef componente fill:#cfe3f7,stroke:#1f6fb5,color:#0b2a45
+    classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
+    class dev,browser persona
+    class pages contenedor
+    class lint,test,build,fallback componente
+    class repo externo
+    style ci fill:none,stroke:#8c959f,stroke-dasharray:4 4
+```
+
+- **En un pull request** se ejecutan el linter, las pruebas y la compilación, pero no se publica.
+- **El sitio se sirve bajo `/raizMotor/`**, no en la raíz del dominio. La compilación recibe esa base y el enrutador la toma de `import.meta.env.BASE_URL`.
+- **Si GitHub Pages está desactivado** en el repositorio, el pipeline lo avisa y omite la publicación. Se activa en Settings > Pages, con origen "GitHub Actions".
