@@ -10,6 +10,7 @@ export interface RegistrationCredentials {
   lastName: string
   /** Con él se inicia sesión después. */
   email: string
+  /** En el formulario, solo el número local; al enviarlo, completo y sin separadores: +50499999999. */
   phone: string
   password: string
 }

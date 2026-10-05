@@ -41,7 +41,7 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
     expect(lastName()).toHaveAttribute('autocomplete', 'family-name')
     expect(email()).toHaveAttribute('type', 'email')
     expect(phone()).toHaveAttribute('type', 'tel')
-    expect(phone()).toHaveAttribute('autocomplete', 'tel')
+    expect(phone()).toHaveAttribute('autocomplete', 'tel-national')
     expect(password()).toHaveAttribute('type', 'password')
     expect(password()).toHaveAttribute('autocomplete', 'new-password')
     expect(submitButton()).toHaveTextContent('Crear cuenta')
@@ -58,6 +58,34 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
     expect(screen.getByLabelText(passwordLabel)).toHaveAttribute('minlength', String(MIN_PASSWORD_LENGTH))
     expect(firstName()).toHaveAttribute('maxlength', String(MAX_NAME_LENGTH))
     expect(lastName()).toHaveAttribute('maxlength', String(MAX_NAME_LENGTH))
+  })
+
+  it('el teléfono lleva fijo el prefijo de Honduras: solo se escribe el número y se envía completo', async () => {
+    // Arrange
+    const { onSubmit, user } = setup()
+    await fillRegistrationForm(user, buildRegistration({ phone: '' }))
+
+    // Act
+    await user.type(phone(), '89150271')
+    await user.click(submitButton())
+
+    // Assert
+    expect(screen.getByText('+504')).toBeInTheDocument()
+    expect(phone()).toHaveValue('8915-0271')
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith(buildRegistration({ phone: '+50489150271' }))
+  })
+
+  it('rechaza un teléfono incompleto sin llegar a enviarlo', async () => {
+    // Arrange
+    const { onSubmit, user } = setup()
+    await fillRegistrationForm(user, buildRegistration({ phone: '8915' }))
+
+    // Act
+    await user.click(submitButton())
+
+    // Assert
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(phone()).toHaveAccessibleDescription('Escribe los 8 dígitos de tu número.')
   })
 
   it('envía los datos escritos', async () => {

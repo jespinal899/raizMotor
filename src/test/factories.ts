@@ -44,7 +44,7 @@ export const buildRegistration = (overrides: Partial<RegistrationCredentials> = 
   firstName: 'Ana',
   lastName: 'Mejía',
   email: 'ana@gmail.com',
-  phone: '+504 9999-9999',
+  phone: '+50499999999',
   password: 'secreta123',
   ...overrides,
 })

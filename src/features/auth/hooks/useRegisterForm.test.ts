@@ -55,14 +55,14 @@ describe('useRegisterForm', () => {
     expect(result.current.status).toBe('idle')
   })
 
-  it('envía los datos de perfil sin espacios sobrantes y la contraseña tal como se escribió', async () => {
+  it('envía el perfil sin espacios sobrantes, el teléfono con su prefijo y la contraseña tal como se escribió', async () => {
     // Arrange
     const { result, onSubmit } = setup()
     fill(result, {
       firstName: '  Ana ',
       lastName: ' Mejía  ',
       email: ' ana@gmail.com ',
-      phone: ' +504 9999-9999 ',
+      phone: '9999-8888',
       password: ' secreta 123 ',
     })
 
@@ -74,7 +74,7 @@ describe('useRegisterForm', () => {
       firstName: 'Ana',
       lastName: 'Mejía',
       email: 'ana@gmail.com',
-      phone: '+504 9999-9999',
+      phone: '+50499998888',
       password: ' secreta 123 ',
     })
   })
@@ -123,7 +123,7 @@ describe('useRegisterForm', () => {
     await act(() => result.current.submit())
 
     // Act
-    act(() => result.current.change('phone', '+504 8888-8888'))
+    act(() => result.current.change('phone', '8888-8888'))
 
     // Assert
     expect(result.current.status).toBe('idle')

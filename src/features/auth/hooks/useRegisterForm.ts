@@ -2,6 +2,7 @@ import { useAccessForm } from '@/features/auth/hooks/useAccessForm'
 import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/auth/services/authService'
 import type { RegistrationCredentials, RegistrationFailure } from '@/features/auth/types/auth.types'
 import { validateRegistration } from '@/features/auth/utils/registerValidation'
+import { toInternationalPhone } from '@/shared/utils/honduranPhone'
 
 interface RegisterFormOptions {
   /** Se resuelve cuando la cuenta queda creada; quien usa el formulario decide qué pasa después. */
@@ -24,13 +25,16 @@ const isUnavailable = (reason: unknown) =>
 
 const toFailureStatus = (reason: unknown): RegistrationFailure => (isUnavailable(reason) ? 'unavailable' : 'failed')
 
-/** Los datos de perfil se envían sin espacios sobrantes; la contraseña, tal cual: pueden ser parte de ella. */
+/**
+ * Los datos de perfil se envían sin espacios sobrantes y el teléfono, completo: en el formulario solo se
+ * escribe el número local. La contraseña va tal cual: sus espacios pueden ser parte de ella.
+ */
 const toCredentials = (values: RegistrationCredentials): RegistrationCredentials => ({
   ...values,
   firstName: values.firstName.trim(),
   lastName: values.lastName.trim(),
   email: values.email.trim(),
-  phone: values.phone.trim(),
+  phone: toInternationalPhone(values.phone),
 })
 
 export const useRegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormOptions) => {

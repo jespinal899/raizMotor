@@ -68,7 +68,7 @@ describe('validateRegistration', () => {
     expect(errors.lastName).toBe(`El apellido no puede pasar de ${MAX_NAME_LENGTH} caracteres.`)
   })
 
-  it.each(['1234', 'mi teléfono', '+504 9999-9999 ext. 12'])('rechaza el teléfono "%s"', (phone) => {
+  it.each(['9999-8888', '2234-5678', '+504 8915-0271'])('acepta el teléfono de Honduras "%s"', (phone) => {
     // Arrange
     const registration = buildRegistration({ phone })
 
@@ -76,7 +76,29 @@ describe('validateRegistration', () => {
     const errors = validateRegistration(registration)
 
     // Assert
-    expect(errors.phone).toBe('Escribe un teléfono válido, de 8 a 15 dígitos.')
+    expect(errors.phone).toBeUndefined()
+  })
+
+  it('rechaza un teléfono al que le faltan dígitos', () => {
+    // Arrange
+    const registration = buildRegistration({ phone: '9999-888' })
+
+    // Act
+    const errors = validateRegistration(registration)
+
+    // Assert
+    expect(errors.phone).toBe('Escribe los 8 dígitos de tu número.')
+  })
+
+  it('rechaza un teléfono que no empieza como los números de Honduras', () => {
+    // Arrange
+    const registration = buildRegistration({ phone: '1234-5678' })
+
+    // Act
+    const errors = validateRegistration(registration)
+
+    // Assert
+    expect(errors.phone).toBe('Revisa el número: en Honduras empiezan por 2, 3, 7, 8 o 9.')
   })
 
   it('rechaza una contraseña más corta que el mínimo', () => {

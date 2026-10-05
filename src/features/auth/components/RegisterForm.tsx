@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react'
 import { UserPlus } from 'lucide-react'
 import PasswordField from '@/components/PasswordField'
+import PhoneField from '@/components/PhoneField'
 import SubmitButton from '@/components/SubmitButton'
 import TextField from '@/components/TextField'
 import { FieldGroup } from '@/components/ui/field'
@@ -62,13 +63,10 @@ const RegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormProps) => {
           readOnly={isBusy}
         />
 
-        <TextField
+        <PhoneField
           label="Teléfono"
           error={errors.phone}
-          type="tel"
           name="phone"
-          autoComplete="tel"
-          placeholder="+504 9999-9999"
           value={values.phone}
           onChange={(value) => change('phone', value)}
           readOnly={isBusy}
