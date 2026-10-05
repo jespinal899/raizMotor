@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { geocodingService } from '@/features/properties/services/geocodingService'
 import type { GeocodingService } from '@/features/properties/services/geocodingService'
 import type { AddressPrecision, MapView, PublicationFormValues } from '@/features/properties/types/publication.types'
@@ -27,12 +27,18 @@ const ZOOM_BY_PRECISION: Record<AddressPrecision, number> = { neighborhood: 16, 
 /** Busca la dirección en el mapa y la deja lista para que la persona la revise y la confirme. */
 export const useAddressSearch = (locate: GeocodingService['locate'] = geocodingService.locate) => {
   const [search, setSearch] = useState<AddressSearch>({ status: 'idle' })
+  const lastSearch = useRef(0)
 
   const start = async (location: AddressLocation) => {
+    lastSearch.current += 1
+    const searchNumber = lastSearch.current
     setSearch((current) => ({ ...current, status: 'searching' }))
 
     // Si el buscador falla se sigue igual que si no hubiera encontrado nada: el punto se marca a mano.
     const located = await locate(toAddressQuery(location)).catch(() => undefined)
+
+    // Si entretanto se pidió otra búsqueda, esta respuesta llega tarde: manda la última pedida.
+    if (searchNumber !== lastSearch.current) return
 
     const review: AddressReview = located
       ? { precision: located.precision, view: { center: located.point, zoom: ZOOM_BY_PRECISION[located.precision] } }

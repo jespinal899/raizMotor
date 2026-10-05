@@ -37,6 +37,10 @@ const toPoint = (results: unknown): Coordinates | undefined => {
   return Number.isFinite(point.lat) && Number.isFinite(point.lng) ? point : undefined
 }
 
+/** Dos consultas que solo cambian en mayúsculas o en espacios piden lo mismo. */
+const toKey = ({ neighborhood, city, department }: AddressQuery): string =>
+  [neighborhood, city, department].map((part) => part.trim().toLowerCase()).join('|')
+
 /** Buscador de direcciones de OpenStreetMap (Nominatim): gratuito, sin clave y pensado para poco tráfico. */
 export const createNominatimGeocodingService = ({
   fetch: fetchFn = (...request) => fetch(...request),
@@ -58,22 +62,38 @@ export const createNominatimGeocodingService = ({
     return toPoint(await response.json())
   }
 
+  const lookUp = async ({ neighborhood, city, department }: AddressQuery): Promise<LocatedAddress | undefined> => {
+    // De lo más preciso a lo más general. La calle y el número no se envían: el buscador no los conoce en Honduras.
+    const attempts: { place: string[]; precision: AddressPrecision }[] = [
+      { place: [neighborhood, city, department], precision: 'neighborhood' },
+      { place: [city, department], precision: 'city' },
+    ]
+
+    for (const [position, { place, precision }] of attempts.entries()) {
+      if (position > 0) await wait(PAUSE_BETWEEN_SEARCHES)
+
+      const point = await search([...place, COUNTRY].join(', '))
+      if (point) return { point, precision }
+    }
+
+    return undefined
+  }
+
+  /** Respuestas ya pedidas, por consulta: repetir una búsqueda no vuelve a preguntar al buscador. */
+  const known = new Map<string, Promise<LocatedAddress | undefined>>()
+
   return {
-    locate: async ({ neighborhood, city, department }) => {
-      // De lo más preciso a lo más general. La calle y el número no se envían: el buscador no los conoce en Honduras.
-      const attempts: { place: string[]; precision: AddressPrecision }[] = [
-        { place: [neighborhood, city, department], precision: 'neighborhood' },
-        { place: [city, department], precision: 'city' },
-      ]
+    locate: (query) => {
+      const key = toKey(query)
+      const remembered = known.get(key)
+      if (remembered) return remembered
 
-      for (const [position, { place, precision }] of attempts.entries()) {
-        if (position > 0) await wait(PAUSE_BETWEEN_SEARCHES)
+      const lookup = lookUp(query)
+      known.set(key, lookup)
+      // Un fallo no es una respuesta: no se recuerda, para que repetir la búsqueda lo intente de nuevo.
+      lookup.catch(() => known.delete(key))
 
-        const point = await search([...place, COUNTRY].join(', '))
-        if (point) return { point, precision }
-      }
-
-      return undefined
+      return lookup
     },
   }
 }

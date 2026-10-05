@@ -123,4 +123,35 @@ describe('useAddressSearch', () => {
     expect(result.current.search.status).toBe('idle')
     expect(result.current.search.review).toEqual(shown)
   })
+
+  it('si se lanza otra búsqueda antes de que termine la anterior, se muestra la última pedida aunque responda antes', async () => {
+    // Arrange
+    const answers: ((point: { lat: number; lng: number }) => void)[] = []
+    const locate = vi.fn<Locate>(
+      () =>
+        new Promise((resolve) => {
+          answers.push((point) => resolve({ point, precision: 'neighborhood' }))
+        }),
+    )
+    const { result } = setup(locate)
+    const lastAsked = { lat: 15.5042, lng: -88.025 }
+    let first: Promise<void> = Promise.resolve()
+    let second: Promise<void> = Promise.resolve()
+    act(() => {
+      first = result.current.start(LOCATION)
+      second = result.current.start({ ...LOCATION, neighborhood: 'Colonia Kennedy' })
+    })
+
+    // Act: la segunda responde primero y la primera, ya anticuada, llega después
+    await act(async () => {
+      answers[1](lastAsked)
+      await second
+      answers[0]({ lat: 14.1021, lng: -87.1897 })
+      await first
+    })
+
+    // Assert
+    expect(result.current.search.status).toBe('reviewing')
+    expect(result.current.search.review?.view.center).toEqual(lastAsked)
+  })
 })
