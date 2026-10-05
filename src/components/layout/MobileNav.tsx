@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Menu, Plus } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import ButtonLink from '@/components/ButtonLink'
 import Logo from '@/components/layout/Logo'
 import NavLabel from '@/components/layout/NavLabel'
@@ -61,6 +61,11 @@ const MobileNav = ({ className }: MobileNavProps) => {
               </li>
             ))}
           </ul>
+
+          {/* Es una sección de la portada, no una página: por eso no usa `NavLink`. */}
+          <Link to={NAV.about.to} onClick={close} className={linkStyle}>
+            <NavLabel>{NAV.about.label}</NavLabel>
+          </Link>
 
           <NavLink to={NAV.contact.to} onClick={close} className={linkStyle}>
             <NavLabel>{NAV.contact.label}</NavLabel>

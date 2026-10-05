@@ -74,6 +74,13 @@ const DesktopNav = ({ className }: DesktopNavProps) => {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
+          {/* Es una sección de la portada, no una página: con `NavLink` se marcaría como actual en todo el inicio. */}
+          <NavigationMenuLink render={<Link to={NAV.about.to} />} className={itemStyle}>
+            <NavLabel>{NAV.about.label}</NavLabel>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
           <NavigationMenuLink render={<NavLink to={NAV.contact.to} />} className={itemStyle}>
             <NavLabel>{NAV.contact.label}</NavLabel>
           </NavigationMenuLink>

@@ -1,5 +1,6 @@
 /** Identificadores de secciones a las que se puede enlazar dentro de una página. */
 export const SECTION_IDS = {
+  about: 'quienes-somos',
   howItWorks: 'como-funciona',
 } as const
 
@@ -14,6 +15,7 @@ export const ROUTES = {
   forgotPassword: '/recuperar-contrasena',
   publish: '/publicar',
   pricing: '/planes',
+  about: `/#${SECTION_IDS.about}`,
   howItWorks: `/#${SECTION_IDS.howItWorks}`,
 } as const
 

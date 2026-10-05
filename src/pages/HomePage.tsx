@@ -1,4 +1,5 @@
 import Container from '@/components/layout/Container'
+import AboutUs from '@/features/home/components/AboutUs'
 import FeaturedProperties from '@/features/home/components/FeaturedProperties'
 import HeroCarousel from '@/features/home/components/HeroCarousel'
 import HowItWorks from '@/features/home/components/HowItWorks'
@@ -14,6 +15,7 @@ const HomePage = () => {
         </Container>
       </div>
       <FeaturedProperties />
+      <AboutUs />
       <HowItWorks />
     </>
   )

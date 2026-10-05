@@ -45,6 +45,7 @@ describe('Footer', () => {
 
     // Assert
     expect(linksOf('Plataforma')).toEqual([
+      'Quiénes somos → /#quienes-somos',
       'Cómo funciona → /#como-funciona',
       'Planes → /planes',
       'Publicar → /publicar',

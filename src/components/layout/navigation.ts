@@ -25,6 +25,7 @@ export const NAV = {
   login: { label: 'Iniciar sesión', to: ROUTES.login },
   publish: { label: 'Publicar', to: ROUTES.publish },
   pricing: { label: 'Planes', to: ROUTES.pricing },
+  about: { label: 'Quiénes somos', to: ROUTES.about },
   howItWorks: { label: 'Cómo funciona', to: ROUTES.howItWorks },
 } satisfies Record<string, NavItem>
 
@@ -51,6 +52,6 @@ export const FOOTER_SECTIONS: FooterSection[] = [
       ...PROPERTY_CATEGORIES.map(({ label, to }) => ({ label, to })),
     ],
   },
-  { title: 'Plataforma', links: [NAV.howItWorks, NAV.pricing, NAV.publish] },
+  { title: 'Plataforma', links: [NAV.about, NAV.howItWorks, NAV.pricing, NAV.publish] },
   { title: 'Ayuda', links: [NAV.contact, NAV.login] },
 ]
