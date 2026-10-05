@@ -43,6 +43,7 @@ export const createLeafletLocationMap: CreateLocationMap = (container, { markerL
 
   let pin: Marker | undefined
   let isPannedByKeyboard = false
+  let isDestroyed = false
 
   const reportMove = () => {
     if (!pin) return
@@ -99,6 +100,10 @@ export const createLeafletLocationMap: CreateLocationMap = (container, { markerL
       placeMarker(point)
     },
     destroy: () => {
+      // Repetirlo no hace nada: Leaflet falla si se le pide retirar dos veces el mismo mapa.
+      if (isDestroyed) return
+      isDestroyed = true
+
       container.removeEventListener('keydown', handleKeyDown)
       container.removeEventListener('pointerdown', handlePointerDown)
       leafletMap.remove()

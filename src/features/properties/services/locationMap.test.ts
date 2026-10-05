@@ -134,4 +134,17 @@ describe('createLeafletLocationMap', () => {
     // Assert
     expect(container).toBeEmptyDOMElement()
   })
+
+  it('destruirlo dos veces no falla: la segunda no tiene nada que retirar', () => {
+    // Arrange
+    const { container, map } = setup()
+    map.destroy()
+
+    // Act
+    const destroyAgain = () => map.destroy()
+
+    // Assert
+    expect(destroyAgain).not.toThrow()
+    expect(container).toBeEmptyDOMElement()
+  })
 })
