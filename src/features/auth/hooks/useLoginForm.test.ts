@@ -5,15 +5,34 @@ import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/s
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
 
 type Submit = (credentials: LoginCredentials) => Promise<void>
+type GoogleSignIn = () => Promise<void>
 
-const setup = (onSubmit: Submit = vi.fn(async () => {})) => {
-  const view = renderHook(() => useLoginForm({ onSubmit }))
-  return { onSubmit, ...view }
+interface Handlers {
+  onSubmit?: Submit
+  onGoogleSignIn?: GoogleSignIn
+}
+
+const setup = ({
+  onSubmit = vi.fn<Submit>(async () => {}),
+  onGoogleSignIn = vi.fn<GoogleSignIn>(async () => {}),
+}: Handlers = {}) => {
+  const view = renderHook(() => useLoginForm({ onSubmit, onGoogleSignIn }))
+  return { onSubmit, onGoogleSignIn, ...view }
 }
 
 const fillCredentials = (result: ReturnType<typeof setup>['result']) => {
   act(() => result.current.change('email', 'ana@gmail.com'))
   act(() => result.current.change('password', 'secreta123'))
+}
+
+/** Promesa que la prueba resuelve cuando quiere, para observar el estado mientras está pendiente. */
+const deferred = () => {
+  let finish: () => void = () => {}
+  const promise = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+
+  return { promise, finish }
 }
 
 describe('useLoginForm', () => {
@@ -62,11 +81,8 @@ describe('useLoginForm', () => {
 
   it('mientras el inicio de sesión está en curso lo indica, y al terminar bien no deja ningún aviso', async () => {
     // Arrange
-    let finish: () => void = () => {}
-    const pending = new Promise<void>((resolve) => {
-      finish = resolve
-    })
-    const { result } = setup(() => pending)
+    const { promise, finish } = deferred()
+    const { result } = setup({ onSubmit: () => promise })
     fillCredentials(result)
 
     // Act
@@ -91,7 +107,7 @@ describe('useLoginForm', () => {
     { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
   ])('queda como "$status" cuando $when', async ({ reason, status }) => {
     // Arrange
-    const { result } = setup(() => Promise.reject(reason))
+    const { result } = setup({ onSubmit: () => Promise.reject(reason) })
     fillCredentials(result)
 
     // Act
@@ -116,7 +132,7 @@ describe('useLoginForm', () => {
 
   it('al editar después de un intento fallido retira el aviso', async () => {
     // Arrange
-    const { result } = setup(() => Promise.reject(new InvalidCredentialsError()))
+    const { result } = setup({ onSubmit: () => Promise.reject(new InvalidCredentialsError()) })
     fillCredentials(result)
     await act(() => result.current.submit())
 
@@ -125,5 +141,55 @@ describe('useLoginForm', () => {
 
     // Assert
     expect(result.current.status).toBe('idle')
+  })
+})
+
+describe('useLoginForm: entrar con Google', () => {
+  it('no exige correo ni contraseña, ni los marca como errores', async () => {
+    // Arrange
+    const { result, onGoogleSignIn, onSubmit } = setup()
+
+    // Act
+    await act(() => result.current.signInWithGoogle())
+
+    // Assert
+    expect(onGoogleSignIn).toHaveBeenCalledOnce()
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(result.current.errors).toEqual({})
+  })
+
+  it('mientras conecta con Google lo indica, y al terminar bien no deja ningún aviso', async () => {
+    // Arrange
+    const { promise, finish } = deferred()
+    const { result } = setup({ onGoogleSignIn: () => promise })
+
+    // Act
+    let connection: Promise<void> = Promise.resolve()
+    act(() => {
+      connection = result.current.signInWithGoogle()
+    })
+    const statusWhileConnecting = result.current.status
+    await act(async () => {
+      finish()
+      await connection
+    })
+
+    // Assert
+    expect(statusWhileConnecting).toBe('connecting')
+    expect(result.current.status).toBe('idle')
+  })
+
+  it.each([
+    { reason: new AuthUnavailableError(), status: 'unavailable', when: 'el acceso con Google aún no está activo' },
+    { reason: new Error('ventana cerrada'), status: 'failed', when: 'ocurre cualquier otro error' },
+  ])('queda como "$status" cuando $when', async ({ reason, status }) => {
+    // Arrange
+    const { result } = setup({ onGoogleSignIn: () => Promise.reject(reason) })
+
+    // Act
+    await act(() => result.current.signInWithGoogle())
+
+    // Assert
+    expect(result.current.status).toBe(status)
   })
 })

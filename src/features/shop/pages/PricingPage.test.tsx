@@ -46,6 +46,7 @@ describe('PricingPage', () => {
 
     // Assert
     expect(screen.getByRole('link', { name: helpLink })).toHaveAttribute('href', '/contacto')
+    expect(screen.getByText(/¿No sabes cuál te conviene\?/)).toHaveTextContent(`¿No sabes cuál te conviene? ${helpLink}`)
     expect(document.title).toBe(`Planes | ${BRAND.name}`)
   })
 })

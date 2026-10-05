@@ -37,3 +37,20 @@ describe('SubmitButton', () => {
     expect(button.querySelector('.animate-spin')).not.toBeNull()
   })
 })
+
+describe('SubmitButton desactivado', () => {
+  it('se puede desactivar aunque no esté enviando, mientras otra acción del formulario está en curso', () => {
+    // Arrange
+    const disabled = true
+
+    // Act
+    render(
+      <SubmitButton isSubmitting={false} disabled={disabled} icon={Send} submittingLabel="Enviando…">
+        Enviar mensaje
+      </SubmitButton>,
+    )
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Enviar mensaje' })).toBeDisabled()
+  })
+})

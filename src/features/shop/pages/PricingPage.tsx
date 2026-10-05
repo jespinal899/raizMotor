@@ -1,5 +1,5 @@
-import ButtonLink from '@/components/ButtonLink'
 import PageHeader from '@/components/PageHeader'
+import TextLink from '@/components/TextLink'
 import Container from '@/components/layout/Container'
 import PlanList from '@/features/shop/components/PlanList'
 import { PLANS } from '@/features/shop/data/plans.data'
@@ -19,10 +19,8 @@ const PricingPage = () => {
       <PlanList plans={PLANS} />
 
       <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-        ¿No sabes cuál te conviene?
-        <ButtonLink to={ROUTES.contact} variant="link" className="h-auto p-0">
-          Escríbenos y te ayudamos a elegir
-        </ButtonLink>
+        ¿No sabes cuál te conviene?{' '}
+        <TextLink to={ROUTES.contact}>Escríbenos y te ayudamos a elegir</TextLink>
       </p>
     </Container>
   )

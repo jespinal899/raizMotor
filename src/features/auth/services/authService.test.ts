@@ -50,3 +50,27 @@ describe('authService', () => {
     await expect(login).rejects.toBeInstanceOf(AuthUnavailableError)
   })
 })
+
+describe('entrar con Google', () => {
+  it('el servicio provisional lo rechaza indicando que aún no está configurado, en lugar de fingirlo', async () => {
+    // Arrange
+    const service = createPendingAuthService()
+
+    // Act
+    const login = service.loginWithGoogle()
+
+    // Assert
+    await expect(login).rejects.toBeInstanceOf(AuthUnavailableError)
+  })
+
+  it('mientras no existan las cuentas, el servicio de la aplicación tampoco inicia sesión con Google', async () => {
+    // Arrange
+    const service = authService
+
+    // Act
+    const login = service.loginWithGoogle()
+
+    // Assert
+    await expect(login).rejects.toBeInstanceOf(AuthUnavailableError)
+  })
+})

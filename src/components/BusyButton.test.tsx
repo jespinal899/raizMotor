@@ -41,3 +41,20 @@ describe('BusyButton', () => {
     expect(button.querySelector('.animate-spin')).not.toBeNull()
   })
 })
+
+describe('BusyButton desactivado', () => {
+  it('se puede desactivar aunque no esté trabajando, por ejemplo mientras otra acción está en curso', () => {
+    // Arrange
+    const disabled = true
+
+    // Act
+    render(
+      <BusyButton isBusy={false} disabled={disabled} icon={Search} busyLabel="Buscando…">
+        Buscar dirección
+      </BusyButton>,
+    )
+
+    // Assert
+    expect(screen.getByRole('button', { name: 'Buscar dirección' })).toBeDisabled()
+  })
+})

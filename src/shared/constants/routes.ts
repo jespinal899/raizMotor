@@ -10,6 +10,8 @@ export const ROUTES = {
   propertyDetail: '/propiedad/:id',
   contact: '/contacto',
   login: '/iniciar-sesion',
+  register: '/registro',
+  forgotPassword: '/recuperar-contrasena',
   publish: '/publicar',
   pricing: '/planes',
   howItWorks: `/#${SECTION_IDS.howItWorks}`,

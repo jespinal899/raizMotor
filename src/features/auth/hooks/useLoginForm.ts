@@ -7,6 +7,8 @@ import { useFormFields } from '@/hooks/useFormFields'
 interface LoginFormOptions {
   /** Se resuelve cuando la sesión queda iniciada; quien usa el formulario decide qué pasa después. */
   onSubmit: (credentials: LoginCredentials) => Promise<void>
+  /** Inicia sesión con Google; se resuelve y se rechaza igual que `onSubmit`. */
+  onGoogleSignIn: () => Promise<void>
 }
 
 const EMPTY_CREDENTIALS: LoginCredentials = { email: '', password: '', remember: false }
@@ -18,7 +20,7 @@ const toFailureStatus = (reason: unknown): LoginStatus => {
   return 'failed'
 }
 
-export const useLoginForm = ({ onSubmit }: LoginFormOptions) => {
+export const useLoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormOptions) => {
   const {
     values,
     errors,
@@ -32,18 +34,26 @@ export const useLoginForm = ({ onSubmit }: LoginFormOptions) => {
     setStatus('idle')
   }
 
-  const submit = async () => {
-    if (!validateFields()) return
-
-    setStatus('submitting')
+  /** Las dos formas de entrar comparten lo que pasa mientras se intenta y cuando falla. */
+  const attempt = async (inProgress: 'submitting' | 'connecting', signIn: () => Promise<void>) => {
+    setStatus(inProgress)
     try {
-      // La contraseña se envía tal cual: sus espacios pueden ser parte de ella.
-      await onSubmit({ ...values, email: values.email.trim() })
+      await signIn()
       setStatus('idle')
     } catch (reason) {
       setStatus(toFailureStatus(reason))
     }
   }
 
-  return { values, errors, status, change, submit }
+  const submit = async () => {
+    if (!validateFields()) return
+
+    // La contraseña se envía tal cual: sus espacios pueden ser parte de ella.
+    await attempt('submitting', () => onSubmit({ ...values, email: values.email.trim() }))
+  }
+
+  // Con Google no hacen falta el correo ni la contraseña, así que no se validan.
+  const signInWithGoogle = () => attempt('connecting', onGoogleSignIn)
+
+  return { values, errors, status, change, submit, signInWithGoogle }
 }
