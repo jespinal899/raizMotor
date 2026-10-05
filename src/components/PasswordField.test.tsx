@@ -66,4 +66,16 @@ describe('PasswordField', () => {
     // Assert
     expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'text')
   })
+
+  it('admite un enlace junto a la etiqueta, como el de recuperar la contraseña', () => {
+    // Arrange
+    const action = <a href="/recuperar-contrasena">Olvidé mi contraseña</a>
+
+    // Act
+    render(<PasswordField label="Contraseña" labelAction={action} value="" onChange={vi.fn()} />)
+
+    // Assert
+    expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password')
+    expect(screen.getByRole('link', { name: 'Olvidé mi contraseña' })).toBeInTheDocument()
+  })
 })

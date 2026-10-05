@@ -186,6 +186,18 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
 })
 
 describe('RegisterForm: registrarse con Google', () => {
+  it('lo presenta como la otra forma de continuar, sin enviar el formulario', () => {
+    // Arrange: formulario recién abierto
+
+    // Act
+    setup()
+
+    // Assert
+    expect(screen.getByText('O continúa con')).toBeInTheDocument()
+    expect(googleButton()).toHaveTextContent('Registrarse con Google')
+    expect(googleButton()).toHaveAttribute('type', 'button')
+  })
+
   it('lo ofrece como alternativa y no pide rellenar el formulario', async () => {
     // Arrange
     const { onGoogleSignUp, onSubmit, user } = setup()

@@ -15,19 +15,31 @@ interface FormFieldProps {
   label: string
   /** Aclaración junto a la etiqueta, p. ej. "opcional". */
   hint?: string
+  /** Enlace a la derecha de la etiqueta, p. ej. "Olvidé mi contraseña". Va fuera de ella: no cambia el nombre del campo. */
+  labelAction?: ReactNode
   error?: string
   children: (control: FormControlProps) => ReactNode
 }
 
-const FormField = ({ label, hint, error, children }: FormFieldProps) => {
+const FormField = ({ label, hint, labelAction, error, children }: FormFieldProps) => {
   const id = useId()
   const errorId = `${id}-error`
+  const caption = (
+    <Label htmlFor={id}>
+      <FieldCaption label={label} hint={hint} />
+    </Label>
+  )
 
   return (
     <div className="grid content-start gap-2">
-      <Label htmlFor={id}>
-        <FieldCaption label={label} hint={hint} />
-      </Label>
+      {labelAction ? (
+        <div className="flex items-center justify-between gap-3">
+          {caption}
+          {labelAction}
+        </div>
+      ) : (
+        caption
+      )}
       {children({ id, 'aria-invalid': Boolean(error), 'aria-describedby': error ? errorId : undefined })}
       <FieldError id={errorId} message={error} />
     </div>

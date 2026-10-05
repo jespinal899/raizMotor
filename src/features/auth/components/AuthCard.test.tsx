@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import { LogIn } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
 import AuthCard from '@/features/auth/components/AuthCard'
 import { renderWithRouter } from '@/test/renderWithRouter'
@@ -9,7 +8,6 @@ const ALTERNATIVE = { question: '¿No tienes cuenta?', action: 'Regístrate', to
 const renderCard = () =>
   renderWithRouter(
     <AuthCard
-      icon={LogIn}
       title="¡Bienvenido!"
       description="Inicia sesión para gestionar tus propiedades."
       alternative={ALTERNATIVE}
@@ -31,7 +29,7 @@ describe('AuthCard', () => {
     expect(screen.getByRole('textbox', { name: 'Correo' })).toBeInTheDocument()
   })
 
-  it('ofrece al pie la otra pantalla, con la pregunta y el enlace separados por un espacio', () => {
+  it('ofrece la otra pantalla debajo del contenido, con la pregunta y el enlace separados por un espacio', () => {
     // Arrange
     const { question, action, to } = ALTERNATIVE
 
@@ -43,13 +41,28 @@ describe('AuthCard', () => {
     expect(screen.getByRole('link', { name: action })).toHaveAttribute('href', to)
   })
 
-  it('el icono de la cabecera es decorativo', () => {
-    // Arrange: tarjeta con su icono
+  it('acompaña el contenido con una foto decorativa, que los lectores de pantalla no anuncian', () => {
+    // Arrange: tarjeta con su foto lateral
 
     // Act
     const { container } = renderCard()
 
     // Assert
-    expect(container.querySelector('[data-slot="card-header"] svg')).toHaveAttribute('aria-hidden', 'true')
+    expect(container.querySelector('img')).toHaveAttribute('alt', '')
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('solo pide la foto desde el ancho en que se muestra: en móviles no gasta datos en ella', () => {
+    // Arrange
+    const widthFromWhichItShows = '(min-width: 768px)'
+
+    // Act
+    const { container } = renderCard()
+
+    // Assert
+    const source = container.querySelector('picture source')
+    expect(source).toHaveAttribute('media', widthFromWhichItShows)
+    expect(source).toHaveAttribute('srcset', expect.stringContaining('https://'))
+    expect(container.querySelector('picture img')).toHaveAttribute('src', expect.stringMatching(/^data:image\//))
   })
 })

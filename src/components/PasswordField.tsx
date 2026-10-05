@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import FormField from '@/components/FormField'
 import PasswordInput from '@/components/PasswordInput'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,8 @@ interface PasswordFieldProps extends InputProps {
   label: string
   /** Regla que debe cumplir, p. ej. "mínimo 8 caracteres". */
   hint?: string
+  /** Enlace a la derecha de la etiqueta, p. ej. el de recuperar la contraseña. */
+  labelAction?: ReactNode
   error?: string
   value: string
   /** Recibe el texto escrito, no el evento. */
@@ -19,9 +21,17 @@ interface PasswordFieldProps extends InputProps {
 }
 
 /** Campo de contraseña con su etiqueta y su error, del mismo alto que `TextField`. */
-const PasswordField = ({ label, hint, error, onChange, className, ...inputProps }: PasswordFieldProps) => {
+const PasswordField = ({
+  label,
+  hint,
+  labelAction,
+  error,
+  onChange,
+  className,
+  ...inputProps
+}: PasswordFieldProps) => {
   return (
-    <FormField label={label} hint={hint} error={error}>
+    <FormField label={label} hint={hint} labelAction={labelAction} error={error}>
       {(control) => (
         <PasswordInput
           {...inputProps}

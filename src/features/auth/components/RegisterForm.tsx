@@ -2,8 +2,9 @@ import type { FormEvent } from 'react'
 import { UserPlus } from 'lucide-react'
 import PasswordField from '@/components/PasswordField'
 import SubmitButton from '@/components/SubmitButton'
-import TextDivider from '@/components/TextDivider'
 import TextField from '@/components/TextField'
+import { FieldGroup } from '@/components/ui/field'
+import AccessSeparator from '@/features/auth/components/AccessSeparator'
 import EmailField from '@/features/auth/components/EmailField'
 import GoogleButton from '@/features/auth/components/GoogleButton'
 import RegisterAlert from '@/features/auth/components/RegisterAlert'
@@ -29,77 +30,79 @@ const RegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormProps) => {
   }
 
   return (
-    <form noValidate aria-label="Formulario de registro" onSubmit={handleSubmit} className="grid gap-5">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <TextField
-          label="Nombre"
-          error={errors.firstName}
-          name="firstName"
-          autoComplete="given-name"
-          maxLength={MAX_NAME_LENGTH}
-          value={values.firstName}
-          onChange={(value) => change('firstName', value)}
+    <form noValidate aria-label="Formulario de registro" onSubmit={handleSubmit}>
+      <FieldGroup>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <TextField
+            label="Nombre"
+            error={errors.firstName}
+            name="firstName"
+            autoComplete="given-name"
+            maxLength={MAX_NAME_LENGTH}
+            value={values.firstName}
+            onChange={(value) => change('firstName', value)}
+            readOnly={isBusy}
+          />
+          <TextField
+            label="Apellido"
+            error={errors.lastName}
+            name="lastName"
+            autoComplete="family-name"
+            maxLength={MAX_NAME_LENGTH}
+            value={values.lastName}
+            onChange={(value) => change('lastName', value)}
+            readOnly={isBusy}
+          />
+        </div>
+
+        <EmailField
+          value={values.email}
+          error={errors.email}
+          onChange={(value) => change('email', value)}
           readOnly={isBusy}
         />
+
         <TextField
-          label="Apellido"
-          error={errors.lastName}
-          name="lastName"
-          autoComplete="family-name"
-          maxLength={MAX_NAME_LENGTH}
-          value={values.lastName}
-          onChange={(value) => change('lastName', value)}
+          label="Teléfono"
+          error={errors.phone}
+          type="tel"
+          name="phone"
+          autoComplete="tel"
+          placeholder="+504 9999-9999"
+          value={values.phone}
+          onChange={(value) => change('phone', value)}
           readOnly={isBusy}
         />
-      </div>
 
-      <EmailField
-        value={values.email}
-        error={errors.email}
-        onChange={(value) => change('email', value)}
-        readOnly={isBusy}
-      />
+        <PasswordField
+          label="Contraseña"
+          hint={`mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
+          error={errors.password}
+          name="password"
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD_LENGTH}
+          value={values.password}
+          onChange={(value) => change('password', value)}
+          readOnly={isBusy}
+        />
 
-      <TextField
-        label="Teléfono"
-        error={errors.phone}
-        type="tel"
-        name="phone"
-        autoComplete="tel"
-        placeholder="+504 9999-9999"
-        value={values.phone}
-        onChange={(value) => change('phone', value)}
-        readOnly={isBusy}
-      />
+        <SubmitButton
+          isSubmitting={isSubmitting}
+          disabled={isConnecting}
+          icon={UserPlus}
+          submittingLabel="Creando cuenta…"
+        >
+          Crear cuenta
+        </SubmitButton>
 
-      <PasswordField
-        label="Contraseña"
-        hint={`mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
-        error={errors.password}
-        name="password"
-        autoComplete="new-password"
-        minLength={MIN_PASSWORD_LENGTH}
-        value={values.password}
-        onChange={(value) => change('password', value)}
-        readOnly={isBusy}
-      />
+        <AccessSeparator />
 
-      <SubmitButton
-        isSubmitting={isSubmitting}
-        disabled={isConnecting}
-        icon={UserPlus}
-        submittingLabel="Creando cuenta…"
-      >
-        Crear cuenta
-      </SubmitButton>
+        <GoogleButton isConnecting={isConnecting} disabled={isSubmitting} onClick={() => void signUpWithGoogle()}>
+          Registrarse con Google
+        </GoogleButton>
 
-      <TextDivider>o</TextDivider>
-
-      <GoogleButton isConnecting={isConnecting} disabled={isSubmitting} onClick={() => void signUpWithGoogle()}>
-        Registrarse con Google
-      </GoogleButton>
-
-      <RegisterAlert status={status} />
+        <RegisterAlert status={status} />
+      </FieldGroup>
     </form>
   )
 }

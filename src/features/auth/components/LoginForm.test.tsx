@@ -69,6 +69,7 @@ describe('LoginForm', () => {
     setup()
 
     // Assert
+    expect(screen.getByText('O continúa con')).toBeInTheDocument()
     expect(googleButton()).toHaveTextContent('Iniciar sesión con Google')
     expect(googleButton()).toHaveAttribute('type', 'button')
     expect(googleButton()).toBeEnabled()

@@ -78,4 +78,20 @@ describe('FormField', () => {
     const ids = screen.getAllByRole('textbox').map((control) => control.id)
     expect(new Set(ids).size).toBe(2)
   })
+
+  it('admite una acción junto a la etiqueta, sin que pase a formar parte de su nombre', () => {
+    // Arrange
+    const action = <a href="/recuperar-contrasena">Olvidé mi contraseña</a>
+
+    // Act
+    render(
+      <FormField label="Contraseña" labelAction={action}>
+        {(control) => <input {...control} />}
+      </FormField>,
+    )
+
+    // Assert
+    expect(screen.getByRole('textbox', { name: 'Contraseña' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Olvidé mi contraseña' })).toBeInTheDocument()
+  })
 })

@@ -1,4 +1,3 @@
-import { LogIn } from 'lucide-react'
 import AuthCard from '@/features/auth/components/AuthCard'
 import LoginForm from '@/features/auth/components/LoginForm'
 import { useEnter } from '@/features/auth/hooks/useEnter'
@@ -16,7 +15,6 @@ const LoginPage = () => {
 
   return (
     <AuthCard
-      icon={LogIn}
       title={`¡Bienvenido a ${BRAND.name}!`}
       description="Inicia sesión para publicar y gestionar tus propiedades."
       alternative={REGISTER_ALTERNATIVE}

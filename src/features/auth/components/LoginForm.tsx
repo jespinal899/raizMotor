@@ -2,10 +2,11 @@ import type { FormEvent } from 'react'
 import { LogIn } from 'lucide-react'
 import PasswordField from '@/components/PasswordField'
 import SubmitButton from '@/components/SubmitButton'
-import TextDivider from '@/components/TextDivider'
 import TextLink from '@/components/TextLink'
 import { Checkbox } from '@/components/ui/checkbox'
+import { FieldGroup } from '@/components/ui/field'
 import { Label } from '@/components/ui/label'
+import AccessSeparator from '@/features/auth/components/AccessSeparator'
 import EmailField from '@/features/auth/components/EmailField'
 import GoogleButton from '@/features/auth/components/GoogleButton'
 import LoginAlert from '@/features/auth/components/LoginAlert'
@@ -31,26 +32,28 @@ const LoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormProps) => {
   }
 
   return (
-    <form noValidate aria-label="Formulario de inicio de sesión" onSubmit={handleSubmit} className="grid gap-5">
-      <EmailField
-        value={values.email}
-        error={errors.email}
-        onChange={(value) => change('email', value)}
-        readOnly={isBusy}
-      />
+    <form noValidate aria-label="Formulario de inicio de sesión" onSubmit={handleSubmit}>
+      <FieldGroup>
+        <EmailField
+          value={values.email}
+          error={errors.email}
+          onChange={(value) => change('email', value)}
+          readOnly={isBusy}
+        />
 
-      <PasswordField
-        label="Contraseña"
-        error={errors.password}
-        name="password"
-        autoComplete="current-password"
-        value={values.password}
-        onChange={(value) => change('password', value)}
-        readOnly={isBusy}
-      />
+        <PasswordField
+          label="Contraseña"
+          labelAction={<TextLink to={ROUTES.forgotPassword}>Olvidé mi contraseña</TextLink>}
+          error={errors.password}
+          name="password"
+          autoComplete="current-password"
+          value={values.password}
+          onChange={(value) => change('password', value)}
+          readOnly={isBusy}
+        />
 
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <Label className="font-normal">
+        {/* `w-fit`: solo la casilla y su texto la marcan, no todo el ancho de la fila. */}
+        <Label className="w-fit font-normal">
           <Checkbox
             name="remember"
             checked={values.remember}
@@ -59,20 +62,19 @@ const LoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormProps) => {
           />
           Recordarme en este dispositivo
         </Label>
-        <TextLink to={ROUTES.forgotPassword}>Olvidé mi contraseña</TextLink>
-      </div>
 
-      <SubmitButton isSubmitting={isSubmitting} disabled={isConnecting} icon={LogIn} submittingLabel="Ingresando…">
-        Iniciar sesión
-      </SubmitButton>
+        <SubmitButton isSubmitting={isSubmitting} disabled={isConnecting} icon={LogIn} submittingLabel="Ingresando…">
+          Iniciar sesión
+        </SubmitButton>
 
-      <TextDivider>o</TextDivider>
+        <AccessSeparator />
 
-      <GoogleButton isConnecting={isConnecting} disabled={isSubmitting} onClick={() => void signInWithGoogle()}>
-        Iniciar sesión con Google
-      </GoogleButton>
+        <GoogleButton isConnecting={isConnecting} disabled={isSubmitting} onClick={() => void signInWithGoogle()}>
+          Iniciar sesión con Google
+        </GoogleButton>
 
-      <LoginAlert status={status} />
+        <LoginAlert status={status} />
+      </FieldGroup>
     </form>
   )
 }
