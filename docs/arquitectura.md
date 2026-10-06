@@ -68,13 +68,14 @@ Al buscador de direcciones solo se le envían la colonia, la ciudad y el departa
 
 ### Lo que todavía no está conectado
 
-Todavía no hay servidor propio. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil; la página de publicar, la ficha y la tarjeta del catálogo lo avisan a quien publica. El inicio de sesión y el envío de contacto siguen pendientes de conectar con servicios externos.
+Todavía no hay servidor propio. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil; la página de publicar y la tarjeta del catálogo lo avisan a quien publica, y la ventana de compartir advierte de que el enlace no servirá a otras personas. El inicio de sesión y el envío de contacto siguen pendientes de conectar con servicios externos.
 
 | Función | Qué falta | Dónde se conecta |
 | --- | --- | --- |
 | Iniciar sesión, registro y acceso con Google | Servicio de cuentas | Última línea de `src/features/auth/services/authService.ts` |
 | Enviar el formulario de contacto | Servicio de correo | Última línea de `src/features/contact/services/contactService.ts` |
 | Cotizar una propiedad | Servidor que reciba la solicitud; hoy se rechaza y la ficha avisa de que no se envió | Última línea de `src/features/properties/services/quoteService.ts` |
+| Reportar una publicación | Servidor que reciba el reporte; hoy se rechaza y la ventana avisa de que no se envió | Última línea de `src/features/properties/services/reportService.ts` |
 | Vistas de una ficha | Servidor que sume las de todos los visitantes; hoy se cuentan las de este navegador y la ficha lo dice | Última línea de `src/features/properties/services/propertyViewService.ts` |
 | Catálogo compartido | Los anuncios locales se combinan con las propiedades de ejemplo | Última línea de `src/features/properties/services/propertyService.ts` |
 
@@ -240,7 +241,7 @@ Repetir una acción deja el mismo resultado que hacerla una vez. Vale para quien
 | Si se repite… | Qué pasa | Dónde está |
 | --- | --- | --- |
 | Un envío mientras el anterior sigue en curso | Sale una sola petición: el segundo se une al primero. | `src/hooks/useAttempt.ts` |
-| Un envío que ya terminó bien, sin cambiar nada | No se envía otra vez, y el botón queda desactivado hasta que cambie algún dato. | `useAttempt`, `ContactForm`, `PropertyForm`, `PropertyQuoteForm` |
+| Un envío que ya terminó bien, sin cambiar nada | No se envía otra vez, y el botón queda desactivado hasta que cambie algún dato. | `useAttempt`, `ContactForm`, `PropertyForm`, `PropertyQuoteForm`, `ReportPropertyForm` |
 | Un envío que falló | El reintento lleva la misma clave de operación que el intento anterior. | `useAttempt`, `src/shared/utils/operationKey.ts` |
 | La misma búsqueda del catálogo | No apila otra entrada en el historial: «atrás» sale de los resultados a la primera. | `useSearch` |
 | La búsqueda de una misma dirección | No se vuelve a consultar Nominatim. Un fallo no se recuerda, para poder reintentar. | `geocodingService` |

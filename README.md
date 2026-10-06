@@ -16,6 +16,7 @@ Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con
 | Búsqueda con filtros y paginación | Funciona con el catálogo de ejemplo y anuncios locales |
 | Ficha de una propiedad | Muestra anuncios de ejemplo y los publicados en este navegador; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Cotizar una propiedad desde su ficha | Interfaz lista; falta el servidor que reciba la solicitud |
+| Reportar una publicación desde su ficha | Interfaz lista; falta el servidor que reciba el reporte |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
 | Publicar una propiedad: formulario por pasos con mapa | Guarda el anuncio y las fotos en IndexedDB de este navegador |
 | Contacto | Interfaz lista; falta el servicio de correo |
@@ -119,7 +120,7 @@ El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. E
 
 ## Pendiente
 
-- Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además de cuentas, envío de contactos y cotizaciones, y el total de vistas de cada ficha.
+- Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además de cuentas, envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
 - Redactar los términos y condiciones que se aceptan al cotizar: hoy la casilla no enlaza a ningún texto.
 - Verificar el teléfono del registro con un código por SMS.
 - Alinear el catálogo de ejemplo con Honduras: hoy usa propiedades de Lima y el formato regional `es-PE`.
