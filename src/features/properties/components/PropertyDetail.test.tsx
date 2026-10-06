@@ -221,6 +221,19 @@ describe('PropertyDetail', () => {
     expect(within(sidebar).queryByText(/baños/)).not.toBeInTheDocument()
   })
 
+  it('a la derecha ofrece contactar y compartir la ficha', () => {
+    // Arrange
+    const property = buildProperty()
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const sidebar = screen.getByRole('complementary')
+    expect(within(sidebar).getByRole('link', { name: 'Contactar al anunciante' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
+  })
+
   it('en un anuncio guardado en este navegador, dice a la derecha que lo publicó quien lo ve', () => {
     // Arrange
     const property = buildProperty({ advertiser: undefined, localOnly: true })

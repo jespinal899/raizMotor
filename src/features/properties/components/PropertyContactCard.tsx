@@ -3,6 +3,7 @@ import ButtonLink from '@/components/ButtonLink'
 import { Card } from '@/components/ui/card'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
 import PropertyPublisher from '@/features/properties/components/PropertyPublisher'
+import SharePropertyDialog from '@/features/properties/components/SharePropertyDialog'
 import type { Property } from '@/features/properties/types/property.types'
 import { propertyContactPath } from '@/shared/constants/routes'
 
@@ -22,6 +23,7 @@ const PropertyContactCard = ({ property }: PropertyContactCardProps) => {
           <MessageCircle />
           Contactar al anunciante
         </ButtonLink>
+        <SharePropertyDialog property={property} />
       </div>
     </Card>
   )
