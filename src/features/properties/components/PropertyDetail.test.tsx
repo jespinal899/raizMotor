@@ -220,4 +220,15 @@ describe('PropertyDetail', () => {
     expect(within(sidebar).queryByText(/dorm\./)).not.toBeInTheDocument()
     expect(within(sidebar).queryByText(/baños/)).not.toBeInTheDocument()
   })
+
+  it('en un anuncio guardado en este navegador, dice a la derecha que lo publicó quien lo ve', () => {
+    // Arrange
+    const property = buildProperty({ advertiser: undefined, localOnly: true })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    expect(within(screen.getByRole('complementary')).getByText('Tú')).toBeInTheDocument()
+  })
 })

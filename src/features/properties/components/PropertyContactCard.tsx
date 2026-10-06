@@ -2,7 +2,7 @@ import { MessageCircle } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
 import { Card } from '@/components/ui/card'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
-import { ADVERTISER_KINDS } from '@/features/properties/data/propertyOptions.data'
+import PropertyPublisher from '@/features/properties/components/PropertyPublisher'
 import type { Property } from '@/features/properties/types/property.types'
 import { propertyContactPath } from '@/shared/constants/routes'
 
@@ -10,25 +10,19 @@ interface PropertyContactCardProps {
   property: Property
 }
 
+/** Columna de la ficha: precio, quién publica y qué se puede hacer con el anuncio. */
 const PropertyContactCard = ({ property }: PropertyContactCardProps) => {
-  const { id, advertiser } = property
-
   return (
     <Card className="gap-5 p-5">
       <PropertyPrice property={property} className="text-3xl" />
+      <PropertyPublisher property={property} />
 
-      {advertiser && (
-        <div className="grid gap-0.5 border-t pt-5">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Publicado por</p>
-          <p className="font-medium">{advertiser.name}</p>
-          <p className="text-sm text-muted-foreground">{ADVERTISER_KINDS[advertiser.kind]}</p>
-        </div>
-      )}
-
-      <ButtonLink to={propertyContactPath(id)} size="lg" className="h-11 text-base">
-        <MessageCircle />
-        Contactar al anunciante
-      </ButtonLink>
+      <div className="grid gap-2">
+        <ButtonLink to={propertyContactPath(property.id)} size="lg" className="h-11 text-base">
+          <MessageCircle />
+          Contactar al anunciante
+        </ButtonLink>
+      </div>
     </Card>
   )
 }
