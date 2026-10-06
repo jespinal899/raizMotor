@@ -5,12 +5,13 @@ import type { BreadcrumbItem } from '@/components/Breadcrumb'
 import ExternalButtonLink from '@/components/ExternalButtonLink'
 import StatusAlert from '@/components/StatusAlert'
 import { Badge } from '@/components/ui/badge'
+import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
 import PropertyDetailLayout from '@/features/properties/components/PropertyDetailLayout'
 import PropertyDetailSection from '@/features/properties/components/PropertyDetailSection'
 import PropertyGallery from '@/features/properties/components/PropertyGallery'
 import PropertyHighlights from '@/features/properties/components/PropertyHighlights'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
-import PropertySidebar from '@/features/properties/components/PropertySidebar'
+import PropertyToolbar from '@/features/properties/components/PropertyToolbar'
 import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { Property } from '@/features/properties/types/property.types'
 import { buildDirectionsUrl } from '@/features/properties/utils/propertyDirections'
@@ -45,6 +46,7 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
   return (
     <PropertyDetailLayout
       breadcrumb={<Breadcrumb items={buildBreadcrumb(property)} />}
+      actions={<PropertyToolbar property={property} />}
       header={
         <header className="grid gap-3">
           <div className="flex gap-1.5">
@@ -62,7 +64,7 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
         </header>
       }
       gallery={<PropertyGallery images={gallery} title={title} />}
-      sidebar={<PropertySidebar property={property} />}
+      sidebar={<PropertyContactCard property={property} />}
     >
       {/* Justo debajo de las fotos: lo esencial de la propiedad antes del texto. */}
       <PropertyHighlights property={property} />

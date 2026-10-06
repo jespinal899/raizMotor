@@ -115,7 +115,7 @@ const SharePropertyDialog = ({ property }: SharePropertyProps) => {
         render={
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="icon-lg"
             aria-label={SHARE_LABEL}
             title={SHARE_LABEL}

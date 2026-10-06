@@ -260,7 +260,7 @@ describe('PropertyDetail', () => {
     expect(within(sidebar).queryByText(/baños/)).not.toBeInTheDocument()
   })
 
-  it('a la derecha ofrece compartir la ficha, cotizarla y contactar al anunciante', () => {
+  it('a la derecha ofrece cotizar la propiedad y contactar al anunciante', () => {
     // Arrange
     const property = buildProperty()
 
@@ -269,9 +269,38 @@ describe('PropertyDetail', () => {
 
     // Assert
     const sidebar = screen.getByRole('complementary')
-    expect(within(sidebar).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('form', { name: 'Cotizar esta propiedad' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('link', { name: 'Contactar al anunciante' })).toBeInTheDocument()
+  })
+
+  it('junto a la ruta de navegación, antes del título, van compartir y reportar', () => {
+    // Arrange
+    const property = buildProperty({ title: 'Casa con jardín' })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const actions = screen.getByRole('group', { name: 'Acciones de la ficha' })
+    const breadcrumb = screen.getByRole('navigation', { name: 'Ruta de navegación' })
+    const title = screen.getByRole('heading', { level: 1, name: 'Casa con jardín' })
+    expect(within(actions).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
+    expect(within(actions).getByRole('button', { name: 'Reportar' })).toBeInTheDocument()
+    expect(breadcrumb.parentElement).toBe(actions.parentElement)
+    expect(actions.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('compartir ya no está en la columna derecha: va con las acciones de arriba', () => {
+    // Arrange
+    const property = buildProperty()
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const sidebar = screen.getByRole('complementary')
+    expect(within(sidebar).queryByRole('button', { name: 'Compartir' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Compartir' })).toHaveLength(1)
   })
 
   it('en la ubicación ofrece "Cómo llegar", que abre en Google Maps la ruta hasta el punto publicado', () => {

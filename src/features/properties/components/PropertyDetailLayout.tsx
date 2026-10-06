@@ -3,6 +3,8 @@ import Container from '@/components/layout/Container'
 
 interface PropertyDetailLayoutProps {
   breadcrumb: ReactNode
+  /** Lo que se puede hacer con la ficha (compartir, reportar…). Va en la fila de la ruta, a la derecha. */
+  actions?: ReactNode
   header: ReactNode
   gallery: ReactNode
   sidebar: ReactNode
@@ -18,6 +20,7 @@ interface PropertyDetailLayoutProps {
  */
 const PropertyDetailLayout = ({
   breadcrumb,
+  actions,
   header,
   gallery,
   sidebar,
@@ -26,16 +29,23 @@ const PropertyDetailLayout = ({
 }: PropertyDetailLayoutProps) => {
   return (
     <Container as="article" className="grid gap-6 py-8" {...accessibility}>
-      {breadcrumb}
-      {header}
+      {/* La ruta a la izquierda y las acciones a la derecha; si no caben en una fila, una debajo de la otra. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        {breadcrumb}
+        {actions}
+      </div>
 
       {/*
-        En móvil el precio y la cotización van justo después de las fotos; en escritorio, en una columna.
-        Esa columna solo se queda fija al desplazarse si la ventana es alta (`tall`): en una baja no cabe
-        entera y su parte de abajo quedaría fuera de la vista.
+        En móvil todo se apila: título, fotos, cotización y el resto. En escritorio el título va en la
+        columna de las fotos, y por eso la barra lateral empieza a su altura. Esa barra solo se queda fija
+        al desplazarse si la ventana es alta (`tall`): en una baja no cabe entera y su parte de abajo
+        quedaría fuera de la vista.
       */}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        {gallery}
+        <div className="grid gap-6 lg:col-start-1">
+          {header}
+          {gallery}
+        </div>
         <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start lg:tall:sticky lg:tall:top-24">
           {sidebar}
         </aside>
