@@ -1,10 +1,11 @@
-import { Building2, House, LandPlot } from 'lucide-react'
+import { Bath, BedDouble, Building2, Car, House, LandPlot, Scaling } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type {
   AdvertiserKind,
   PropertyOperation,
   PropertyType,
 } from '@/features/properties/types/property.types'
+import type { PropertyHighlightKey } from '@/features/properties/utils/propertyHighlights'
 
 interface PropertyTypeDetails {
   label: string
@@ -28,6 +29,16 @@ export const ADVERTISER_KINDS: Record<AdvertiserKind, string> = {
   particular: 'Particular',
   inmobiliaria: 'Inmobiliaria',
   constructora: 'Constructora',
+}
+
+/** Icono de cada dato de una propiedad: el mismo en las tarjetas del catálogo y en la ficha. */
+export const PROPERTY_FACT_ICONS: Record<PropertyHighlightKey, LucideIcon> = {
+  bedrooms: BedDouble,
+  bathrooms: Bath,
+  parking: Car,
+  builtArea: House,
+  landArea: LandPlot,
+  area: Scaling,
 }
 
 export const MAX_PRICE_OPTIONS: Record<PropertyOperation, number[]> = {

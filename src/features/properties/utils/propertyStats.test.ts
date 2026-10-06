@@ -4,7 +4,7 @@ import { getPropertyStats } from '@/features/properties/utils/propertyStats'
 describe('getPropertyStats', () => {
   it('devuelve dormitorios, baños y área de una vivienda', () => {
     // Arrange
-    const house = { bedrooms: 3, bathrooms: 2, parking: 1, area: 180 }
+    const house = { bedrooms: 3, bathrooms: 2, area: 180 }
 
     // Act
     const stats = getPropertyStats(house)
@@ -15,17 +15,6 @@ describe('getPropertyStats', () => {
       { key: 'bathrooms', text: '2 baños' },
       { key: 'area', text: '180 m²' },
     ])
-  })
-
-  it('incluye los estacionamientos solo cuando se piden', () => {
-    // Arrange
-    const house = { bedrooms: 3, bathrooms: 2, parking: 2, area: 180 }
-
-    // Act
-    const stats = getPropertyStats(house, { withParking: true })
-
-    // Assert
-    expect(stats.map((stat) => stat.text)).toEqual(['3 dorm.', '2 baños', '2 estac.', '180 m²'])
   })
 
   it('usa el singular cuando hay un solo baño', () => {
@@ -44,7 +33,7 @@ describe('getPropertyStats', () => {
     const land = { area: 1000 }
 
     // Act
-    const stats = getPropertyStats(land, { withParking: true })
+    const stats = getPropertyStats(land)
 
     // Assert
     expect(stats).toEqual([{ key: 'area', text: '1,000 m²' }])

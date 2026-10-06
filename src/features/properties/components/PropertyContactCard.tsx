@@ -2,7 +2,6 @@ import { MessageCircle } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
 import { Card } from '@/components/ui/card'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
-import PropertyStats from '@/features/properties/components/PropertyStats'
 import { ADVERTISER_KINDS } from '@/features/properties/data/propertyOptions.data'
 import type { Property } from '@/features/properties/types/property.types'
 import { propertyContactPath } from '@/shared/constants/routes'
@@ -17,7 +16,6 @@ const PropertyContactCard = ({ property }: PropertyContactCardProps) => {
   return (
     <Card className="gap-5 p-5">
       <PropertyPrice property={property} className="text-3xl" />
-      <PropertyStats property={property} withParking className="gap-x-5 gap-y-2 text-foreground" />
 
       {advertiser && (
         <div className="grid gap-0.5 border-t pt-5">

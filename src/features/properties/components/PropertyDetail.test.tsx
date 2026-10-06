@@ -52,7 +52,7 @@ describe('PropertyDetail', () => {
     expect(within(breadcrumb).getByText('Lote campestre')).toHaveAttribute('aria-current', 'page')
   })
 
-  it('muestra la descripción y cada característica', () => {
+  it('muestra la descripción y, entre las características destacadas, cada comodidad', () => {
     // Arrange
     const property = buildProperty({
       description: 'Una casa luminosa cerca del parque.',
@@ -64,11 +64,11 @@ describe('PropertyDetail', () => {
 
     // Assert
     expect(screen.getByText('Una casa luminosa cerca del parque.')).toBeInTheDocument()
-    const features = screen.getByRole('region', { name: 'Características' })
+    const features = screen.getByRole('region', { name: 'Características destacadas' })
     expect(within(features).getAllByRole('listitem').map(textOf)).toEqual(['Piscina', 'Terraza', 'Cocina equipada'])
   })
 
-  it('muestra precio, datos con estacionamientos y quién publica', () => {
+  it('a la derecha muestra el precio y quién publica', () => {
     // Arrange
     const property = buildProperty({
       price: 420000,
@@ -85,7 +85,7 @@ describe('PropertyDetail', () => {
     // Assert
     const sidebar = screen.getByRole('complementary')
     expect(textOf(within(sidebar).getByText(/420,000/))).toBe('$ 420,000')
-    expect(within(sidebar).getAllByRole('listitem').map(textOf)).toEqual(['3 dorm.', '3 baños', '2 estac.', '220 m²'])
+    expect(within(sidebar).getByText('Publicado por')).toBeInTheDocument()
     expect(within(sidebar).getByText('Inmobiliaria de prueba')).toBeInTheDocument()
     expect(within(sidebar).getByText('Inmobiliaria')).toBeInTheDocument()
   })
@@ -140,9 +140,10 @@ describe('PropertyDetail', () => {
     // Assert
     expect(screen.getByText('Avenida República de Chile, casa 12')).toBeInTheDocument()
     expect(screen.getByText('Francisco Morazán')).toBeInTheDocument()
-    const surfaces = screen.getByRole('region', { name: 'Superficies' })
-    expect(within(surfaces).getByText('180 m²')).toBeInTheDocument()
-    expect(within(surfaces).getByText('250 m²')).toBeInTheDocument()
+    const highlights = screen.getByRole('region', { name: 'Características destacadas' })
+    expect(within(highlights).getByText('180 m²')).toBeInTheDocument()
+    expect(within(highlights).getByText('250 m²')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Superficies' })).not.toBeInTheDocument()
     expect(await screen.findByRole('application', { name: 'Mapa de la propiedad' })).toHaveTextContent(
       'Latitud 14.1; longitud -87.19',
     )
@@ -172,5 +173,51 @@ describe('PropertyDetail', () => {
 
     // Assert
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
+  })
+
+  it('destaca dormitorios, baños, estacionamientos y superficie con su nombre completo', () => {
+    // Arrange
+    const property = buildProperty({ bedrooms: 3, bathrooms: 3, parking: 2, area: 220 })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const highlights = screen.getByRole('region', { name: 'Características destacadas' })
+    expect(within(highlights).getAllByRole('term').map(textOf)).toEqual([
+      'Dormitorios',
+      'Baños',
+      'Estacionamientos',
+      'Superficie',
+    ])
+    expect(within(highlights).getAllByRole('definition').map(textOf)).toEqual(['3', '3', '2', '220 m²'])
+  })
+
+  it('las características destacadas van justo debajo de las fotos, antes de la descripción', () => {
+    // Arrange
+    const property = buildProperty({ title: 'Casa con jardín' })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const photo = screen.getByRole('img', { name: /Casa con jardín, foto 1/ })
+    const highlights = screen.getByRole('region', { name: 'Características destacadas' })
+    const description = screen.getByRole('region', { name: 'Descripción' })
+    expect(photo.compareDocumentPosition(highlights) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(highlights.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('no repite los datos de la propiedad en la columna derecha', () => {
+    // Arrange
+    const property = buildProperty({ bedrooms: 3, bathrooms: 2 })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const sidebar = screen.getByRole('complementary')
+    expect(within(sidebar).queryByText(/dorm\./)).not.toBeInTheDocument()
+    expect(within(sidebar).queryByText(/baños/)).not.toBeInTheDocument()
   })
 })
