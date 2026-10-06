@@ -40,6 +40,18 @@ describe('SharePropertyDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('el botón es solo el icono, y se llama "Compartir" para quien no lo ve', () => {
+    // Arrange: ficha recién abierta
+
+    // Act
+    renderWithRouter(<SharePropertyDialog property={PROPERTY} />)
+
+    // Assert
+    const share = screen.getByRole('button', { name: 'Compartir' })
+    expect(share.textContent).toBe('')
+    expect(share).toHaveAttribute('title', 'Compartir')
+  })
+
   it('presenta la ficha que se va a compartir: foto principal, título, ubicación y precio', async () => {
     // Arrange: propiedad del catálogo
 

@@ -1,7 +1,8 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
+import { propertyViewService } from '@/features/properties/services/propertyViewService'
 import { quoteService } from '@/features/properties/services/quoteService'
 import { buildProperty } from '@/test/factories'
 import { anyOperationKey } from '@/test/operationKey'
@@ -17,27 +18,50 @@ const PROPERTY = buildProperty({
 const follows = (first: HTMLElement, second: HTMLElement) =>
   Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
 
-const renderCard = (property = PROPERTY) => renderWithRouter(<PropertyContactCard property={property} />)
+/** Pinta la columna y espera a que aparezcan las vistas, lo último en llegar. */
+const renderCard = async (property = PROPERTY) => {
+  renderWithRouter(<PropertyContactCard property={property} />)
+
+  return { views: await screen.findByText(/en este navegador/) }
+}
 
 describe('PropertyContactCard', () => {
-  it('compartir va arriba del formulario de cotización, y quién publica, debajo', () => {
+  beforeEach(() => {
+    vi.spyOn(propertyViewService, 'registerView').mockResolvedValue(12)
+  })
+
+  it('junto al icono de compartir dice cuántas vistas lleva esta ficha', async () => {
+    // Arrange: ficha con 12 visitas contadas
+
+    // Act
+    const { views } = await renderCard()
+
+    // Assert
+    const share = screen.getByRole('button', { name: 'Compartir' })
+    expect(views).toHaveTextContent('12 vistas en este navegador')
+    expect(share.parentElement).toContainElement(views)
+    expect(propertyViewService.registerView).toHaveBeenCalledExactlyOnceWith('casa-1')
+  })
+
+  it('compartir y las vistas van arriba del formulario de cotización, y quién publica, debajo', async () => {
     // Arrange: ficha con anunciante
 
     // Act
-    renderCard()
+    const { views } = await renderCard()
 
     // Assert
     const share = screen.getByRole('button', { name: 'Compartir' })
     const publisher = screen.getByText('Publicado por')
     expect(follows(share, quoteForm.form())).toBe(true)
+    expect(follows(views, quoteForm.form())).toBe(true)
     expect(follows(quoteForm.form(), publisher)).toBe(true)
   })
 
-  it('el precio encabeza la columna', () => {
+  it('el precio encabeza la columna', async () => {
     // Arrange: ficha de 420 000 dólares
 
     // Act
-    renderCard()
+    await renderCard()
 
     // Assert
     const price = screen.getByText(/420,000/)
@@ -48,7 +72,7 @@ describe('PropertyContactCard', () => {
     // Arrange
     const user = userEvent.setup()
     const request = vi.spyOn(quoteService, 'request').mockResolvedValue()
-    renderCard()
+    await renderCard()
     await fillQuoteForm(user)
 
     // Act
@@ -65,7 +89,7 @@ describe('PropertyContactCard', () => {
   it('hoy, sin servidor, avisa de que la cotización no se envió', async () => {
     // Arrange
     const user = userEvent.setup()
-    renderCard()
+    await renderCard()
     await fillQuoteForm(user)
 
     // Act
@@ -77,11 +101,11 @@ describe('PropertyContactCard', () => {
     expect(alert).toHaveTextContent('No se envió tu solicitud.')
   })
 
-  it('debajo de quién publica deja escribirle por esta propiedad', () => {
+  it('debajo de quién publica deja escribirle por esta propiedad', async () => {
     // Arrange: ficha con anunciante
 
     // Act
-    renderCard()
+    await renderCard()
 
     // Assert
     const contact = screen.getByRole('link', { name: 'Contactar al anunciante' })
@@ -89,12 +113,12 @@ describe('PropertyContactCard', () => {
     expect(follows(screen.getByText('Publicado por'), contact)).toBe(true)
   })
 
-  it('si no se sabe quién publica, la columna no lo inventa', () => {
+  it('si no se sabe quién publica, la columna no lo inventa', async () => {
     // Arrange
     const property = buildProperty({ advertiser: undefined })
 
     // Act
-    renderCard(property)
+    await renderCard(property)
 
     // Assert
     expect(screen.queryByText('Publicado por')).not.toBeInTheDocument()

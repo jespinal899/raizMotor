@@ -104,13 +104,26 @@ const SharePropertyPanel = ({ property }: SharePropertyProps) => {
   )
 }
 
-/** Botón "Compartir" de la ficha y la ventana que abre, con WhatsApp y copiar enlace. */
+const SHARE_LABEL = 'Compartir'
+
+/** Icono de compartir de la ficha y la ventana que abre, con WhatsApp y copiar enlace. */
 const SharePropertyDialog = ({ property }: SharePropertyProps) => {
   return (
     <Dialog>
-      <DialogTrigger render={<Button type="button" variant="outline" size="lg" className={actionSize} />}>
-        <Share2 />
-        Compartir
+      {/* Solo el icono: el nombre lo llevan la etiqueta, para quien no ve la pantalla, y el texto al pasar el ratón. */}
+      <DialogTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-lg"
+            aria-label={SHARE_LABEL}
+            title={SHARE_LABEL}
+            className="size-11"
+          />
+        }
+      >
+        <Share2 className="size-5" />
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
         <SharePropertyPanel property={property} />

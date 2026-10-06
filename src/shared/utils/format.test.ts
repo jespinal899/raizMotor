@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatArea, formatPrice } from '@/shared/utils/format'
+import { formatArea, formatNumber, formatPrice } from '@/shared/utils/format'
 
 // Intl separa el símbolo y la cifra con un espacio de no separación.
 const withPlainSpaces = (text: string) => text.replace(/\s/g, ' ')
@@ -38,5 +38,18 @@ describe('formatArea', () => {
 
     // Assert
     expect(formatted).toBe('2,500 m²')
+  })
+})
+
+describe('formatNumber', () => {
+  it('separa los miles de una cantidad', () => {
+    // Arrange
+    const count = 12500
+
+    // Act
+    const formatted = formatNumber(count)
+
+    // Assert
+    expect(formatted).toBe('12,500')
   })
 })

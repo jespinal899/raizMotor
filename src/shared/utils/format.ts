@@ -9,4 +9,7 @@ const numberFormatter = new Intl.NumberFormat('es-PE')
 
 export const formatPrice = (amount: number) => priceFormatter.format(amount)
 
-export const formatArea = (squareMeters: number) => `${numberFormatter.format(squareMeters)} m²`
+/** Una cantidad con su separador de miles. */
+export const formatNumber = (value: number) => numberFormatter.format(value)
+
+export const formatArea = (squareMeters: number) => `${formatNumber(squareMeters)} m²`

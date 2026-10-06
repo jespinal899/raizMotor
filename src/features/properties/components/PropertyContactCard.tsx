@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
 import PropertyPublisher from '@/features/properties/components/PropertyPublisher'
 import PropertyQuoteForm from '@/features/properties/components/PropertyQuoteForm'
+import PropertyViews from '@/features/properties/components/PropertyViews'
 import SharePropertyDialog from '@/features/properties/components/SharePropertyDialog'
 import { quoteService } from '@/features/properties/services/quoteService'
 import type { Property } from '@/features/properties/types/property.types'
@@ -13,7 +14,7 @@ interface PropertyContactCardProps {
   property: Property
 }
 
-/** Columna de la ficha: precio, compartir, el formulario para cotizar y, debajo, quién publica. */
+/** Columna de la ficha: precio, compartir y vistas, el formulario para cotizar y, debajo, quién publica. */
 const PropertyContactCard = ({ property }: PropertyContactCardProps) => {
   const { id } = property
 
@@ -21,7 +22,10 @@ const PropertyContactCard = ({ property }: PropertyContactCardProps) => {
     <Card className="gap-5 p-5">
       <PropertyPrice property={property} className="text-3xl" />
 
-      <SharePropertyDialog property={property} />
+      <div className="flex items-center gap-3">
+        <SharePropertyDialog property={property} />
+        <PropertyViews propertyId={id} />
+      </div>
 
       <div className="border-t pt-5">
         <PropertyQuoteForm

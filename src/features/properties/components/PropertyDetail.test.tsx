@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PropertyDetail from '@/features/properties/components/PropertyDetail'
+import { propertyViewService } from '@/features/properties/services/propertyViewService'
 import type { Property } from '@/features/properties/types/property.types'
 import { buildProperty } from '@/test/factories'
 import { renderWithRouter } from '@/test/renderWithRouter'
@@ -22,6 +23,11 @@ const LOCATION = {
 }
 
 describe('PropertyDetail', () => {
+  // El contador de vistas tiene sus propias pruebas. Aquí no llega a responder: la ficha se comprueba al instante.
+  beforeEach(() => {
+    vi.spyOn(propertyViewService, 'registerView').mockReturnValue(new Promise(() => {}))
+  })
+
   it('muestra el título como encabezado principal, la ubicación y las etiquetas', () => {
     // Arrange
     const property = buildProperty({
