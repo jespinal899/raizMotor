@@ -6,6 +6,9 @@ const findDepartment = (id: string) => DEPARTMENTS.find((department) => departme
 
 export const isDepartmentId = (value: string): boolean => findDepartment(value) !== undefined
 
+/** Nombre del departamento, o `undefined` si el identificador no corresponde a ninguno. */
+export const getDepartmentName = (id: string): string | undefined => findDepartment(id)?.name
+
 /** Vista del mapa para un departamento: su cabecera de cerca, o todo el país si aún no se eligió ninguno. */
 export const getDepartmentView = (id: string): MapView => {
   const department = findDepartment(id)
@@ -31,7 +34,7 @@ export const toAddressQuery = ({
 }: Pick<PublicationFormValues, 'department' | 'city' | 'neighborhood'>): AddressQuery => ({
   neighborhood: neighborhood.trim(),
   city: withoutClarification(city),
-  department: findDepartment(department)?.name ?? '',
+  department: getDepartmentName(department) ?? '',
 })
 
 /** La dirección completa en una línea, de lo más concreto al departamento. */
@@ -41,4 +44,4 @@ export const formatAddress = ({
   city,
   department,
 }: Pick<PublicationFormValues, 'department' | 'city' | 'neighborhood' | 'address'>): string =>
-  [address.trim(), neighborhood.trim(), city, findDepartment(department)?.name].filter(Boolean).join(', ')
+  [address.trim(), neighborhood.trim(), city, getDepartmentName(department)].filter(Boolean).join(', ')

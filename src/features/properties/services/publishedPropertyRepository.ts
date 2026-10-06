@@ -1,4 +1,5 @@
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
+import { createOperationKey } from '@/shared/utils/operationKey'
 
 const DATABASE_NAME = 'domus-raiz-properties'
 const DATABASE_VERSION = 1
@@ -22,12 +23,6 @@ interface RepositoryOptions {
   getFactory?: () => IDBFactory | undefined
   createId?: () => string
   now?: () => number
-}
-
-const createPublicationId = () => {
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
-
-  return `anuncio-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 }
 
 const requestError = (request: IDBRequest) => request.error ?? new Error('No se pudo completar la operación de almacenamiento.')
@@ -57,7 +52,8 @@ const openDatabase = (factory: IDBFactory) =>
 /** Repositorio local: IndexedDB conserva tanto los datos como los archivos de imagen. */
 export const createIndexedDbPublicationRepository = ({
   getFactory = () => globalThis.indexedDB,
-  createId = createPublicationId,
+  // Misma fuente aleatoria que las claves de operación: funciona también sin HTTPS.
+  createId = createOperationKey,
   now = Date.now,
 }: RepositoryOptions = {}): PublishedPropertyRepository => {
   let database: Promise<IDBDatabase> | undefined
