@@ -7,22 +7,13 @@ import type {
 import type { Property } from '@/features/properties/types/property.types'
 import { getDepartmentName } from '@/features/properties/utils/departments'
 
-const imageUrlsById = new Map<string, string[]>()
-
-const getImageUrls = ({ id, publication }: StoredPropertyPublication) => {
-  const cached = imageUrlsById.get(id)
-  if (cached) return cached
-
-  const urls = publication.images.map((image) => URL.createObjectURL(image))
-  imageUrlsById.set(id, urls)
-  return urls
-}
-
-/** Adapta un anuncio guardado a los datos que consumen la búsqueda y la ficha. */
-export const toPublishedProperty = (record: StoredPropertyPublication): Property => {
-  const { id, publication } = record
-  const { location, type, operation, builtArea, landArea, bedrooms, bathrooms, title, description, price } = publication
-  const gallery = getImageUrls(record)
+/**
+ * Adapta un anuncio guardado a los datos que consumen la búsqueda y la ficha. Las fotos viajan como los
+ * archivos guardados: quien las pinta crea su dirección temporal y la libera al dejar de mostrarlas.
+ */
+export const toPublishedProperty = ({ id, publication }: StoredPropertyPublication): Property => {
+  const { location, type, operation, builtArea, landArea, bedrooms, bathrooms, title, description, price, images } =
+    publication
 
   return {
     id,
@@ -39,8 +30,8 @@ export const toPublishedProperty = (record: StoredPropertyPublication): Property
     bedrooms,
     bathrooms,
     features: [],
-    image: gallery[0],
-    gallery,
+    image: images[0],
+    gallery: images,
     location: {
       department: getDepartmentName(location.department) ?? location.department,
       address: location.address,

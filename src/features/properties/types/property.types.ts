@@ -15,6 +15,9 @@ export interface PropertyLocation {
   coordinates: Coordinates
 }
 
+/** Una foto: su dirección web o, en un anuncio guardado en este navegador, el propio archivo. */
+export type PhotoSource = string | Blob
+
 export interface Advertiser {
   name: string
   kind: AdvertiserKind
@@ -40,9 +43,9 @@ export interface Property {
   parking?: number
   features: string[]
   /** Portada para listados. */
-  image: string
+  image: PhotoSource
   /** Fotos en tamaño grande para la página de detalle; la primera es la portada. */
-  gallery: string[]
+  gallery: PhotoSource[]
   /** Dirección exacta que se confirmó al publicar; el catálogo de ejemplo no la incluye. */
   location?: PropertyLocation
   advertiser?: Advertiser

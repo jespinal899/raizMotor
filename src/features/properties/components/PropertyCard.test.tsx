@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import PropertyCard from '@/features/properties/components/PropertyCard'
-import { buildProperty } from '@/test/factories'
+import { buildImageFile, buildProperty } from '@/test/factories'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
 const textOf = (element: HTMLElement) => element.textContent?.replace(/\s+/g, ' ').trim()
@@ -94,5 +94,16 @@ describe('PropertyCard', () => {
     const stats = screen.getAllByRole('listitem').map(textOf)
     expect(stats).toEqual(['1,000 m²'])
     expect(screen.getByText('Terreno')).toBeInTheDocument()
+  })
+
+  it('usa de portada la foto guardada en este navegador', () => {
+    // Arrange
+    const property = buildProperty({ image: buildImageFile({ name: 'portada.jpg' }) })
+
+    // Act
+    const { container } = renderWithRouter(<PropertyCard property={property} />)
+
+    // Assert
+    expect(container.querySelector('img')).toHaveAttribute('src', 'blob:portada.jpg')
   })
 })

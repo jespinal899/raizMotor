@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import PropertyGallery from '@/features/properties/components/PropertyGallery'
+import { buildImageFile } from '@/test/factories'
 
 const IMAGES = ['https://example.com/1.jpg', 'https://example.com/2.jpg', 'https://example.com/3.jpg']
 const TITLE = 'Casa de prueba'
@@ -61,5 +62,20 @@ describe('PropertyGallery', () => {
     expect(mainPhoto()).toHaveAttribute('src', IMAGES[0])
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByText('1 / 1')).not.toBeInTheDocument()
+  })
+
+  it('muestra también las fotos guardadas en este navegador y permite cambiar entre ellas', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const images = [buildImageFile({ name: 'fachada.jpg' }), buildImageFile({ name: 'patio.jpg' })]
+    render(<PropertyGallery images={images} title={TITLE} />)
+    const firstShown = mainPhoto().getAttribute('src')
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Ver foto 2' }))
+
+    // Assert
+    expect(firstShown).toBe('blob:fachada.jpg')
+    expect(mainPhoto()).toHaveAttribute('src', 'blob:patio.jpg')
   })
 })

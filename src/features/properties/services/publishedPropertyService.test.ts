@@ -59,6 +59,20 @@ describe('toPublishedProperty', () => {
     })
     expect(property.advertiser).toBeUndefined()
   })
+
+  it('entrega las fotos como los archivos guardados, con la primera de portada, sin crear direcciones temporales', () => {
+    // Arrange
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL')
+    const publication = record('casa-publicada')
+
+    // Act
+    const property = toPublishedProperty(publication)
+
+    // Assert
+    expect(property.gallery).toEqual(publication.publication.images)
+    expect(property.image).toBe(publication.publication.images[0])
+    expect(createObjectUrl).not.toHaveBeenCalled()
+  })
 })
 
 describe('createPublishedPropertyService', () => {

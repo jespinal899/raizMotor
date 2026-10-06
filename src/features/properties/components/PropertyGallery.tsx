@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import PropertyPhoto from '@/features/properties/components/PropertyPhoto'
+import type { PhotoSource } from '@/features/properties/types/property.types'
 import { cn } from '@/lib/utils'
 
 interface PropertyGalleryProps {
-  images: string[]
+  images: PhotoSource[]
   title: string
 }
 
@@ -14,8 +16,8 @@ const PropertyGallery = ({ images, title }: PropertyGalleryProps) => {
   return (
     <div className="grid gap-3">
       <div className="relative overflow-hidden rounded-2xl bg-muted">
-        <img
-          src={images[selected]}
+        <PropertyPhoto
+          source={images[selected]}
           alt={`${title}, foto ${selected + 1} de ${total}`}
           className="aspect-3/2 w-full object-cover"
         />
@@ -32,7 +34,7 @@ const PropertyGallery = ({ images, title }: PropertyGalleryProps) => {
             const active = position === selected
 
             return (
-              <li key={image}>
+              <li key={position}>
                 <button
                   type="button"
                   onClick={() => setSelected(position)}
@@ -43,7 +45,7 @@ const PropertyGallery = ({ images, title }: PropertyGalleryProps) => {
                     active ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100',
                   )}
                 >
-                  <img src={image} alt="" loading="lazy" className="aspect-4/3 w-full object-cover" />
+                  <PropertyPhoto source={image} alt="" loading="lazy" className="aspect-4/3 w-full object-cover" />
                 </button>
               </li>
             )

@@ -2,6 +2,7 @@ import { MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import PropertyPhoto from '@/features/properties/components/PropertyPhoto'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
 import PropertyStats from '@/features/properties/components/PropertyStats'
 import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
@@ -18,8 +19,8 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
   return (
     <Card className="relative h-full gap-0 py-0 transition-shadow duration-300 focus-within:shadow-lg hover:shadow-lg">
       <div className="relative aspect-4/3 overflow-hidden bg-muted">
-        <img
-          src={image}
+        <PropertyPhoto
+          source={image}
           alt=""
           loading="lazy"
           className="size-full object-cover transition-transform duration-500 group-hover/card:scale-105"

@@ -1,10 +1,10 @@
 import { useCallback } from 'react'
 
 /**
- * Ref para un `<img>` que muestra un archivo elegido por la persona: le pone una dirección temporal
- * y la libera cuando la imagen deja de mostrarse o cambia de archivo.
+ * Ref para un `<img>` que muestra un archivo del navegador, elegido por la persona o ya guardado: le pone
+ * una dirección temporal y la libera cuando la imagen deja de mostrarse o cambia de archivo.
  */
-export const useObjectUrlRef = (file: File) =>
+export const useObjectUrlRef = (file: Blob) =>
   useCallback(
     (image: HTMLImageElement | null) => {
       if (!image) return
