@@ -14,7 +14,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property }: PropertyCardProps) => {
-  const { id, title, type, operation, district, city, image } = property
+  const { id, title, type, operation, district, city, image, localOnly } = property
 
   return (
     <Card className="relative h-full gap-0 py-0 transition-shadow duration-300 focus-within:shadow-lg hover:shadow-lg">
@@ -25,9 +25,15 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
           loading="lazy"
           className="size-full object-cover transition-transform duration-500 group-hover/card:scale-105"
         />
-        <div className="absolute top-3 left-3 flex gap-1.5">
+        <div className="absolute top-3 right-3 left-3 flex flex-wrap gap-1.5">
           <Badge>{OPERATIONS[operation].label}</Badge>
           <Badge variant="secondary">{PROPERTY_TYPES[type].label}</Badge>
+          {/* En el catálogo se mezcla con las de ejemplo: quien la publicó debe saber que nadie más la ve. */}
+          {localOnly && (
+            <Badge variant="outline" className="bg-background">
+              Solo tú lo ves
+            </Badge>
+          )}
         </div>
       </div>
 

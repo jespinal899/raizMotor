@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react'
-import { Check, MapPin } from 'lucide-react'
+import { Check, EyeOff, MapPin } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
 import type { BreadcrumbItem } from '@/components/Breadcrumb'
+import StatusAlert from '@/components/StatusAlert'
 import { Badge } from '@/components/ui/badge'
 import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
 import PropertyDetailLayout from '@/features/properties/components/PropertyDetailLayout'
@@ -12,6 +13,13 @@ import { ROUTES, propertyTypePath } from '@/shared/constants/routes'
 import { formatArea } from '@/shared/utils/format'
 
 const sectionTitle = 'font-heading text-xl font-semibold tracking-tight'
+
+const LOCAL_ONLY_NOTE = {
+  title: 'Este anuncio solo está guardado en este navegador',
+  description:
+    'Otras personas todavía no pueden verlo, y el enlace no funcionará en otro dispositivo. ' +
+    'Si borras los datos del navegador, se pierde.',
+}
 const LocationMapView = lazy(() => import('@/features/properties/components/LocationMapView'))
 
 const buildBreadcrumb = ({ title, type }: Property): BreadcrumbItem[] => {
@@ -30,7 +38,8 @@ interface PropertyDetailProps {
 }
 
 const PropertyDetail = ({ property }: PropertyDetailProps) => {
-  const { title, description, type, operation, district, city, features, gallery, location, builtArea, landArea } = property
+  const { title, description, type, operation, district, city, features, gallery } = property
+  const { location, builtArea, landArea, localOnly } = property
 
   return (
     <PropertyDetailLayout
@@ -46,6 +55,8 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
             <MapPin className="size-4 shrink-0" aria-hidden="true" />
             {district}, {city}
           </p>
+          {/* Arriba del todo: es lo primero que debe saber quien acaba de publicar y piensa compartir el enlace. */}
+          {localOnly && <StatusAlert role="note" icon={EyeOff} {...LOCAL_ONLY_NOTE} />}
         </header>
       }
       gallery={<PropertyGallery images={gallery} title={title} />}

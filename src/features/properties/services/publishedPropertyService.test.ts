@@ -73,6 +73,17 @@ describe('toPublishedProperty', () => {
     expect(property.image).toBe(publication.publication.images[0])
     expect(createObjectUrl).not.toHaveBeenCalled()
   })
+
+  it('marca el anuncio como guardado solo en este navegador', () => {
+    // Arrange
+    const publication = record('casa-publicada')
+
+    // Act
+    const property = toPublishedProperty(publication)
+
+    // Assert
+    expect(property.localOnly).toBe(true)
+  })
 })
 
 describe('createPublishedPropertyService', () => {

@@ -68,7 +68,7 @@ Al buscador de direcciones solo se le envían la colonia, la ciudad y el departa
 
 ### Lo que todavía no está conectado
 
-Todavía no hay servidor propio. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil. El inicio de sesión y el envío de contacto siguen pendientes de conectar con servicios externos.
+Todavía no hay servidor propio. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil; la página de publicar, la ficha y la tarjeta del catálogo lo avisan a quien publica. El inicio de sesión y el envío de contacto siguen pendientes de conectar con servicios externos.
 
 | Función | Qué falta | Dónde se conecta |
 | --- | --- | --- |
@@ -191,7 +191,7 @@ Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno
 
 | Servicio | Qué hace hoy |
 | --- | --- |
-| `propertyService` | Combina el catálogo de ejemplo con los anuncios de IndexedDB y aplica filtros y paginación. |
+| `propertyService` | Combina el catálogo de ejemplo con los anuncios de IndexedDB y aplica filtros y paginación. Si el almacenamiento del navegador falla, sigue sirviendo el catálogo de ejemplo. |
 | `geocodingService` | Consulta Nominatim, como mucho una vez por segundo, para situar una dirección, y recuerda las respuestas. |
 | `locationMap` | Encapsula Leaflet: es el único archivo que conoce la biblioteca del mapa. |
 | `publicationService` | Guarda cada anuncio y sus fotos en IndexedDB; devuelve su ID y mantiene la clave de operación para evitar duplicados. |

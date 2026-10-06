@@ -38,6 +38,7 @@ export const toPublishedProperty = ({ id, publication }: StoredPropertyPublicati
       coordinates: location.coordinates,
     },
     featured: false,
+    localOnly: true,
   }
 }
 

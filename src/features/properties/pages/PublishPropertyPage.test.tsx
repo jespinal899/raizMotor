@@ -49,6 +49,18 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
     await waitFor(() => expect(document.title).toBe(`Publicar propiedad | ${BRAND.name}`))
   })
 
+  it('avisa antes de empezar de que el anuncio se guardará solo en este navegador', () => {
+    // Arrange: visitante que quiere anunciar
+
+    // Act
+    setup()
+
+    // Assert
+    const note = screen.getByRole('note')
+    expect(note).toHaveTextContent('Tu anuncio se guardará solo en este navegador')
+    expect(note).toHaveTextContent('otras personas no podrán verlo')
+  })
+
   it('al confirmar la ubicación muestra un aviso de que se guardó', async () => {
     // Arrange
     const { fakeMap, user } = setup()
@@ -84,6 +96,6 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
     await user.click(publishButton())
 
     // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos publicar tu propiedad')
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos guardar tu propiedad')
   })
 })

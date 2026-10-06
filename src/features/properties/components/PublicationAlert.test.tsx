@@ -13,7 +13,7 @@ describe('PublicationAlert', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('confirma la publicación solo cuando el anuncio se publicó', () => {
+  it('confirma que el anuncio se guardó y aclara que solo está en este navegador', () => {
     // Arrange
     const status = 'published'
 
@@ -22,11 +22,11 @@ describe('PublicationAlert', () => {
 
     // Assert
     const message = screen.getByRole('status')
-    expect(message).toHaveTextContent('Tu propiedad se publicó')
-    expect(message).toHaveTextContent('Ya aparece en tu catálogo local.')
+    expect(message).toHaveTextContent('Tu propiedad se guardó')
+    expect(message).toHaveTextContent('Está en este navegador; otras personas todavía no pueden verla.')
   })
 
-  it('ante un fallo del servicio invita a reintentar', () => {
+  it('si no se pudo guardar, lo dice y explica qué revisar', () => {
     // Arrange
     const status = 'failed'
 
@@ -35,7 +35,7 @@ describe('PublicationAlert', () => {
 
     // Assert
     const alert = screen.getByRole('alert')
-    expect(alert).toHaveTextContent('No pudimos publicar tu propiedad')
-    expect(alert).toHaveTextContent('Inténtalo de nuevo en unos minutos.')
+    expect(alert).toHaveTextContent('No pudimos guardar tu propiedad')
+    expect(alert).toHaveTextContent('Revisa que el navegador permita guardar datos de este sitio y vuelve a intentarlo.')
   })
 })

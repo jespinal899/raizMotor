@@ -7,14 +7,14 @@ import type { PublicationStatus } from '@/features/properties/types/publication.
 const ALERTS: Partial<Record<PublicationStatus, StatusAlertContent>> = {
   published: {
     icon: CircleCheck,
-    title: 'Tu propiedad se publicó',
-    description: 'Ya aparece en tu catálogo local.',
+    title: 'Tu propiedad se guardó',
+    description: 'Está en este navegador; otras personas todavía no pueden verla.',
     role: 'status',
   },
   failed: {
     icon: CircleAlert,
-    title: 'No pudimos publicar tu propiedad',
-    description: 'Tu anuncio no se envió. Inténtalo de nuevo en unos minutos.',
+    title: 'No pudimos guardar tu propiedad',
+    description: 'Revisa que el navegador permita guardar datos de este sitio y vuelve a intentarlo.',
     variant: 'destructive',
   },
 }

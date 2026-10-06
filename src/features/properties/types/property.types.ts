@@ -50,6 +50,8 @@ export interface Property {
   location?: PropertyLocation
   advertiser?: Advertiser
   featured: boolean
+  /** Guardada solo en este navegador: nadie más puede verla todavía. */
+  localOnly?: boolean
 }
 
 export interface PropertyFilters {

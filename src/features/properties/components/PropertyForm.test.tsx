@@ -305,7 +305,7 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
 
     // Assert
     expect(onSubmit).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION, anyOperationKey())
-    expect(await screen.findByText('Tu propiedad se publicó')).toBeInTheDocument()
+    expect(await screen.findByText('Tu propiedad se guardó')).toBeInTheDocument()
   })
 
   it('una vez publicada no deja publicarla otra vez', async () => {
@@ -313,7 +313,7 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
     const { fakeMap, onSubmit, user } = setup()
     await fillPublicationForm(user, fakeMap)
     await user.click(publishButton())
-    await screen.findByText('Tu propiedad se publicó')
+    await screen.findByText('Tu propiedad se guardó')
 
     // Act
     await user.click(publishButton())
@@ -345,8 +345,8 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
     await user.click(publishButton())
 
     // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos publicar tu propiedad')
-    expect(screen.queryByText('Tu propiedad se publicó')).not.toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos guardar tu propiedad')
+    expect(screen.queryByText('Tu propiedad se guardó')).not.toBeInTheDocument()
     expect(publishButton()).toBeEnabled()
   })
 })

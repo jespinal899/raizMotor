@@ -149,4 +149,28 @@ describe('PropertyDetail', () => {
     expect(screen.queryByRole('heading', { name: 'Características' })).not.toBeInTheDocument()
     expect(screen.queryByText('Publicado por')).not.toBeInTheDocument()
   })
+
+  it('avisa de que un anuncio local solo existe en este navegador', () => {
+    // Arrange
+    const property = buildProperty({ localOnly: true })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const note = screen.getByRole('note')
+    expect(note).toHaveTextContent('Este anuncio solo está guardado en este navegador')
+    expect(note).toHaveTextContent('Otras personas todavía no pueden verlo')
+  })
+
+  it('no muestra ese aviso en una propiedad del catálogo', () => {
+    // Arrange
+    const property = buildProperty()
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    expect(screen.queryByRole('note')).not.toBeInTheDocument()
+  })
 })

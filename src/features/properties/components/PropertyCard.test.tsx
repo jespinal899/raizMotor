@@ -106,4 +106,26 @@ describe('PropertyCard', () => {
     // Assert
     expect(container.querySelector('img')).toHaveAttribute('src', 'blob:portada.jpg')
   })
+
+  it('avisa de que un anuncio guardado en este navegador solo lo ve quien lo publicó', () => {
+    // Arrange
+    const property = buildProperty({ localOnly: true })
+
+    // Act
+    renderWithRouter(<PropertyCard property={property} />)
+
+    // Assert
+    expect(screen.getByText('Solo tú lo ves')).toBeInTheDocument()
+  })
+
+  it('no pone ese aviso en las propiedades del catálogo', () => {
+    // Arrange
+    const property = buildProperty()
+
+    // Act
+    renderWithRouter(<PropertyCard property={property} />)
+
+    // Assert
+    expect(screen.queryByText('Solo tú lo ves')).not.toBeInTheDocument()
+  })
 })
