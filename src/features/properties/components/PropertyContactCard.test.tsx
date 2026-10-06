@@ -1,8 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
-import { propertyViewService } from '@/features/properties/services/propertyViewService'
 import { quoteService } from '@/features/properties/services/quoteService'
 import { buildProperty } from '@/test/factories'
 import { anyOperationKey } from '@/test/operationKey'
@@ -18,61 +17,36 @@ const PROPERTY = buildProperty({
 const follows = (first: HTMLElement, second: HTMLElement) =>
   Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
 
-/** Pinta la columna y espera a que aparezcan las vistas, lo último en llegar. */
-const renderCard = async (property = PROPERTY) => {
-  renderWithRouter(<PropertyContactCard property={property} />)
-
-  return { views: await screen.findByText(/en este navegador/) }
-}
+const renderCard = (property = PROPERTY) => renderWithRouter(<PropertyContactCard property={property} />)
 
 describe('PropertyContactCard', () => {
-  beforeEach(() => {
-    vi.spyOn(propertyViewService, 'registerView').mockResolvedValue(12)
-  })
-
-  it('junto al icono de compartir dice cuántas vistas lleva esta ficha', async () => {
-    // Arrange: ficha con 12 visitas contadas
-
-    // Act
-    const { views } = await renderCard()
-
-    // Assert
-    const share = screen.getByRole('button', { name: 'Compartir' })
-    expect(views).toHaveTextContent('12 vistas en este navegador')
-    expect(share.parentElement).toContainElement(views)
-    expect(propertyViewService.registerView).toHaveBeenCalledExactlyOnceWith('casa-1')
-  })
-
-  it('compartir y las vistas van arriba del formulario de cotización, y quién publica, debajo', async () => {
+  it('empieza por el formulario de cotización y, debajo, dice quién publica', () => {
     // Arrange: ficha con anunciante
 
     // Act
-    const { views } = await renderCard()
+    renderCard()
 
     // Assert
-    const share = screen.getByRole('button', { name: 'Compartir' })
-    const publisher = screen.getByText('Publicado por')
-    expect(follows(share, quoteForm.form())).toBe(true)
-    expect(follows(views, quoteForm.form())).toBe(true)
-    expect(follows(quoteForm.form(), publisher)).toBe(true)
+    expect(follows(quoteForm.form(), screen.getByText('Publicado por'))).toBe(true)
+    expect(screen.getByText('Inmobiliaria de prueba')).toBeInTheDocument()
   })
 
-  it('el precio encabeza la columna', async () => {
+  it('no lleva el precio ni el icono de compartir: van fuera de la tarjeta', () => {
     // Arrange: ficha de 420 000 dólares
 
     // Act
-    await renderCard()
+    renderCard()
 
     // Assert
-    const price = screen.getByText(/420,000/)
-    expect(follows(price, screen.getByRole('button', { name: 'Compartir' }))).toBe(true)
+    expect(screen.queryByText(/420,000/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Compartir' })).not.toBeInTheDocument()
   })
 
   it('al cotizar pide la cotización de esta propiedad con los datos del formulario', async () => {
     // Arrange
     const user = userEvent.setup()
     const request = vi.spyOn(quoteService, 'request').mockResolvedValue()
-    await renderCard()
+    renderCard()
     await fillQuoteForm(user)
 
     // Act
@@ -89,7 +63,7 @@ describe('PropertyContactCard', () => {
   it('hoy, sin servidor, avisa de que la cotización no se envió', async () => {
     // Arrange
     const user = userEvent.setup()
-    await renderCard()
+    renderCard()
     await fillQuoteForm(user)
 
     // Act
@@ -101,11 +75,11 @@ describe('PropertyContactCard', () => {
     expect(alert).toHaveTextContent('No se envió tu solicitud.')
   })
 
-  it('debajo de quién publica deja escribirle por esta propiedad', async () => {
+  it('debajo de quién publica deja escribirle por esta propiedad', () => {
     // Arrange: ficha con anunciante
 
     // Act
-    await renderCard()
+    renderCard()
 
     // Assert
     const contact = screen.getByRole('link', { name: 'Contactar al anunciante' })
@@ -113,12 +87,12 @@ describe('PropertyContactCard', () => {
     expect(follows(screen.getByText('Publicado por'), contact)).toBe(true)
   })
 
-  it('si no se sabe quién publica, la columna no lo inventa', async () => {
+  it('si no se sabe quién publica, la tarjeta no lo inventa', () => {
     // Arrange
     const property = buildProperty({ advertiser: undefined })
 
     // Act
-    await renderCard(property)
+    renderCard(property)
 
     // Assert
     expect(screen.queryByText('Publicado por')).not.toBeInTheDocument()

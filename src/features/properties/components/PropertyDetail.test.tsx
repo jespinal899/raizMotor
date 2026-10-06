@@ -80,23 +80,54 @@ describe('PropertyDetail', () => {
     expect(within(features).getAllByRole('listitem').map(textOf)).toEqual(['Piscina', 'Terraza', 'Cocina equipada'])
   })
 
-  it('a la derecha muestra el precio y quién publica', () => {
+  it('bajo el título y la ubicación, antes de las fotos, dice el precio con "Desde"', () => {
     // Arrange
-    const property = buildProperty({
-      price: 420000,
-      bedrooms: 3,
-      bathrooms: 3,
-      parking: 2,
-      area: 220,
-      advertiser: { name: 'Inmobiliaria de prueba', kind: 'inmobiliaria' },
-    })
+    const property = buildProperty({ title: 'Casa con jardín', price: 420000, operation: 'venta' })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const price = screen.getByText(/420,000/).closest('p') as HTMLElement
+    const follows = (first: HTMLElement, second: HTMLElement) =>
+      Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(textOf(price)).toBe('Desde $ 420,000')
+    expect(follows(screen.getByText('Miraflores, Lima'), price)).toBe(true)
+    expect(follows(price, screen.getByRole('img', { name: /Casa con jardín, foto 1/ }))).toBe(true)
+  })
+
+  it('en un alquiler, el precio de la ficha aclara que es por mes', () => {
+    // Arrange
+    const property = buildProperty({ price: 850, operation: 'alquiler' })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    expect(textOf(screen.getByText(/850/).closest('p') as HTMLElement)).toBe('Desde $ 850 / mes')
+  })
+
+  it('el precio se dice una sola vez: la columna derecha ya no lo repite', () => {
+    // Arrange
+    const property = buildProperty({ price: 420000 })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    expect(screen.getAllByText(/420,000/)).toHaveLength(1)
+    expect(within(screen.getByRole('complementary')).queryByText(/420,000/)).not.toBeInTheDocument()
+  })
+
+  it('a la derecha muestra quién publica', () => {
+    // Arrange
+    const property = buildProperty({ advertiser: { name: 'Inmobiliaria de prueba', kind: 'inmobiliaria' } })
 
     // Act
     renderWithRouter(<PropertyDetail property={property} />)
 
     // Assert
     const sidebar = screen.getByRole('complementary')
-    expect(textOf(within(sidebar).getByText(/420,000/))).toBe('$ 420,000')
     expect(within(sidebar).getByText('Publicado por')).toBeInTheDocument()
     expect(within(sidebar).getByText('Inmobiliaria de prueba')).toBeInTheDocument()
     expect(within(sidebar).getByText('Inmobiliaria')).toBeInTheDocument()

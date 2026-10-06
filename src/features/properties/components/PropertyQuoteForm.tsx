@@ -19,6 +19,7 @@ interface PropertyQuoteFormProps {
 /** Formulario breve de la ficha para pedir la cotización de la propiedad. */
 const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
   const titleId = useId()
+  const descriptionId = useId()
   const { values, errors, status, change, submit } = useQuoteForm({ onSubmit })
   const isSending = status === 'sending'
 
@@ -28,10 +29,21 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
   }
 
   return (
-    <form noValidate aria-labelledby={titleId} onSubmit={handleSubmit} className="grid gap-4">
-      <h2 id={titleId} className="font-heading text-lg font-semibold tracking-tight">
-        Cotizar esta propiedad
-      </h2>
+    <form
+      noValidate
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      onSubmit={handleSubmit}
+      className="grid gap-4"
+    >
+      <div className="grid gap-1">
+        <h2 id={titleId} className="font-heading text-lg font-semibold tracking-tight">
+          Cotizar esta propiedad
+        </h2>
+        <p id={descriptionId} className="text-sm text-pretty text-muted-foreground">
+          Recibe en tu correo un valor estimado en segundos.
+        </p>
+      </div>
 
       <TextField
         label="Nombre y apellido"

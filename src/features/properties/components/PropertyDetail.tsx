@@ -5,11 +5,12 @@ import type { BreadcrumbItem } from '@/components/Breadcrumb'
 import ExternalButtonLink from '@/components/ExternalButtonLink'
 import StatusAlert from '@/components/StatusAlert'
 import { Badge } from '@/components/ui/badge'
-import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
 import PropertyDetailLayout from '@/features/properties/components/PropertyDetailLayout'
 import PropertyDetailSection from '@/features/properties/components/PropertyDetailSection'
 import PropertyGallery from '@/features/properties/components/PropertyGallery'
 import PropertyHighlights from '@/features/properties/components/PropertyHighlights'
+import PropertyPrice from '@/features/properties/components/PropertyPrice'
+import PropertySidebar from '@/features/properties/components/PropertySidebar'
 import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { Property } from '@/features/properties/types/property.types'
 import { buildDirectionsUrl } from '@/features/properties/utils/propertyDirections'
@@ -55,12 +56,13 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
             <MapPin className="size-4 shrink-0" aria-hidden="true" />
             {district}, {city}
           </p>
+          <PropertyPrice property={property} prefix="Desde" className="text-3xl" />
           {/* Arriba del todo: es lo primero que debe saber quien acaba de publicar y piensa compartir el enlace. */}
           {localOnly && <StatusAlert role="note" icon={EyeOff} {...LOCAL_ONLY_NOTE} />}
         </header>
       }
       gallery={<PropertyGallery images={gallery} title={title} />}
-      sidebar={<PropertyContactCard property={property} />}
+      sidebar={<PropertySidebar property={property} />}
     >
       {/* Justo debajo de las fotos: lo esencial de la propiedad antes del texto. */}
       <PropertyHighlights property={property} />

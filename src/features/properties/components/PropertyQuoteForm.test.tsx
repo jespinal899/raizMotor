@@ -26,6 +26,21 @@ describe('PropertyQuoteForm', () => {
     expect(quoteForm.submitButton()).toHaveTextContent('Cotizar')
   })
 
+  it('bajo el título explica qué se recibe al cotizar', () => {
+    // Arrange
+    const onSubmit = sent()
+
+    // Act
+    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+
+    // Assert
+    const message = 'Recibe en tu correo un valor estimado en segundos.'
+    const title = within(quoteForm.form()).getByRole('heading', { name: 'Cotizar esta propiedad' })
+    expect(quoteForm.form()).toHaveAccessibleDescription(message)
+    expect(title.compareDocumentPosition(screen.getByText(message)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText(message).compareDocumentPosition(quoteForm.fullName()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('el teléfono trae fijo el prefijo de Honduras: solo se escribe el número', async () => {
     // Arrange
     const user = userEvent.setup()
