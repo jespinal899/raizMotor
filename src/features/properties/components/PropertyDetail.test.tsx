@@ -223,7 +223,7 @@ describe('PropertyDetail', () => {
     expect(within(sidebar).queryByText(/baños/)).not.toBeInTheDocument()
   })
 
-  it('a la derecha ofrece contactar y compartir la ficha', () => {
+  it('a la derecha ofrece compartir la ficha, cotizarla y contactar al anunciante', () => {
     // Arrange
     const property = buildProperty()
 
@@ -232,8 +232,9 @@ describe('PropertyDetail', () => {
 
     // Assert
     const sidebar = screen.getByRole('complementary')
-    expect(within(sidebar).getByRole('link', { name: 'Contactar al anunciante' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('form', { name: 'Cotizar esta propiedad' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('link', { name: 'Contactar al anunciante' })).toBeInTheDocument()
   })
 
   it('en la ubicación ofrece "Cómo llegar", que abre en Google Maps la ruta hasta el punto publicado', () => {

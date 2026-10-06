@@ -29,10 +29,14 @@ const PropertyDetailLayout = ({
       {breadcrumb}
       {header}
 
-      {/* En móvil el precio y el contacto van justo después de las fotos; en escritorio, en una columna fija. */}
+      {/*
+        En móvil el precio y la cotización van justo después de las fotos; en escritorio, en una columna.
+        Esa columna solo se queda fija al desplazarse si la ventana es alta (`tall`): en una baja no cabe
+        entera y su parte de abajo quedaría fuera de la vista.
+      */}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         {gallery}
-        <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+        <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start lg:tall:sticky lg:tall:top-24">
           {sidebar}
         </aside>
         <div className="grid gap-8 lg:col-start-1">{children}</div>
