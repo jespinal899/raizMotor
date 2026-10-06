@@ -68,18 +68,17 @@ Al buscador de direcciones solo se le envían la colonia, la ciudad y el departa
 
 ### Lo que todavía no está conectado
 
-Todavía no hay servidor propio ni base de datos. Estas funciones tienen la interfaz terminada, pero su servicio es provisional: rechaza la operación con un error de "no disponible" y la pantalla lo avisa. Ninguna simula un resultado que no ocurrió.
+Todavía no hay servidor propio. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil. El inicio de sesión y el envío de contacto siguen pendientes de conectar con servicios externos.
 
 | Función | Qué falta | Dónde se conecta |
 | --- | --- | --- |
 | Iniciar sesión, registro y acceso con Google | Servicio de cuentas | Última línea de `src/features/auth/services/authService.ts` |
-| Publicar una propiedad | Servicio de anuncios | Última línea de `src/features/properties/services/publicationService.ts` |
 | Enviar el formulario de contacto | Servicio de correo | Última línea de `src/features/contact/services/contactService.ts` |
-| Catálogo real | Hoy se sirven propiedades de ejemplo desde la memoria | Última línea de `src/features/properties/services/propertyService.ts` |
+| Catálogo compartido | Los anuncios locales se combinan con las propiedades de ejemplo | Última línea de `src/features/properties/services/propertyService.ts` |
 
 ## Nivel 2 · Contenedores
 
-El sistema tiene dos contenedores: el sitio estático que entrega los archivos y la aplicación que se ejecuta en el navegador. El catálogo de ejemplo viaja dentro de la propia aplicación.
+El sistema tiene dos contenedores: el sitio estático que entrega los archivos y la aplicación que se ejecuta en el navegador. El catálogo de ejemplo viaja dentro de la aplicación; las publicaciones y sus fotos quedan en IndexedDB del navegador.
 
 ```mermaid
 %%{init: {"flowchart": {"wrappingWidth": 280}}}%%
@@ -192,10 +191,10 @@ Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno
 
 | Servicio | Qué hace hoy |
 | --- | --- |
-| `propertyService` | Devuelve las propiedades de ejemplo desde la memoria, con filtros y paginación. |
+| `propertyService` | Combina el catálogo de ejemplo con los anuncios de IndexedDB y aplica filtros y paginación. |
 | `geocodingService` | Consulta Nominatim, como mucho una vez por segundo, para situar una dirección, y recuerda las respuestas. |
 | `locationMap` | Encapsula Leaflet: es el único archivo que conoce la biblioteca del mapa. |
-| `publicationService` | Provisional: rechaza con `PublicationUnavailableError`. |
+| `publicationService` | Guarda cada anuncio y sus fotos en IndexedDB; devuelve su ID y mantiene la clave de operación para evitar duplicados. |
 | `contactService` | Provisional: rechaza con `ContactUnavailableError`. |
 | `authService` | Provisional: rechaza con `AuthUnavailableError` o `RegistrationUnavailableError`. |
 
@@ -213,7 +212,7 @@ flowchart LR
     component["<b>Componentes</b><br/>SearchResults, PropertyCard<br/>Pintan lo que reciben"]
     hook["<b>Hook</b><br/>useProperties<br/>Pide los datos y decide el estado"]
     contract["<b>Contrato</b><br/>interface PropertyService"]
-    impl["<b>Implementación</b><br/>createInMemoryPropertyService<br/>Catálogo de ejemplo"]
+    impl["<b>Implementación</b><br/>createPublishedPropertyService<br/>IndexedDB y catálogo de ejemplo"]
     utils["<b>Lógica pura</b><br/>utils y types<br/>Filtros y formatos, sin React"]
 
     page --> component
@@ -229,7 +228,7 @@ flowchart LR
 
 - **El componente pinta y el hook decide.** Los componentes no piden datos ni conocen servicios.
 - **El hook depende del contrato, no de la implementación.** Recibe el servicio como parámetro con un valor por defecto, y por eso las pruebas pueden pasarle uno falso.
-- **La implementación se elige en un solo sitio.** Por ejemplo, `export const propertyService: PropertyService = createInMemoryPropertyService(PROPERTIES)`. Para conectar una API real se cambia esa línea.
+- **La implementación se elige en un solo sitio.** `propertyService` combina el catálogo de ejemplo con `createPublishedPropertyService`; para conectar una API compartida se cambia esa línea.
 - **La lógica pura vive en `utils`.** Validaciones, filtros y formatos se prueban sin React.
 
 ## Idempotencia
@@ -257,7 +256,7 @@ Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: rep
 - **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
 - **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
 
-La clave solo evita duplicados si el servicio la respeta. La implementación real de cada servicio debe guardar la clave junto con el resultado y, si le llega una que ya atendió, devolver ese mismo resultado sin repetir el efecto. Las implementaciones provisionales de hoy rechazan todas las operaciones, así que todavía no hay nada que duplicar.
+La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Las cuentas y el contacto siguen pendientes de sus servicios externos.
 
 Iniciar sesión no lleva clave: repetirlo deja la misma sesión.
 

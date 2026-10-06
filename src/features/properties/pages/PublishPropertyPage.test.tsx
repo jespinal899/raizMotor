@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PublishPropertyPage from '@/features/properties/pages/PublishPropertyPage'
 import { createLeafletLocationMap } from '@/features/properties/services/locationMap'
-import { PublicationUnavailableError, publicationService } from '@/features/properties/services/publicationService'
+import { publicationService } from '@/features/properties/services/publicationService'
 import { BRAND } from '@/shared/constants/brand'
 import { buildFakeLocationMap } from '@/test/fakeLocationMap'
 import { FILLED_PUBLICATION, fillLocationScreen, fillPublicationForm } from '@/test/publicationForm'
@@ -24,9 +24,9 @@ const publish = vi.mocked(publicationService.publish)
 const setup = () => {
   const fakeMap = buildFakeLocationMap()
   vi.mocked(createLeafletLocationMap).mockImplementation(fakeMap.createMap)
-  renderWithRouter(<PublishPropertyPage />, { route: '/publicar' })
+  const view = renderWithRouter(<PublishPropertyPage />, { route: '/publicar', path: '/publicar' })
 
-  return { fakeMap, user: userEvent.setup() }
+  return { fakeMap, user: userEvent.setup(), view }
 }
 
 const publishButton = () => screen.getByRole('button', { name: 'Publicar propiedad' })
@@ -60,10 +60,10 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
     expect(await screen.findByText('Ubicación guardada con éxito.')).toBeInTheDocument()
   })
 
-  it('envía el anuncio completo al servicio de publicación y confirma el resultado', async () => {
+  it('guarda el anuncio completo y abre la ficha que devolvió el servicio', async () => {
     // Arrange
-    publish.mockResolvedValue(undefined)
-    const { fakeMap, user } = setup()
+    publish.mockResolvedValue('anuncio-publicado')
+    const { fakeMap, user, view } = setup()
     await fillPublicationForm(user, fakeMap)
 
     // Act
@@ -71,12 +71,12 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
 
     // Assert
     expect(publish).toHaveBeenCalledExactlyOnceWith(FILLED_PUBLICATION, anyOperationKey())
-    expect(await screen.findByText('Tu propiedad se publicó')).toBeInTheDocument()
+    await waitFor(() => expect(view.currentPath()).toBe('/propiedad/anuncio-publicado'))
   })
 
-  it('si el servicio de publicación aún no está activo, lo avisa en lugar de confirmar', async () => {
+  it('si falla el almacenamiento, avisa sin navegar ni confirmar el anuncio', async () => {
     // Arrange
-    publish.mockRejectedValue(new PublicationUnavailableError())
+    publish.mockRejectedValue(new Error('almacenamiento no disponible'))
     const { fakeMap, user } = setup()
     await fillPublicationForm(user, fakeMap)
 
@@ -84,6 +84,6 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
     await user.click(publishButton())
 
     // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('La publicación aún no está disponible')
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos publicar tu propiedad')
   })
 })

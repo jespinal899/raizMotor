@@ -8,14 +8,22 @@ interface LocationMapViewProps {
   view: MapView
   /** Nombre del mapa para quien no lo ve. */
   label: string
-  onMarkerMove: (point: Coordinates) => void
+  onMarkerMove?: (point: Coordinates) => void
+  /** En una ficha el mapa solo muestra el punto publicado. */
+  interactive?: boolean
   createMap?: CreateLocationMap
 }
 
 const MARKER_LABEL = 'Ubicación de la propiedad'
 
 /** Mapa con un marcador que la persona puede arrastrar, o colocar con un clic, hasta el punto exacto. */
-const LocationMapView = ({ view, label, onMarkerMove, createMap = createLeafletLocationMap }: LocationMapViewProps) => {
+const LocationMapView = ({
+  view,
+  label,
+  onMarkerMove = () => {},
+  interactive = true,
+  createMap = createLeafletLocationMap,
+}: LocationMapViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LocationMap | null>(null)
   const reportMove = useEffectEvent(onMarkerMove)
@@ -28,6 +36,7 @@ const LocationMapView = ({ view, label, onMarkerMove, createMap = createLeafletL
     const map = createMap(containerRef.current, {
       markerLabel: MARKER_LABEL,
       onMarkerMove: (point) => reportMove(point),
+      interactive,
     })
     mapRef.current = map
 
@@ -35,7 +44,7 @@ const LocationMapView = ({ view, label, onMarkerMove, createMap = createLeafletL
       map.destroy()
       mapRef.current = null
     }
-  }, [createMap])
+  }, [createMap, interactive])
 
   // Depende de los valores y no del objeto: un punto igual no debe deshacer lo que movió la persona.
   useEffect(() => {

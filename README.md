@@ -8,14 +8,14 @@ Plataforma web inmobiliaria para Honduras: reúne casas, apartamentos y terrenos
 
 ## Estado actual
 
-Todavía no hay servidor propio ni base de datos. El catálogo funciona con propiedades de ejemplo, y las funciones que necesitan un servicio real muestran un aviso en lugar de simular el resultado.
+Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con anuncios guardados en IndexedDB del navegador actual; los anuncios locales no se sincronizan con otros dispositivos ni visitantes. Las demás funciones que necesitan un servicio externo muestran un aviso en lugar de simular el resultado.
 
 | Función | Estado |
 | --- | --- |
 | Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona |
-| Búsqueda con filtros y paginación | Funciona con el catálogo de ejemplo |
-| Ficha de una propiedad | Funciona con el catálogo de ejemplo |
-| Publicar una propiedad: formulario por pasos con mapa | Interfaz lista; falta el servicio de anuncios |
+| Búsqueda con filtros y paginación | Funciona con el catálogo de ejemplo y anuncios locales |
+| Ficha de una propiedad | Muestra anuncios de ejemplo y los publicados en este navegador |
+| Publicar una propiedad: formulario por pasos con mapa | Guarda el anuncio y las fotos en IndexedDB de este navegador |
 | Contacto | Interfaz lista; falta el servicio de correo |
 | Iniciar sesión, registro y acceso con Google | Interfaz lista; falta el servicio de cuentas |
 | Recuperar contraseña | Solo avisa de que aún no está disponible |
@@ -94,7 +94,7 @@ Cada funcionalidad usa, según lo que necesite, las mismas carpetas: `pages`, `c
 
 - **Código por funcionalidad.** Lo nuevo va en su carpeta de `src/features`. Solo pasa a `src/components`, `src/hooks` o `src/shared` cuando lo usan varias funcionalidades.
 - **Capas.** El componente pinta, el hook decide y el servicio habla con el exterior. La lógica pura vive en `utils`.
-- **Servicios intercambiables.** Cada servicio declara un contrato y elige su implementación en una sola línea. Si el servicio real no existe, la implementación provisional rechaza la operación y la pantalla lo avisa.
+- **Servicios intercambiables.** Cada servicio declara un contrato y elige su implementación en un solo sitio. Las publicaciones se guardan localmente; las funciones que aún requieren un servicio externo muestran un aviso si este falta.
 - **Idempotencia.** Repetir una acción no la duplica: un envío en curso o ya hecho no se repite, y toda escritura lleva una clave de operación. Las reglas están en [docs/arquitectura.md](docs/arquitectura.md#idempotencia).
 - **Pruebas primero.** Cada comportamiento se escribe con su prueba, junto al código (`Componente.test.tsx`), con los bloques `// Arrange`, `// Act` y `// Assert` a la vista.
 - **Componentes.** Función flecha con `export default`. Los de interfaz base se añaden con `npx shadcn@latest add <nombre>`.
@@ -117,7 +117,7 @@ El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. E
 
 ## Pendiente
 
-- Decidir el servidor y conectar cuentas, publicación de anuncios y envío del contacto.
+- Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además de cuentas y envío de contactos.
 - Verificar el teléfono del registro con un código por SMS.
 - Alinear el catálogo de ejemplo con Honduras: hoy usa propiedades de Lima y el formato regional `es-PE`.
 - Confirmar el contenido de los planes.

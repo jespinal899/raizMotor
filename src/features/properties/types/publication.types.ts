@@ -1,9 +1,6 @@
-import type { PropertyOperation, PropertyType } from '@/features/properties/types/property.types'
+import type { Coordinates, PropertyOperation, PropertyType } from '@/features/properties/types/property.types'
 
-export interface Coordinates {
-  lat: number
-  lng: number
-}
+export type { Coordinates } from '@/features/properties/types/property.types'
 
 /** Hacia dónde mira el mapa. */
 export interface MapView {
@@ -74,5 +71,4 @@ export interface PropertyPublication {
   images: File[]
 }
 
-/** Estado del envío: `unavailable` significa que la publicación aún no está conectada a un servicio. */
-export type PublicationStatus = 'idle' | 'submitting' | 'published' | 'unavailable' | 'failed'
+export type PublicationStatus = 'idle' | 'submitting' | 'published' | 'failed'

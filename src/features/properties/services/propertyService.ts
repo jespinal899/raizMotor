@@ -1,5 +1,6 @@
 import { PROPERTIES } from '@/features/properties/data/properties.data'
-import { createInMemoryPropertyService } from '@/features/properties/services/inMemoryPropertyService'
+import { createPublishedPropertyService } from '@/features/properties/services/publishedPropertyService'
+import { publishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
 import type { Property, PropertyFilters } from '@/features/properties/types/property.types'
 import type { PageRequest, Paginated } from '@/shared/types/common.types'
 
@@ -11,5 +12,5 @@ export interface PropertyService {
   getById(id: string): Promise<Property | undefined>
 }
 
-// Único punto donde se elige la implementación: al conectar la API, se cambia solo esta línea.
-export const propertyService: PropertyService = createInMemoryPropertyService(PROPERTIES)
+// Los anuncios locales complementan el catálogo provisional hasta conectar una API.
+export const propertyService: PropertyService = createPublishedPropertyService(PROPERTIES, publishedPropertyRepository)

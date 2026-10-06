@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import PropertyForm from '@/features/properties/components/PropertyForm'
 import { createLeafletLocationMap } from '@/features/properties/services/locationMap'
-import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
 import { buildFakeLocationMap } from '@/test/fakeLocationMap'
 import { anyOperationKey } from '@/test/operationKey'
@@ -337,16 +336,16 @@ describe('PropertyForm', { timeout: 20_000 }, () => {
     expect(publishButton()).toHaveTextContent('Publicando…')
   })
 
-  it('si la publicación aún no está activa lo avisa, sin dar el anuncio por publicado', async () => {
+  it('si no se puede guardar, avisa del fallo y permite volver a intentar', async () => {
     // Arrange
-    const { fakeMap, user } = setup(() => Promise.reject(new PublicationUnavailableError()))
+    const { fakeMap, user } = setup(() => Promise.reject(new Error('almacenamiento no disponible')))
     await fillPublicationForm(user, fakeMap)
 
     // Act
     await user.click(publishButton())
 
     // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('La publicación aún no está disponible')
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos publicar tu propiedad')
     expect(screen.queryByText('Tu propiedad se publicó')).not.toBeInTheDocument()
     expect(publishButton()).toBeEnabled()
   })

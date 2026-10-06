@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Check, MapPin } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
 import type { BreadcrumbItem } from '@/components/Breadcrumb'
@@ -8,8 +9,10 @@ import PropertyGallery from '@/features/properties/components/PropertyGallery'
 import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { Property } from '@/features/properties/types/property.types'
 import { ROUTES, propertyTypePath } from '@/shared/constants/routes'
+import { formatArea } from '@/shared/utils/format'
 
 const sectionTitle = 'font-heading text-xl font-semibold tracking-tight'
+const LocationMapView = lazy(() => import('@/features/properties/components/LocationMapView'))
 
 const buildBreadcrumb = ({ title, type }: Property): BreadcrumbItem[] => {
   const { plural, slug } = PROPERTY_TYPES[type]
@@ -27,7 +30,7 @@ interface PropertyDetailProps {
 }
 
 const PropertyDetail = ({ property }: PropertyDetailProps) => {
-  const { title, description, type, operation, district, city, features, gallery } = property
+  const { title, description, type, operation, district, city, features, gallery, location, builtArea, landArea } = property
 
   return (
     <PropertyDetailLayout
@@ -55,19 +58,71 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
         <p className="leading-relaxed text-pretty text-muted-foreground">{description}</p>
       </section>
 
-      <section aria-labelledby="caracteristicas" className="grid gap-3">
-        <h2 id="caracteristicas" className={sectionTitle}>
-          Características
-        </h2>
-        <ul className="grid gap-2.5 sm:grid-cols-2">
-          {features.map((feature) => (
-            <li key={feature} className="flex items-center gap-2">
-              <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {features.length > 0 && (
+        <section aria-labelledby="caracteristicas" className="grid gap-3">
+          <h2 id="caracteristicas" className={sectionTitle}>
+            Características
+          </h2>
+          <ul className="grid gap-2.5 sm:grid-cols-2">
+            {features.map((feature) => (
+              <li key={feature} className="flex items-center gap-2">
+                <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(builtArea !== undefined || landArea !== undefined) && (
+        <section aria-labelledby="superficies" className="grid gap-3">
+          <h2 id="superficies" className={sectionTitle}>
+            Superficies
+          </h2>
+          <dl className="grid gap-2 sm:grid-cols-2">
+            {builtArea !== undefined && (
+              <div>
+                <dt className="text-sm text-muted-foreground">Superficie construida</dt>
+                <dd className="font-medium">{formatArea(builtArea)}</dd>
+              </div>
+            )}
+            {landArea !== undefined && (
+              <div>
+                <dt className="text-sm text-muted-foreground">Superficie del terreno</dt>
+                <dd className="font-medium">{formatArea(landArea)}</dd>
+              </div>
+            )}
+          </dl>
+        </section>
+      )}
+
+      {location && (
+        <section aria-labelledby="ubicacion-propiedad" className="grid gap-3">
+          <h2 id="ubicacion-propiedad" className={sectionTitle}>
+            Ubicación
+          </h2>
+          <address className="grid gap-1 text-sm not-italic text-muted-foreground">
+            <span>{location.address}</span>
+            <span>{district}, {city}</span>
+            <span>{location.department}</span>
+          </address>
+          <Suspense
+            fallback={
+              <div
+                role="img"
+                aria-label="Cargando mapa de la propiedad"
+                className="h-72 animate-pulse rounded-lg border bg-muted sm:h-80"
+              />
+            }
+          >
+            <LocationMapView
+              view={{ center: location.coordinates, zoom: 15 }}
+              label="Mapa de la propiedad"
+              interactive={false}
+            />
+          </Suspense>
+        </section>
+      )}
     </PropertyDetailLayout>
   )
 }

@@ -1,27 +1,16 @@
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
-
-/** La publicación de anuncios no está conectada todavía; no es un fallo de red ni de quien publica. */
-export class PublicationUnavailableError extends Error {
-  constructor() {
-    super('La publicación de propiedades aún no está configurada.')
-    this.name = 'PublicationUnavailableError'
-  }
-}
+import type { PublishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
+import { publishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
 
 export interface PublicationService {
   /**
-   * Se resuelve cuando el anuncio queda publicado y se rechaza si no se pudo publicar. Es idempotente: si
-   * llega dos veces con la misma clave, por un reintento o un doble envío, se publica un solo anuncio.
+   * Se resuelve con el identificador guardado. Repetir una clave devuelve ese mismo identificador.
    */
-  publish(publication: PropertyPublication, operationKey: string): Promise<void>
+  publish(publication: PropertyPublication, operationKey: string): Promise<string>
 }
 
-/** Implementación provisional mientras no exista el servicio de anuncios: nunca finge una publicación. */
-export const createPendingPublicationService = (): PublicationService => ({
-  publish: async () => {
-    throw new PublicationUnavailableError()
-  },
+export const createPublicationService = (repository: PublishedPropertyRepository): PublicationService => ({
+  publish: (publication, operationKey) => repository.publish(publication, operationKey),
 })
 
-// Único punto donde se elige cómo se publica: al conectar el servicio de anuncios, se cambia solo esta línea.
-export const publicationService: PublicationService = createPendingPublicationService()
+export const publicationService: PublicationService = createPublicationService(publishedPropertyRepository)

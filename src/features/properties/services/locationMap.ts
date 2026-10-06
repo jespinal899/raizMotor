@@ -14,6 +14,8 @@ interface LocationMapOptions {
   markerLabel: string
   /** Recibe el punto cada vez que la persona mueve el marcador. */
   onMarkerMove: (point: Coordinates) => void
+  /** Desactiva arrastre, zoom y eventos de movimiento cuando el mapa solo informa. */
+  interactive?: boolean
 }
 
 export type CreateLocationMap = (container: HTMLElement, options: LocationMapOptions) => LocationMap
@@ -36,9 +38,20 @@ const MARKER_ICON = divIcon({
 })
 
 /** Mapa de OpenStreetMap con Leaflet. Es el único archivo que conoce la librería del mapa. */
-export const createLeafletLocationMap: CreateLocationMap = (container, { markerLabel, onMarkerMove }) => {
+export const createLeafletLocationMap: CreateLocationMap = (
+  container,
+  { markerLabel, onMarkerMove, interactive = true },
+) => {
   // Sin zoom con la rueda: secuestraría el desplazamiento de la página o de la ventana que contiene el mapa.
-  const leafletMap = createMap(container, { scrollWheelZoom: false })
+  const leafletMap = createMap(container, {
+    scrollWheelZoom: false,
+    dragging: interactive,
+    doubleClickZoom: interactive,
+    boxZoom: interactive,
+    keyboard: interactive,
+    touchZoom: interactive,
+    zoomControl: interactive,
+  })
   tileLayer(TILES_URL, { attribution: TILES_ATTRIBUTION, maxZoom: MAX_ZOOM }).addTo(leafletMap)
 
   let pin: Marker | undefined
@@ -61,18 +74,12 @@ export const createLeafletLocationMap: CreateLocationMap = (container, { markerL
     pin = createMarker(point, {
       icon: MARKER_ICON,
       title: markerLabel,
-      draggable: true,
+      draggable: interactive,
       autoPan: true,
       bubblingMouseEvents: false,
     }).addTo(leafletMap)
-    pin.on('dragend', reportMove)
+    if (interactive) pin.on('dragend', reportMove)
   }
-
-  // Un clic (o un toque) en el mapa lleva el marcador a ese punto.
-  leafletMap.on('click', ({ latlng }) => {
-    placeMarker(latlng)
-    reportMove()
-  })
 
   // Con el teclado el marcador no se puede arrastrar: al desplazar el mapa con las flechas, lo acompaña en el centro.
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -82,16 +89,24 @@ export const createLeafletLocationMap: CreateLocationMap = (container, { markerL
   const handlePointerDown = () => {
     isPannedByKeyboard = false
   }
-  container.addEventListener('keydown', handleKeyDown)
-  container.addEventListener('pointerdown', handlePointerDown)
 
-  leafletMap.on('moveend', () => {
-    if (!isPannedByKeyboard) return
+  if (interactive) {
+    // Un clic (o un toque) en el mapa lleva el marcador a ese punto.
+    leafletMap.on('click', ({ latlng }) => {
+      placeMarker(latlng)
+      reportMove()
+    })
+    container.addEventListener('keydown', handleKeyDown)
+    container.addEventListener('pointerdown', handlePointerDown)
 
-    isPannedByKeyboard = false
-    placeMarker(leafletMap.getCenter())
-    reportMove()
-  })
+    leafletMap.on('moveend', () => {
+      if (!isPannedByKeyboard) return
+
+      isPannedByKeyboard = false
+      placeMarker(leafletMap.getCenter())
+      reportMove()
+    })
+  }
 
   return {
     showPoint: ({ center, zoom }) => {
@@ -104,8 +119,10 @@ export const createLeafletLocationMap: CreateLocationMap = (container, { markerL
       if (isDestroyed) return
       isDestroyed = true
 
-      container.removeEventListener('keydown', handleKeyDown)
-      container.removeEventListener('pointerdown', handlePointerDown)
+      if (interactive) {
+        container.removeEventListener('keydown', handleKeyDown)
+        container.removeEventListener('pointerdown', handlePointerDown)
+      }
       leafletMap.remove()
     },
   }

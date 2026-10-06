@@ -1,4 +1,3 @@
-import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
 import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { ADDRESS_FIELDS } from '@/features/properties/utils/publicationSteps'
 import { validatePublication } from '@/features/properties/utils/publicationValidation'
@@ -29,7 +28,7 @@ const EMPTY_PUBLICATION: PublicationFormValues = {
   images: [],
 }
 
-const toFailureStatus = (reason: unknown) => (reason instanceof PublicationUnavailableError ? 'unavailable' : 'failed')
+const toFailureStatus = () => 'failed' as const
 
 type PublicationForm = ReturnType<typeof usePublicationForm>
 
@@ -53,7 +52,7 @@ export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {
     change: changeField,
     validateFields,
   } = useFormFields({ initialValues: EMPTY_PUBLICATION, validate: validatePublication })
-  const { status, attempt, reset } = useAttempt<'submitting', 'unavailable' | 'failed', 'published'>({
+  const { status, attempt, reset } = useAttempt<'submitting', 'failed', 'published'>({
     toFailure: toFailureStatus,
     succeeded: 'published',
   })

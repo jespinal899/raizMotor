@@ -19,11 +19,13 @@ const PropertyContactCard = ({ property }: PropertyContactCardProps) => {
       <PropertyPrice property={property} className="text-3xl" />
       <PropertyStats property={property} withParking className="gap-x-5 gap-y-2 text-foreground" />
 
-      <div className="grid gap-0.5 border-t pt-5">
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Publicado por</p>
-        <p className="font-medium">{advertiser.name}</p>
-        <p className="text-sm text-muted-foreground">{ADVERTISER_KINDS[advertiser.kind]}</p>
-      </div>
+      {advertiser && (
+        <div className="grid gap-0.5 border-t pt-5">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Publicado por</p>
+          <p className="font-medium">{advertiser.name}</p>
+          <p className="text-sm text-muted-foreground">{ADVERTISER_KINDS[advertiser.kind]}</p>
+        </div>
+      )}
 
       <ButtonLink to={propertyContactPath(id)} size="lg" className="h-11 text-base">
         <MessageCircle />

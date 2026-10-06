@@ -124,6 +124,23 @@ describe('createLeafletLocationMap', () => {
     expect(container.querySelector('.leaflet-control-attribution')).toHaveTextContent(expectedCredit)
   })
 
+  it('en modo de solo lectura conserva el marcador sin aceptar cambios de ubicación', () => {
+    // Arrange
+    const container = document.body.appendChild(document.createElement('div'))
+    const onMarkerMove = vi.fn()
+    const map = createLeafletLocationMap(container, { markerLabel: MARKER_LABEL, onMarkerMove, interactive: false })
+    map.showPoint(TEGUCIGALPA)
+
+    // Act
+    fireEvent.click(container, { clientX: 120, clientY: 80 })
+
+    // Assert
+    expect(container.querySelector('.leaflet-control-zoom')).toBeNull()
+    expect(container.querySelector('.leaflet-marker-draggable')).toBeNull()
+    expect(onMarkerMove).not.toHaveBeenCalled()
+    map.destroy()
+  })
+
   it('al destruirlo retira del contenedor todo lo que había pintado', () => {
     // Arrange
     const { container, map } = setup()

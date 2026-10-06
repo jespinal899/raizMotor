@@ -1,7 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { usePublicationForm } from '@/features/properties/hooks/usePublicationForm'
-import { PublicationUnavailableError } from '@/features/properties/services/publicationService'
 import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { toPublication } from '@/features/properties/utils/toPublication'
 import { deferred } from '@/test/deferred'
@@ -112,19 +111,16 @@ describe('usePublicationForm', () => {
     expect(result.current.status).toBe('published')
   })
 
-  it.each([
-    { reason: new PublicationUnavailableError(), status: 'unavailable', when: 'la publicación aún no está activa' },
-    { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
-  ])('queda como "$status" cuando $when', async ({ reason, status }) => {
+  it('queda como fallida cuando no se puede guardar el anuncio', async () => {
     // Arrange
-    const { result } = setup(() => Promise.reject(reason))
+    const { result } = setup(() => Promise.reject(new Error('almacenamiento no disponible')))
     fillForm(result)
 
     // Act
     await act(() => result.current.submit())
 
     // Assert
-    expect(result.current.status).toBe(status)
+    expect(result.current.status).toBe('failed')
   })
 
   it('al corregir un campo quita solo su error', async () => {
@@ -203,7 +199,7 @@ describe('usePublicationForm', () => {
 
   it('al editar después de un intento retira el aviso', async () => {
     // Arrange
-    const { result } = setup(() => Promise.reject(new PublicationUnavailableError()))
+    const { result } = setup(() => Promise.reject(new Error('almacenamiento no disponible')))
     fillForm(result)
     await act(() => result.current.submit())
 

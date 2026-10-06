@@ -10,6 +10,14 @@ vi.mock('@/features/properties/services/propertyService', () => ({
   propertyService: { getFeatured: vi.fn(), search: vi.fn(), getById: vi.fn() },
 }))
 
+vi.mock('@/features/properties/components/LocationMapView', () => ({
+  default: ({ label, view }: { label: string; view: { center: { lat: number; lng: number } } }) => (
+    <div role="application" aria-label={label}>
+      Latitud {view.center.lat}; longitud {view.center.lng}
+    </div>
+  ),
+}))
+
 const getById = vi.mocked(propertyService.getById)
 
 const renderPage = (id: string) =>
@@ -42,6 +50,34 @@ describe('PropertyDetailPage', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Casa con jardín' })).toBeInTheDocument()
     expect(getById).toHaveBeenCalledWith('casa-1')
     await waitFor(() => expect(document.title).toBe(`Casa con jardín | ${BRAND.name}`))
+  })
+
+  it('muestra los datos publicados cuando se abre directamente su identificador', async () => {
+    // Arrange
+    getById.mockResolvedValue(
+      buildProperty({
+        id: 'publicada-42',
+        title: 'Casa publicada en Palmira',
+        advertiser: undefined,
+        builtArea: 180,
+        landArea: 250,
+        location: {
+          department: 'Francisco Morazán',
+          address: 'Avenida República de Chile, casa 12',
+          coordinates: { lat: 14.1, lng: -87.19 },
+        },
+      }),
+    )
+
+    // Act
+    renderPage('publicada-42')
+
+    // Assert
+    expect(await screen.findByRole('heading', { level: 1, name: 'Casa publicada en Palmira' })).toBeInTheDocument()
+    expect(screen.getByText('Avenida República de Chile, casa 12')).toBeInTheDocument()
+    expect(await screen.findByRole('application', { name: 'Mapa de la propiedad' })).toHaveTextContent(
+      'Latitud 14.1; longitud -87.19',
+    )
   })
 
   it('avisa cuando la propiedad no existe y ofrece ver las demás', async () => {
