@@ -1,8 +1,7 @@
 import { ContactUnavailableError } from '@/features/contact/services/contactService'
 import type { ContactFormValues } from '@/features/contact/types/contact.types'
 import { validateContactForm } from '@/features/contact/utils/contactValidation'
-import { useAttempt } from '@/hooks/useAttempt'
-import { useFormFields } from '@/hooks/useFormFields'
+import { useAttemptForm } from '@/hooks/useAttemptForm'
 
 interface ContactFormOptions {
   initialDescription?: string
@@ -20,25 +19,18 @@ const trimValues = (values: ContactFormValues): ContactFormValues => ({
 const toFailureStatus = (reason: unknown) => (reason instanceof ContactUnavailableError ? 'unavailable' : 'failed')
 
 export const useContactForm = ({ initialDescription = '', onSubmit }: ContactFormOptions) => {
-  const {
-    values,
-    errors,
-    change: changeField,
-    validateFields,
-  } = useFormFields<ContactFormValues>({
+  // Con un dato distinto es otro mensaje: el formulario retira el aviso del anterior y se podrá enviar de nuevo.
+  const { values, errors, status, change, validateFields, attempt } = useAttemptForm<
+    ContactFormValues,
+    'sending',
+    'unavailable' | 'failed',
+    'sent'
+  >({
     initialValues: { name: '', email: '', phone: '', description: initialDescription },
     validate: validateContactForm,
-  })
-  const { status, attempt, reset } = useAttempt<'sending', 'unavailable' | 'failed', 'sent'>({
     toFailure: toFailureStatus,
     succeeded: 'sent',
   })
-
-  // Con un dato distinto es otro mensaje: se retira el aviso del anterior y se podrá enviar de nuevo.
-  const change: typeof changeField = (field, value) => {
-    changeField(field, value)
-    reset()
-  }
 
   const submit = async () => {
     if (!validateFields()) return

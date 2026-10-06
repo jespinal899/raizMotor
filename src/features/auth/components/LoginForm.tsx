@@ -1,13 +1,12 @@
 import type { FormEvent } from 'react'
 import { LogIn } from 'lucide-react'
+import CheckboxField from '@/components/CheckboxField'
+import EmailField from '@/components/EmailField'
 import PasswordField from '@/components/PasswordField'
 import SubmitButton from '@/components/SubmitButton'
 import TextLink from '@/components/TextLink'
-import { Checkbox } from '@/components/ui/checkbox'
 import { FieldGroup } from '@/components/ui/field'
-import { Label } from '@/components/ui/label'
 import AccessSeparator from '@/features/auth/components/AccessSeparator'
-import EmailField from '@/features/auth/components/EmailField'
 import GoogleButton from '@/features/auth/components/GoogleButton'
 import LoginAlert from '@/features/auth/components/LoginAlert'
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm'
@@ -52,16 +51,13 @@ const LoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormProps) => {
           readOnly={isBusy}
         />
 
-        {/* `w-fit`: solo la casilla y su texto la marcan, no todo el ancho de la fila. */}
-        <Label className="w-fit font-normal">
-          <Checkbox
-            name="remember"
-            checked={values.remember}
-            onCheckedChange={(checked) => change('remember', checked)}
-            readOnly={isBusy}
-          />
-          Recordarme en este dispositivo
-        </Label>
+        <CheckboxField
+          label="Recordarme en este dispositivo"
+          name="remember"
+          checked={values.remember}
+          onChange={(checked) => change('remember', checked)}
+          readOnly={isBusy}
+        />
 
         <SubmitButton isSubmitting={isSubmitting} disabled={isConnecting} icon={LogIn} submittingLabel="Ingresando…">
           Iniciar sesión

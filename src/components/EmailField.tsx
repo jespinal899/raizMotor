@@ -3,12 +3,12 @@ import TextField from '@/components/TextField'
 interface EmailFieldProps {
   value: string
   error?: string
-  /** Para bloquearlo mientras el acceso está en curso. */
+  /** Para bloquearlo mientras el envío está en curso. */
   readOnly?: boolean
   onChange: (value: string) => void
 }
 
-/** Correo de la cuenta: el mismo campo al iniciar sesión y al registrarse. */
+/** Correo de una persona: el mismo campo al iniciar sesión, al registrarse y al pedir una cotización. */
 const EmailField = ({ value, error, readOnly, onChange }: EmailFieldProps) => {
   return (
     <TextField

@@ -1,5 +1,6 @@
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
-import { EMAIL_RULES, PASSWORD_REQUIRED } from '@/features/auth/utils/credentialRules'
+import { PASSWORD_REQUIRED } from '@/features/auth/utils/credentialRules'
+import { EMAIL_RULES } from '@/shared/utils/fieldRules'
 import { validate } from '@/shared/utils/validators'
 import type { FieldErrors } from '@/shared/utils/validators'
 

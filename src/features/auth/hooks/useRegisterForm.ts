@@ -1,7 +1,11 @@
-import { useAccessForm } from '@/features/auth/hooks/useAccessForm'
 import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/auth/services/authService'
-import type { RegistrationCredentials, RegistrationFailure } from '@/features/auth/types/auth.types'
+import type {
+  AccessInProgress,
+  RegistrationCredentials,
+  RegistrationFailure,
+} from '@/features/auth/types/auth.types'
 import { validateRegistration } from '@/features/auth/utils/registerValidation'
+import { useAttemptForm } from '@/hooks/useAttemptForm'
 import { toInternationalPhone } from '@/shared/utils/honduranPhone'
 
 interface RegisterFormOptions {
@@ -41,7 +45,11 @@ const toCredentials = (values: RegistrationCredentials): RegistrationCredentials
 })
 
 export const useRegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormOptions) => {
-  const { values, errors, status, change, validateFields, attempt } = useAccessForm({
+  const { values, errors, status, change, validateFields, attempt } = useAttemptForm<
+    RegistrationCredentials,
+    AccessInProgress,
+    RegistrationFailure
+  >({
     initialValues: EMPTY_REGISTRATION,
     validate: validateRegistration,
     toFailure: toFailureStatus,

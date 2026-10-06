@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { useAccessForm } from '@/features/auth/hooks/useAccessForm'
+import { useAttemptForm } from '@/hooks/useAttemptForm'
 import { required, validate } from '@/shared/utils/validators'
 
 interface Values {
@@ -17,10 +17,15 @@ const validateValues = (values: Values) => ({
 
 const setup = () =>
   renderHook(() =>
-    useAccessForm({ initialValues: INITIAL_VALUES, validate: validateValues, toFailure: () => 'failed' as const }),
+    useAttemptForm<Values, 'submitting', 'failed', 'sent'>({
+      initialValues: INITIAL_VALUES,
+      validate: validateValues,
+      toFailure: () => 'failed',
+      succeeded: 'sent',
+    }),
   )
 
-describe('useAccessForm', () => {
+describe('useAttemptForm', () => {
   it('empieza con los valores iniciales, sin errores y sin ningún intento', () => {
     // Arrange: formulario recién abierto
 
@@ -61,6 +66,29 @@ describe('useAccessForm', () => {
 
     // Assert
     expect(statusAfterFailure).toBe('failed')
+    expect(result.current.status).toBe('idle')
+  })
+
+  it('cuando el intento termina bien queda en el estado de éxito que se le indicó', async () => {
+    // Arrange
+    const { result } = setup()
+
+    // Act
+    await act(() => result.current.attempt('submitting', () => Promise.resolve()))
+
+    // Assert
+    expect(result.current.status).toBe('sent')
+  })
+
+  it('al editar después de un envío correcto vuelve al reposo: lo escrito es otro envío', async () => {
+    // Arrange
+    const { result } = setup()
+    await act(() => result.current.attempt('submitting', () => Promise.resolve()))
+
+    // Act
+    act(() => result.current.change('email', 'otra@gmail.com'))
+
+    // Assert
     expect(result.current.status).toBe('idle')
   })
 })

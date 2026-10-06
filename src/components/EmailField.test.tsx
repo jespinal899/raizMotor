@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import EmailField from '@/features/auth/components/EmailField'
+import EmailField from '@/components/EmailField'
 
 const field = () => screen.getByRole('textbox', { name: 'Correo' })
 
@@ -45,7 +45,7 @@ describe('EmailField', () => {
     expect(field()).toHaveAccessibleDescription(error)
   })
 
-  it('se puede bloquear mientras el acceso está en curso', () => {
+  it('se puede bloquear mientras el envío está en curso', () => {
     // Arrange
     const readOnly = true
 

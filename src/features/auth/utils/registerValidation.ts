@@ -1,6 +1,6 @@
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
-import { EMAIL_RULES, PASSWORD_REQUIRED } from '@/features/auth/utils/credentialRules'
-import { honduranPhone } from '@/shared/utils/honduranPhone'
+import { PASSWORD_REQUIRED } from '@/features/auth/utils/credentialRules'
+import { EMAIL_RULES, PHONE_RULES } from '@/shared/utils/fieldRules'
 import { maxLength, minCharacters, required, validate } from '@/shared/utils/validators'
 import type { FieldErrors } from '@/shared/utils/validators'
 
@@ -18,7 +18,7 @@ export const validateRegistration = (values: RegistrationCredentials): FieldErro
     maxLength(MAX_NAME_LENGTH, `El apellido no puede pasar de ${MAX_NAME_LENGTH} caracteres.`),
   ]),
   email: validate(values.email, EMAIL_RULES),
-  phone: validate(values.phone, [required('Escribe tu teléfono.'), honduranPhone]),
+  phone: validate(values.phone, PHONE_RULES),
   // La contraseña se envía tal como se escribe, así que su largo se cuenta sin recortar los espacios.
   password: validate(values.password, [
     PASSWORD_REQUIRED,

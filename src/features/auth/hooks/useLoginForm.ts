@@ -1,7 +1,7 @@
-import { useAccessForm } from '@/features/auth/hooks/useAccessForm'
 import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authService'
-import type { LoginCredentials, LoginFailure } from '@/features/auth/types/auth.types'
+import type { AccessInProgress, LoginCredentials, LoginFailure } from '@/features/auth/types/auth.types'
 import { validateLogin } from '@/features/auth/utils/loginValidation'
+import { useAttemptForm } from '@/hooks/useAttemptForm'
 
 interface LoginFormOptions {
   /** Se resuelve cuando la sesión queda iniciada; quien usa el formulario decide qué pasa después. */
@@ -20,7 +20,11 @@ const toFailureStatus = (reason: unknown): LoginFailure => {
 }
 
 export const useLoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormOptions) => {
-  const { values, errors, status, change, validateFields, attempt } = useAccessForm({
+  const { values, errors, status, change, validateFields, attempt } = useAttemptForm<
+    LoginCredentials,
+    AccessInProgress,
+    LoginFailure
+  >({
     initialValues: EMPTY_CREDENTIALS,
     validate: validateLogin,
     toFailure: toFailureStatus,
