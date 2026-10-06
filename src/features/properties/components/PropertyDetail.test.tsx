@@ -15,6 +15,12 @@ vi.mock('@/features/properties/components/LocationMapView', () => ({
 
 const textOf = (element: HTMLElement) => element.textContent?.replace(/\s+/g, ' ').trim()
 
+const LOCATION = {
+  department: 'Francisco Morazán',
+  address: 'Avenida República de Chile, casa 12',
+  coordinates: { lat: 14.1, lng: -87.19 },
+}
+
 describe('PropertyDetail', () => {
   it('muestra el título como encabezado principal, la ubicación y las etiquetas', () => {
     // Arrange
@@ -127,11 +133,7 @@ describe('PropertyDetail', () => {
       ...buildProperty({ features: [], advertiser: undefined }),
       builtArea: 180,
       landArea: 250,
-      location: {
-        department: 'Francisco Morazán',
-        address: 'Avenida República de Chile, casa 12',
-        coordinates: { lat: 14.1, lng: -87.19 },
-      },
+      location: LOCATION,
     } as Property
 
     // Act
@@ -232,6 +234,35 @@ describe('PropertyDetail', () => {
     const sidebar = screen.getByRole('complementary')
     expect(within(sidebar).getByRole('link', { name: 'Contactar al anunciante' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
+  })
+
+  it('en la ubicación ofrece "Cómo llegar", que abre en Google Maps la ruta hasta el punto publicado', () => {
+    // Arrange
+    const property = buildProperty({ location: LOCATION })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const directions = within(screen.getByRole('region', { name: 'Ubicación' })).getByRole('link', {
+      name: 'Cómo llegar',
+    })
+    const destination = new URL(directions.getAttribute('href') ?? '')
+    expect(destination.origin + destination.pathname).toBe('https://www.google.com/maps/dir/')
+    expect(destination.searchParams.get('destination')).toBe('14.1,-87.19')
+    expect(directions).toHaveAttribute('target', '_blank')
+    expect(directions).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('sin un punto publicado no ofrece "Cómo llegar": no hay destino que dar', () => {
+    // Arrange
+    const property = buildProperty({ location: undefined })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    expect(screen.queryByRole('link', { name: 'Cómo llegar' })).not.toBeInTheDocument()
   })
 
   it('en un anuncio guardado en este navegador, dice a la derecha que lo publicó quien lo ve', () => {

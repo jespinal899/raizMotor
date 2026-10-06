@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react'
-import { EyeOff, MapPin } from 'lucide-react'
+import { EyeOff, MapPin, Navigation } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
 import type { BreadcrumbItem } from '@/components/Breadcrumb'
+import ExternalButtonLink from '@/components/ExternalButtonLink'
 import StatusAlert from '@/components/StatusAlert'
 import { Badge } from '@/components/ui/badge'
 import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
@@ -11,6 +12,7 @@ import PropertyGallery from '@/features/properties/components/PropertyGallery'
 import PropertyHighlights from '@/features/properties/components/PropertyHighlights'
 import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { Property } from '@/features/properties/types/property.types'
+import { buildDirectionsUrl } from '@/features/properties/utils/propertyDirections'
 import { ROUTES, propertyTypePath } from '@/shared/constants/routes'
 
 const LOCAL_ONLY_NOTE = {
@@ -69,13 +71,24 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
 
       {location && (
         <PropertyDetailSection id="ubicacion-propiedad" title="Ubicación">
-          <address className="grid gap-1 text-sm text-muted-foreground not-italic">
-            <span>{location.address}</span>
-            <span>
-              {district}, {city}
-            </span>
-            <span>{location.department}</span>
-          </address>
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+            <address className="grid gap-1 text-sm text-muted-foreground not-italic">
+              <span>{location.address}</span>
+              <span>
+                {district}, {city}
+              </span>
+              <span>{location.department}</span>
+            </address>
+            <ExternalButtonLink
+              href={buildDirectionsUrl(location.coordinates)}
+              variant="outline"
+              size="lg"
+              className="h-11 text-base"
+            >
+              <Navigation />
+              Cómo llegar
+            </ExternalButtonLink>
+          </div>
           <Suspense
             fallback={
               <div

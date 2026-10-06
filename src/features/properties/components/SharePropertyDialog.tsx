@@ -1,7 +1,8 @@
 import { Copy, EyeOff, MapPin, Share2 } from 'lucide-react'
+import ExternalButtonLink from '@/components/ExternalButtonLink'
 import FormField from '@/components/FormField'
 import StatusAlert from '@/components/StatusAlert'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,6 @@ import type { Property } from '@/features/properties/types/property.types'
 import { buildShareText, buildWhatsAppShareUrl } from '@/features/properties/utils/propertyShare'
 import { useAbsoluteUrl } from '@/hooks/useAbsoluteUrl'
 import { useClipboardCopy } from '@/hooks/useClipboardCopy'
-import { cn } from '@/lib/utils'
 import { propertyDetailPath } from '@/shared/constants/routes'
 
 const actionSize = 'h-11 text-base'
@@ -75,15 +75,15 @@ const SharePropertyPanel = ({ property }: SharePropertyProps) => {
       </FormField>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        <a
+        <ExternalButtonLink
           href={buildWhatsAppShareUrl(buildShareText(property), link)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), actionSize)}
+          variant="outline"
+          size="lg"
+          className={actionSize}
         >
           <WhatsAppIcon />
           WhatsApp
-        </a>
+        </ExternalButtonLink>
         <Button type="button" size="lg" onClick={() => void copy()} className={actionSize}>
           <Copy />
           Copiar enlace
