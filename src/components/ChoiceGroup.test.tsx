@@ -71,4 +71,17 @@ describe('ChoiceGroup', () => {
     expect(group).toHaveAttribute('aria-invalid', 'true')
     expect(group).toHaveAccessibleDescription(error)
   })
+
+  it('admite otra disposición de las opciones, por ejemplo una debajo de otra', () => {
+    // Arrange
+    const oneColumn = 'grid-cols-1'
+
+    // Act
+    render(<ChoiceGroup label="Operación" options={OPTIONS} value="" onChange={vi.fn()} className={oneColumn} />)
+
+    // Assert
+    const group = screen.getByRole('radiogroup', { name: 'Operación' })
+    expect(group).toHaveClass(oneColumn)
+    expect(group.className).not.toContain('auto-fit')
+  })
 })

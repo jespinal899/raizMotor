@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import FormGroup from '@/components/FormGroup'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { cn } from '@/lib/utils'
 
 export interface ChoiceOption<Value extends string> {
   value: Value
@@ -16,10 +17,19 @@ interface ChoiceGroupProps<Value extends string> {
   value: Value | ''
   onChange: (value: Value) => void
   error?: string
+  /** Para cambiar la disposición de las opciones, p. ej. `grid-cols-1` cuando son frases. */
+  className?: string
 }
 
 /** Pocas opciones excluyentes, todas a la vista como tarjetas. */
-const ChoiceGroup = <Value extends string>({ label, options, value, onChange, error }: ChoiceGroupProps<Value>) => {
+const ChoiceGroup = <Value extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  error,
+  className,
+}: ChoiceGroupProps<Value>) => {
   const choose = (selected: unknown) => {
     const chosen = options.find((option) => option.value === selected)
     if (chosen) onChange(chosen.value)
@@ -32,7 +42,7 @@ const ChoiceGroup = <Value extends string>({ label, options, value, onChange, er
           {...group}
           value={value}
           onValueChange={choose}
-          className="grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))]"
+          className={cn('grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))]', className)}
         >
           {options.map(({ value: optionValue, label: optionLabel, icon: Icon }) => (
             <Label
