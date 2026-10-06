@@ -118,7 +118,6 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
             <LocationMapView
               view={{ center: location.coordinates, zoom: 15 }}
               label="Mapa de la propiedad"
-              interactive={false}
             />
           </Suspense>
         </section>

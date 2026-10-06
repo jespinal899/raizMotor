@@ -8,17 +8,11 @@ const TEGUCIGALPA: MapView = { center: { lat: 14.0723, lng: -87.1921 }, zoom: 16
 const SAN_PEDRO_SULA: MapView = { center: { lat: 15.5042, lng: -88.025 }, zoom: 14 }
 const LABEL = 'Mapa para confirmar la dirección'
 
-const setup = (view: MapView = TEGUCIGALPA, interactive = true) => {
+const setup = (view: MapView = TEGUCIGALPA) => {
   const fake = buildFakeLocationMap()
   const onMarkerMove = vi.fn()
   const renderMap = (current: MapView) => (
-    <LocationMapView
-      view={current}
-      label={LABEL}
-      onMarkerMove={onMarkerMove}
-      interactive={interactive}
-      createMap={fake.createMap}
-    />
+    <LocationMapView view={current} label={LABEL} onMarkerMove={onMarkerMove} createMap={fake.createMap} />
   )
   const { rerender, unmount } = render(renderMap(view))
 
@@ -84,14 +78,26 @@ describe('LocationMapView', () => {
     expect(mapElement()).toHaveAttribute('tabindex', '0')
   })
 
-  it('indica al servicio que no debe permitir cambios en el mapa de la ficha', () => {
-    // Arrange
-    const { fake } = setup(TEGUCIGALPA, false)
+  it('con aviso de movimiento crea un mapa en el que el marcador se puede mover', () => {
+    // Arrange: mapa para confirmar una dirección
 
-    // Act: el mapa se crea al mostrar la vista
+    // Act
+    const { fake } = setup()
 
     // Assert
-    expect(fake.createMap).toHaveBeenCalledWith(mapElement(), expect.objectContaining({ interactive: false }))
+    expect(fake.createMap).toHaveBeenCalledWith(mapElement(), expect.objectContaining({ onMarkerMove: expect.any(Function) }))
+  })
+
+  it('sin aviso de movimiento crea un mapa de solo consulta, con el marcador fijo', () => {
+    // Arrange
+    const fake = buildFakeLocationMap()
+
+    // Act
+    render(<LocationMapView view={TEGUCIGALPA} label={LABEL} createMap={fake.createMap} />)
+
+    // Assert
+    expect(fake.createMap).toHaveBeenCalledExactlyOnceWith(mapElement(), { markerLabel: 'Ubicación de la propiedad' })
+    expect(fake.map.showPoint).toHaveBeenCalledExactlyOnceWith(TEGUCIGALPA)
   })
 
   it('al dejar de mostrarse destruye el mapa', () => {

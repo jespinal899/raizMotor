@@ -12,7 +12,7 @@ export const buildFakeLocationMap = () => {
   }
 
   const createMap = vi.fn<CreateLocationMap>((_container, { onMarkerMove }) => {
-    reportMove = onMarkerMove
+    reportMove = onMarkerMove ?? (() => {})
     return map
   })
 

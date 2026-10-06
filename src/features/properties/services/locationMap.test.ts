@@ -124,23 +124,6 @@ describe('createLeafletLocationMap', () => {
     expect(container.querySelector('.leaflet-control-attribution')).toHaveTextContent(expectedCredit)
   })
 
-  it('en modo de solo lectura conserva el marcador sin aceptar cambios de ubicación', () => {
-    // Arrange
-    const container = document.body.appendChild(document.createElement('div'))
-    const onMarkerMove = vi.fn()
-    const map = createLeafletLocationMap(container, { markerLabel: MARKER_LABEL, onMarkerMove, interactive: false })
-    map.showPoint(TEGUCIGALPA)
-
-    // Act
-    fireEvent.click(container, { clientX: 120, clientY: 80 })
-
-    // Assert
-    expect(container.querySelector('.leaflet-control-zoom')).toBeNull()
-    expect(container.querySelector('.leaflet-marker-draggable')).toBeNull()
-    expect(onMarkerMove).not.toHaveBeenCalled()
-    map.destroy()
-  })
-
   it('al destruirlo retira del contenedor todo lo que había pintado', () => {
     // Arrange
     const { container, map } = setup()
@@ -163,5 +146,78 @@ describe('createLeafletLocationMap', () => {
     // Assert
     expect(destroyAgain).not.toThrow()
     expect(container).toBeEmptyDOMElement()
+  })
+})
+
+describe('createLeafletLocationMap: mapa de solo consulta', () => {
+  afterEach(() => {
+    document.body.replaceChildren()
+  })
+
+  const setupReadOnly = () => {
+    const container = document.body.appendChild(document.createElement('div'))
+    const map = createLeafletLocationMap(container, { markerLabel: MARKER_LABEL })
+    map.showPoint(TEGUCIGALPA)
+    const marker = () => container.querySelector<HTMLElement>('.leaflet-marker-icon')
+
+    return { container, map, marker }
+  }
+
+  it('muestra el marcador en el punto, pero no deja arrastrarlo', () => {
+    // Arrange: ficha de una propiedad publicada
+
+    // Act
+    const { container, marker } = setupReadOnly()
+
+    // Assert
+    expect(marker()).toHaveAttribute('title', MARKER_LABEL)
+    expect(container.querySelector('.leaflet-marker-draggable')).toBeNull()
+  })
+
+  it('un clic en el mapa no mueve el marcador', () => {
+    // Arrange
+    const { container, marker } = setupReadOnly()
+    const positionBefore = marker()?.style.transform
+
+    // Act
+    fireEvent.click(container, { clientX: 120, clientY: 80 })
+
+    // Assert
+    expect(marker()?.style.transform).toBe(positionBefore)
+  })
+
+  it('ofrece los botones para acercar y alejar, para poder conocer la zona', () => {
+    // Arrange: ficha de una propiedad publicada
+
+    // Act
+    const { container } = setupReadOnly()
+
+    // Assert
+    expect(container.querySelector('.leaflet-control-zoom-in')).toHaveAccessibleName('Acercar')
+    expect(container.querySelector('.leaflet-control-zoom-out')).toHaveAccessibleName('Alejar')
+  })
+
+  it('el marcador no recibe el foco del teclado: no hay nada que hacer con él', () => {
+    // Arrange: ficha de una propiedad publicada
+
+    // Act
+    const { marker } = setupReadOnly()
+
+    // Assert
+    expect(marker()).not.toHaveAttribute('tabindex')
+  })
+
+  it('al desplazar el mapa con las flechas el marcador se queda en la propiedad', () => {
+    // Arrange
+    const { container, marker } = setupReadOnly()
+    const positionBefore = marker()?.style.transform
+    container.focus()
+
+    // Act
+    fireEvent.keyDown(container, ARROW_RIGHT)
+    fireEvent.keyUp(container, ARROW_RIGHT)
+
+    // Assert
+    expect(marker()?.style.transform).toBe(positionBefore)
   })
 })

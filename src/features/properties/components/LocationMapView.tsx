@@ -8,25 +8,22 @@ interface LocationMapViewProps {
   view: MapView
   /** Nombre del mapa para quien no lo ve. */
   label: string
+  /**
+   * Recibe el punto cuando la persona mueve el marcador. Sin él, el mapa es de solo consulta: muestra el
+   * punto con el marcador fijo, como en la ficha de una propiedad.
+   */
   onMarkerMove?: (point: Coordinates) => void
-  /** En una ficha el mapa solo muestra el punto publicado. */
-  interactive?: boolean
   createMap?: CreateLocationMap
 }
 
 const MARKER_LABEL = 'Ubicación de la propiedad'
 
-/** Mapa con un marcador que la persona puede arrastrar, o colocar con un clic, hasta el punto exacto. */
-const LocationMapView = ({
-  view,
-  label,
-  onMarkerMove = () => {},
-  interactive = true,
-  createMap = createLeafletLocationMap,
-}: LocationMapViewProps) => {
+/** Mapa con un marcador en un punto. Para elegirlo, la persona lo arrastra o lo coloca con un clic. */
+const LocationMapView = ({ view, label, onMarkerMove, createMap = createLeafletLocationMap }: LocationMapViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LocationMap | null>(null)
-  const reportMove = useEffectEvent(onMarkerMove)
+  const reportMove = useEffectEvent((point: Coordinates) => onMarkerMove?.(point))
+  const canMoveMarker = onMarkerMove !== undefined
   const { lat, lng } = view.center
   const { zoom } = view
 
@@ -35,8 +32,7 @@ const LocationMapView = ({
 
     const map = createMap(containerRef.current, {
       markerLabel: MARKER_LABEL,
-      onMarkerMove: (point) => reportMove(point),
-      interactive,
+      onMarkerMove: canMoveMarker ? (point) => reportMove(point) : undefined,
     })
     mapRef.current = map
 
@@ -44,7 +40,7 @@ const LocationMapView = ({
       map.destroy()
       mapRef.current = null
     }
-  }, [createMap, interactive])
+  }, [createMap, canMoveMarker])
 
   // Depende de los valores y no del objeto: un punto igual no debe deshacer lo que movió la persona.
   useEffect(() => {

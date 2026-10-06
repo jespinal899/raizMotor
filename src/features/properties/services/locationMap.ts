@@ -1,4 +1,4 @@
-import { divIcon, map as createMap, marker as createMarker, tileLayer } from 'leaflet'
+import { Browser, control, divIcon, map as createMap, marker as createMarker, tileLayer } from 'leaflet'
 import type { LatLngExpression, Marker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Coordinates, MapView } from '@/features/properties/types/publication.types'
@@ -12,10 +12,11 @@ export interface LocationMap {
 interface LocationMapOptions {
   /** Describe el marcador a quien no lo ve. */
   markerLabel: string
-  /** Recibe el punto cada vez que la persona mueve el marcador. */
-  onMarkerMove: (point: Coordinates) => void
-  /** Desactiva arrastre, zoom y eventos de movimiento cuando el mapa solo informa. */
-  interactive?: boolean
+  /**
+   * Recibe el punto cada vez que la persona mueve el marcador. Sin él, el mapa es de solo consulta: se puede
+   * recorrer y acercar para conocer la zona, pero el marcador queda fijo en el punto mostrado.
+   */
+  onMarkerMove?: (point: Coordinates) => void
 }
 
 export type CreateLocationMap = (container: HTMLElement, options: LocationMapOptions) => LocationMap
@@ -38,20 +39,19 @@ const MARKER_ICON = divIcon({
 })
 
 /** Mapa de OpenStreetMap con Leaflet. Es el único archivo que conoce la librería del mapa. */
-export const createLeafletLocationMap: CreateLocationMap = (
-  container,
-  { markerLabel, onMarkerMove, interactive = true },
-) => {
-  // Sin zoom con la rueda: secuestraría el desplazamiento de la página o de la ventana que contiene el mapa.
+export const createLeafletLocationMap: CreateLocationMap = (container, { markerLabel, onMarkerMove }) => {
+  const canMoveMarker = onMarkerMove !== undefined
+
   const leafletMap = createMap(container, {
+    // Sin zoom con la rueda: secuestraría el desplazamiento de la página o de la ventana que contiene el mapa.
     scrollWheelZoom: false,
-    dragging: interactive,
-    doubleClickZoom: interactive,
-    boxZoom: interactive,
-    keyboard: interactive,
-    touchZoom: interactive,
-    zoomControl: interactive,
+    // En una ficha, arrastrar el mapa con el dedo atraparía el desplazamiento de la página: en móviles se
+    // recorre con los botones de zoom y el gesto de pellizco.
+    dragging: canMoveMarker || !Browser.mobile,
+    zoomControl: false,
   })
+  // Los botones de zoom se añaden aparte para darles nombre en español: Leaflet los trae en inglés.
+  control.zoom({ zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(leafletMap)
   tileLayer(TILES_URL, { attribution: TILES_ATTRIBUTION, maxZoom: MAX_ZOOM }).addTo(leafletMap)
 
   let pin: Marker | undefined
@@ -59,7 +59,7 @@ export const createLeafletLocationMap: CreateLocationMap = (
   let isDestroyed = false
 
   const reportMove = () => {
-    if (!pin) return
+    if (!pin || !onMarkerMove) return
 
     const { lat, lng } = pin.getLatLng()
     onMarkerMove({ lat, lng })
@@ -74,11 +74,14 @@ export const createLeafletLocationMap: CreateLocationMap = (
     pin = createMarker(point, {
       icon: MARKER_ICON,
       title: markerLabel,
-      draggable: interactive,
+      draggable: canMoveMarker,
       autoPan: true,
+      // Un marcador fijo no hace nada: no recibe el foco del teclado ni los clics.
+      keyboard: canMoveMarker,
+      interactive: canMoveMarker,
       bubblingMouseEvents: false,
     }).addTo(leafletMap)
-    if (interactive) pin.on('dragend', reportMove)
+    if (canMoveMarker) pin.on('dragend', reportMove)
   }
 
   // Con el teclado el marcador no se puede arrastrar: al desplazar el mapa con las flechas, lo acompaña en el centro.
@@ -90,7 +93,7 @@ export const createLeafletLocationMap: CreateLocationMap = (
     isPannedByKeyboard = false
   }
 
-  if (interactive) {
+  if (canMoveMarker) {
     // Un clic (o un toque) en el mapa lleva el marcador a ese punto.
     leafletMap.on('click', ({ latlng }) => {
       placeMarker(latlng)
@@ -119,7 +122,7 @@ export const createLeafletLocationMap: CreateLocationMap = (
       if (isDestroyed) return
       isDestroyed = true
 
-      if (interactive) {
+      if (canMoveMarker) {
         container.removeEventListener('keydown', handleKeyDown)
         container.removeEventListener('pointerdown', handlePointerDown)
       }
