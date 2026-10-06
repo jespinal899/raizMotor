@@ -1,9 +1,8 @@
 import { lazy, Suspense } from 'react'
-import { EyeOff, MapPin, Navigation } from 'lucide-react'
+import { MapPin, Navigation } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
 import type { BreadcrumbItem } from '@/components/Breadcrumb'
 import ExternalButtonLink from '@/components/ExternalButtonLink'
-import StatusAlert from '@/components/StatusAlert'
 import { Badge } from '@/components/ui/badge'
 import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
 import PropertyDetailLayout from '@/features/properties/components/PropertyDetailLayout'
@@ -17,12 +16,6 @@ import type { Property } from '@/features/properties/types/property.types'
 import { buildDirectionsUrl } from '@/features/properties/utils/propertyDirections'
 import { ROUTES, propertyTypePath } from '@/shared/constants/routes'
 
-const LOCAL_ONLY_NOTE = {
-  title: 'Este anuncio solo está guardado en este navegador',
-  description:
-    'Otras personas todavía no pueden verlo, y el enlace no funcionará en otro dispositivo. ' +
-    'Si borras los datos del navegador, se pierde.',
-}
 const LocationMapView = lazy(() => import('@/features/properties/components/LocationMapView'))
 
 const buildBreadcrumb = ({ title, type }: Property): BreadcrumbItem[] => {
@@ -41,7 +34,7 @@ interface PropertyDetailProps {
 }
 
 const PropertyDetail = ({ property }: PropertyDetailProps) => {
-  const { title, description, type, operation, district, city, gallery, location, localOnly } = property
+  const { title, description, type, operation, district, city, gallery, location } = property
 
   return (
     <PropertyDetailLayout
@@ -59,8 +52,6 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
             {district}, {city}
           </p>
           <PropertyPrice property={property} prefix="Desde" className="text-3xl" />
-          {/* Arriba del todo: es lo primero que debe saber quien acaba de publicar y piensa compartir el enlace. */}
-          {localOnly && <StatusAlert role="note" icon={EyeOff} {...LOCAL_ONLY_NOTE} />}
         </header>
       }
       gallery={<PropertyGallery images={gallery} title={title} />}

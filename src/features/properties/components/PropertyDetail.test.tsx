@@ -190,7 +190,7 @@ describe('PropertyDetail', () => {
     expect(screen.queryByText('Publicado por')).not.toBeInTheDocument()
   })
 
-  it('avisa de que un anuncio local solo existe en este navegador', () => {
+  it('la ficha de un anuncio guardado en este navegador se ve como cualquier otra, sin aviso bajo el título', () => {
     // Arrange
     const property = buildProperty({ localOnly: true })
 
@@ -198,20 +198,8 @@ describe('PropertyDetail', () => {
     renderWithRouter(<PropertyDetail property={property} />)
 
     // Assert
-    const note = screen.getByRole('note')
-    expect(note).toHaveTextContent('Este anuncio solo está guardado en este navegador')
-    expect(note).toHaveTextContent('Otras personas todavía no pueden verlo')
-  })
-
-  it('no muestra ese aviso en una propiedad del catálogo', () => {
-    // Arrange
-    const property = buildProperty()
-
-    // Act
-    renderWithRouter(<PropertyDetail property={property} />)
-
-    // Assert
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
+    expect(screen.queryByText('Este anuncio solo está guardado en este navegador')).not.toBeInTheDocument()
   })
 
   it('destaca dormitorios, baños, estacionamientos y superficie con su nombre completo', () => {
