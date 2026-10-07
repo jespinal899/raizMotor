@@ -51,9 +51,9 @@ const PropertyDetailLayout = ({
           Primera pantalla: en escritorio el título y las fotos ocupan lo que queda de ventana bajo la barra
           de navegación y la ruta (10.5rem), de modo que las fotos se ven enteras sin desplazarse; el resto
           empieza justo debajo. La galería se queda con el alto que deja el título, con un mínimo para que
-          no se aplaste y un tope (44rem) para que en monitores muy altos no quede una foto estirada.
+          no se aplaste y un tope (35rem) para que en ventanas altas la foto no crezca más de la cuenta.
         */}
-        <div className="grid gap-6 lg:col-start-1 lg:min-h-[min(100dvh-10.5rem,44rem)] lg:grid-rows-[auto_minmax(16rem,1fr)] lg:gap-4">
+        <div className="grid gap-6 lg:col-start-1 lg:min-h-[min(100dvh-10.5rem,35rem)] lg:grid-rows-[auto_minmax(16rem,1fr)] lg:gap-4">
           {header}
           {gallery}
         </div>

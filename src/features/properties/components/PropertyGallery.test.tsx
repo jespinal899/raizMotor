@@ -5,9 +5,14 @@ import PropertyGallery from '@/features/properties/components/PropertyGallery'
 import { buildImageFile } from '@/test/factories'
 
 const IMAGES = ['https://example.com/1.jpg', 'https://example.com/2.jpg', 'https://example.com/3.jpg']
+const TEN_IMAGES = Array.from({ length: 10 }, (_, position) => `https://example.com/${position + 1}.jpg`)
 const TITLE = 'Casa de prueba'
 
 const mainPhoto = () => screen.getByRole('img', { name: /Casa de prueba, foto/ })
+const thumbnails = () => screen.getAllByRole('button', { name: /^Ver foto \d+$/ })
+const moreTile = (remaining: number) => screen.getByRole('button', { name: `Ver ${remaining} fotos más` })
+const nextButton = () => screen.getByRole('button', { name: 'Foto siguiente' })
+const previousButton = () => screen.getByRole('button', { name: 'Foto anterior' })
 
 describe('PropertyGallery', () => {
   it('muestra la primera foto como principal', () => {
@@ -31,10 +36,9 @@ describe('PropertyGallery', () => {
     render(<PropertyGallery images={images} title={TITLE} />)
 
     // Assert
-    const thumbnails = screen.getAllByRole('button', { name: /Ver foto/ })
-    expect(thumbnails).toHaveLength(3)
-    expect(thumbnails[0]).toHaveAttribute('aria-current', 'true')
-    expect(thumbnails[1]).not.toHaveAttribute('aria-current')
+    expect(thumbnails()).toHaveLength(3)
+    expect(thumbnails()[0]).toHaveAttribute('aria-current', 'true')
+    expect(thumbnails()[1]).not.toHaveAttribute('aria-current')
   })
 
   it('cambia la foto principal al elegir una miniatura', async () => {
@@ -51,7 +55,7 @@ describe('PropertyGallery', () => {
     expect(screen.getByRole('button', { name: 'Ver foto 3' })).toHaveAttribute('aria-current', 'true')
   })
 
-  it('con una sola foto no muestra miniaturas ni contador', () => {
+  it('con una sola foto no muestra miniaturas, contador ni flechas', () => {
     // Arrange
     const images = IMAGES.slice(0, 1)
 
@@ -77,5 +81,98 @@ describe('PropertyGallery', () => {
     // Assert
     expect(firstShown).toBe('blob:fachada.jpg')
     expect(mainPhoto()).toHaveAttribute('src', 'blob:patio.jpg')
+  })
+
+  it('con cuatro fotos caben todas en la tira: no hace falta decir que hay más', () => {
+    // Arrange
+    const images = TEN_IMAGES.slice(0, 4)
+
+    // Act
+    render(<PropertyGallery images={images} title={TITLE} />)
+
+    // Assert
+    expect(thumbnails()).toHaveLength(4)
+    expect(screen.queryByRole('button', { name: /fotos más/ })).not.toBeInTheDocument()
+  })
+
+  it('con más fotos de las que caben, la última casilla dice cuántas faltan', () => {
+    // Arrange
+    const images = TEN_IMAGES
+
+    // Act
+    render(<PropertyGallery images={images} title={TITLE} />)
+
+    // Assert
+    expect(thumbnails()).toHaveLength(3)
+    expect(moreTile(7)).toHaveTextContent('+7')
+    expect(screen.getAllByRole('listitem')).toHaveLength(4)
+  })
+
+  it('pulsar la casilla "+7" muestra en grande la primera foto que no cabía en la tira', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    render(<PropertyGallery images={TEN_IMAGES} title={TITLE} />)
+
+    // Act
+    await user.click(moreTile(7))
+
+    // Assert
+    expect(mainPhoto()).toHaveAttribute('src', TEN_IMAGES[3])
+    expect(screen.getByText('4 / 10')).toBeInTheDocument()
+    expect(moreTile(7)).toHaveAttribute('aria-current', 'true')
+  })
+
+  it('la flecha "siguiente" pasa a la foto siguiente', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    render(<PropertyGallery images={IMAGES} title={TITLE} />)
+
+    // Act
+    await user.click(nextButton())
+
+    // Assert
+    expect(mainPhoto()).toHaveAttribute('src', IMAGES[1])
+    expect(screen.getByText('2 / 3')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ver foto 2' })).toHaveAttribute('aria-current', 'true')
+  })
+
+  it('la flecha "anterior", desde la primera foto, da la vuelta hasta la última', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    render(<PropertyGallery images={IMAGES} title={TITLE} />)
+
+    // Act
+    await user.click(previousButton())
+
+    // Assert
+    expect(mainPhoto()).toHaveAttribute('src', IMAGES[2])
+    expect(screen.getByText('3 / 3')).toBeInTheDocument()
+  })
+
+  it('desde la última foto, "siguiente" vuelve a la primera', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    render(<PropertyGallery images={IMAGES} title={TITLE} />)
+    await user.click(screen.getByRole('button', { name: 'Ver foto 3' }))
+
+    // Act
+    await user.click(nextButton())
+
+    // Assert
+    expect(mainPhoto()).toHaveAttribute('src', IMAGES[0])
+  })
+
+  it('con las flechas se llega a las fotos que no caben en la tira, y entonces se marca la casilla "+N"', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    render(<PropertyGallery images={TEN_IMAGES} title={TITLE} />)
+
+    // Act
+    await user.click(previousButton())
+
+    // Assert
+    expect(mainPhoto()).toHaveAccessibleName('Casa de prueba, foto 10 de 10')
+    expect(moreTile(7)).toHaveAttribute('aria-current', 'true')
+    expect(thumbnails().every((thumbnail) => !thumbnail.hasAttribute('aria-current'))).toBe(true)
   })
 })
