@@ -40,7 +40,7 @@ describe('HERO_SLIDES', () => {
     expect(actions.map((action) => action.to)).not.toContain(ROUTES.publish)
   })
 
-  it('ningún slide anuncia precios ni cupos de planes que aún no están definidos', () => {
+  it('ningún slide repite precios ni cupos de los planes: esos datos viven solo en sus páginas', () => {
     // Arrange
     const priceOrQuota = /\$\s?\d|\d+\s+propiedades/
 

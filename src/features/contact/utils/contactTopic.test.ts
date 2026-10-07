@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildPlanTopic, buildPropertyTopic } from '@/features/contact/utils/contactTopic'
-import { PLANS } from '@/features/shop/data/plans.data'
+import { findPlanInquiry } from '@/features/shop/utils/planInquiry'
 import { buildProperty } from '@/test/factories'
 
 describe('buildPropertyTopic', () => {
@@ -27,7 +27,7 @@ describe('buildPropertyTopic', () => {
 describe('buildPlanTopic', () => {
   it('describe el plan y propone una descripción que lo menciona, sin referencia', () => {
     // Arrange
-    const plan = PLANS.find(({ id }) => id === 'inmobiliaria')!
+    const plan = findPlanInquiry('inmobiliaria')!
 
     // Act
     const topic = buildPlanTopic(plan)
@@ -37,6 +37,7 @@ describe('buildPlanTopic', () => {
       id: 'plan:inmobiliaria',
       label: 'Consulta sobre el plan',
       title: 'Inmobiliarias',
+      detail: 'Para empresas con un equipo que gestiona varias propiedades.',
       defaultDescription: 'Me interesa el plan Inmobiliarias. ¿Me pueden dar más información?',
     })
     expect(topic.reference).toBeUndefined()
@@ -45,7 +46,7 @@ describe('buildPlanTopic', () => {
   it('distingue cada motivo con un identificador propio', () => {
     // Arrange
     const property = buildProperty({ id: 'inmobiliaria' })
-    const plan = PLANS.find(({ id }) => id === 'inmobiliaria')!
+    const plan = findPlanInquiry('inmobiliaria')!
 
     // Act
     const ids = [buildPropertyTopic(property, '').id, buildPlanTopic(plan).id]

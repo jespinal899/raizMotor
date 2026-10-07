@@ -4,68 +4,89 @@ import PricingPage from '@/features/shop/pages/PricingPage'
 import { BRAND } from '@/shared/constants/brand'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
+const PLAN_NAMES = ['Propietario', 'Agente inmobiliario', 'Inmobiliarias']
+
 const planCard = (name: string) =>
   screen.getByRole('heading', { level: 2, name }).closest('[data-slot="card"]') as HTMLElement
 
 describe('PricingPage', () => {
-  it('presenta los tres planes, cada uno con su encabezado', () => {
+  it('invita a publicar con su título y su subtítulo', () => {
     // Arrange
-    const expectedPlans = ['Propietario', 'Agente inmobiliario', 'Inmobiliarias']
+    const subtitle =
+      'Elige el plan que mejor se adapte a tus necesidades. Empieza gratis hoy mismo y llega a miles de personas.'
 
     // Act
     renderWithRouter(<PricingPage />, { route: '/planes' })
 
     // Assert
-    expect(screen.getByRole('heading', { level: 1, name: 'Planes' })).toBeInTheDocument()
-    const plans = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
-    expect(plans).toEqual(expectedPlans)
+    expect(screen.getByRole('heading', { level: 1, name: 'Publica tu propiedad en simples pasos' })).toBeInTheDocument()
+    expect(screen.getByText(subtitle)).toBeInTheDocument()
   })
 
-  it('cada plan ofrece su siguiente paso', () => {
-    // Arrange
-    const expectedActions = [
-      'Publicar gratis → /publicar',
-      'Quiero saber más → /contacto?plan=agente',
-      'Quiero saber más → /contacto?plan=inmobiliaria',
-    ]
-
-    // Act
-    renderWithRouter(<PricingPage />, { route: '/planes' })
-
-    // Assert
-    const actions = screen
-      .getAllByRole('link')
-      .slice(0, 3)
-      .map((link) => `${link.textContent} → ${link.getAttribute('href')}`)
-    expect(actions).toEqual(expectedActions)
-  })
-
-  it('el plan Propietario es gratis y dice que incluye una publicación con hasta diez fotos', () => {
+  it('el título va centrado y resalta "simples pasos" en el color de la marca', () => {
     // Arrange: página de planes
 
     // Act
     renderWithRouter(<PricingPage />, { route: '/planes' })
 
     // Assert
-    const owner = planCard('Propietario')
-    expect(within(owner).getByText('Gratis')).toBeInTheDocument()
-    expect(within(owner).getByText('1 publicación gratis')).toBeInTheDocument()
-    expect(within(owner).getByText('Hasta 10 fotos por publicación')).toBeInTheDocument()
+    const title = screen.getByRole('heading', { level: 1 })
+    expect(title.closest('header')).toHaveClass('text-center')
+    expect(within(title).getByText('simples pasos')).toHaveClass('text-primary')
   })
 
-  it('los planes de agentes e inmobiliarias se anuncian como "Próximamente", sin precio', () => {
-    // Arrange
-    const upcomingPlans = ['Agente inmobiliario', 'Inmobiliarias']
+  it('presenta los tres planes, cada uno con su encabezado', () => {
+    // Arrange: página de planes
 
     // Act
     renderWithRouter(<PricingPage />, { route: '/planes' })
 
     // Assert
-    for (const name of upcomingPlans) {
-      expect(within(planCard(name)).getByText('Próximamente')).toBeInTheDocument()
-      expect(within(planCard(name)).queryByText(/\$/)).not.toBeInTheDocument()
-      expect(within(planCard(name)).queryByRole('list')).not.toBeInTheDocument()
-    }
+    const plans = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
+    expect(plans).toEqual(PLAN_NAMES)
+  })
+
+  it('cada plan explica para quién es', () => {
+    // Arrange
+    const expectedTexts = [/^Vende o arrienda rápido\./, /^Impulsa tu carrera\./, /^Para empresas con un equipo/]
+
+    // Act
+    renderWithRouter(<PricingPage />, { route: '/planes' })
+
+    // Assert
+    PLAN_NAMES.forEach((name, index) => {
+      expect(within(planCard(name)).getByText(expectedTexts[index])).toBeInTheDocument()
+    })
+  })
+
+  it('cada plan ofrece su siguiente paso', () => {
+    // Arrange
+    const expectedActions = [
+      'Publicar como propietario → /publicar',
+      'Publicar como inmobiliario → /planes/agente-inmobiliario',
+      'Publicar como inmobiliaria → /contacto?plan=inmobiliaria',
+    ]
+
+    // Act
+    renderWithRouter(<PricingPage />, { route: '/planes' })
+
+    // Assert
+    const actions = PLAN_NAMES.map((name) => within(planCard(name)).getByRole('link')).map(
+      (link) => `${link.textContent} → ${link.getAttribute('href')}`,
+    )
+    expect(actions).toEqual(expectedActions)
+  })
+
+  it('las tarjetas llevan solo el nombre, el texto y el botón: sin precio, insignia ni lista', () => {
+    // Arrange
+    const removedTexts = ['Gratis', 'Próximamente', 'Recomendado', /Estamos definiendo este plan/]
+
+    // Act
+    renderWithRouter(<PricingPage />, { route: '/planes' })
+
+    // Assert
+    for (const text of removedTexts) expect(screen.queryByText(text)).not.toBeInTheDocument()
+    for (const name of PLAN_NAMES) expect(within(planCard(name)).queryByRole('list')).not.toBeInTheDocument()
   })
 
   it('ofrece ayuda para elegir y pone su título en la pestaña', () => {

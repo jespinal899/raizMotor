@@ -1,36 +1,52 @@
-import { MAX_IMAGES } from '@/features/properties/utils/imageFiles'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
-import type { Plan, PlanId } from '@/features/shop/types/plan.types'
+import type { AgentPlan, AgentPlanId, Plan } from '@/features/shop/types/plan.types'
 import { ROUTES, planContactPath } from '@/shared/constants/routes'
 
-/** Mientras un plan no tiene precio ni contenido, su botón lleva al contacto diciendo de qué plan se trata. */
-const askAbout = (id: PlanId) => ({ label: 'Quiero saber más', to: planContactPath(id) })
+/** A quién van dirigidos los planes de pago para agentes; también los identifica al consultar por uno. */
+export const AGENT_AUDIENCE = 'Agente inmobiliario'
 
 export const PLANS: Plan[] = [
   {
     id: 'propietario',
     name: 'Propietario',
-    audience: 'Para quien vende o alquila su propia propiedad.',
-    price: { kind: 'free' },
-    // Los límites se leen de donde se aplican: la tarjeta no puede prometer otra cosa que el formulario.
-    features: [`${MAX_FREE_PUBLICATIONS} publicación gratis`, `Hasta ${MAX_IMAGES} fotos por publicación`],
-    action: { label: 'Publicar gratis', to: ROUTES.publish },
-    highlighted: true,
+    // La cantidad se lee de donde se aplica: la tarjeta no puede prometer otra que el formulario.
+    description:
+      `Vende o arrienda rápido. Publica ${MAX_FREE_PUBLICATIONS} propiedad gratis y aprovecha nuestra alta ` +
+      'visualización para llegar a miles de interesados sin comisiones.',
+    action: { label: 'Publicar como propietario', to: ROUTES.publish },
   },
   {
     id: 'agente',
-    name: 'Agente inmobiliario',
-    audience: 'Para agentes independientes que anuncian propiedades de sus clientes.',
-    price: { kind: 'upcoming' },
-    features: [],
-    action: askAbout('agente'),
+    name: AGENT_AUDIENCE,
+    description:
+      'Impulsa tu carrera. Publica tu cartera de propiedades y accede a un panel exclusivo para administrar, ' +
+      'dar seguimiento y ver reportes de tus anuncios. La herramienta definitiva para cerrar más ventas.',
+    action: { label: 'Publicar como inmobiliario', to: ROUTES.agentPlans },
   },
   {
     id: 'inmobiliaria',
     name: 'Inmobiliarias',
-    audience: 'Para empresas con un equipo que gestiona varias propiedades.',
-    price: { kind: 'upcoming' },
-    features: [],
-    action: askAbout('inmobiliaria'),
+    description: 'Para empresas con un equipo que gestiona varias propiedades.',
+    action: { label: 'Publicar como inmobiliaria', to: planContactPath('inmobiliaria') },
+  },
+]
+
+/** Todavía no hay pagos en línea: contratar abre el contacto indicando de qué plan se trata. */
+const contract = (id: AgentPlanId) => ({ label: 'Contratar', to: planContactPath(id) })
+
+export const AGENT_PLANS: AgentPlan[] = [
+  {
+    id: 'agente-plan-1',
+    name: 'Plan 1',
+    features: ['Publica hasta 25 propiedades', '1 usuario por agente inmobiliario'],
+    monthlyPrice: 599,
+    action: contract('agente-plan-1'),
+  },
+  {
+    id: 'agente-plan-2',
+    name: 'Plan 2',
+    features: ['Publica hasta 100 propiedades', '2 usuarios por agente inmobiliario'],
+    monthlyPrice: 999,
+    action: contract('agente-plan-2'),
   },
 ]

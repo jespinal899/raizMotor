@@ -3,7 +3,7 @@ import type { ContactTopic } from '@/features/contact/types/contact.types'
 import { buildPlanTopic, buildPropertyTopic } from '@/features/contact/utils/contactTopic'
 import { propertyService } from '@/features/properties/services/propertyService'
 import type { PropertyService } from '@/features/properties/services/propertyService'
-import { PLANS } from '@/features/shop/data/plans.data'
+import { findPlanInquiry } from '@/features/shop/utils/planInquiry'
 import { useAbsoluteUrl } from '@/hooks/useAbsoluteUrl'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { CONTACT_PARAMS, propertyDetailPath } from '@/shared/constants/routes'
@@ -20,7 +20,7 @@ export const useContactTopic = (service: PropertyService = propertyService) => {
     `contact-property:${propertyId}`,
   )
 
-  const plan = PLANS.find(({ id }) => id === planId)
+  const plan = findPlanInquiry(planId)
   let topic: ContactTopic | undefined
   if (property) topic = buildPropertyTopic(property, propertyUrl)
   else if (plan) topic = buildPlanTopic(plan)

@@ -1,16 +1,24 @@
+import type { ReactNode } from 'react'
 import PlanCard from '@/features/shop/components/PlanCard'
-import type { Plan } from '@/features/shop/types/plan.types'
+import type { ListedPlan } from '@/features/shop/types/plan.types'
+import { cn } from '@/lib/utils'
 
-interface PlanListProps {
-  plans: Plan[]
+interface PlanListProps<Item extends ListedPlan> {
+  plans: Item[]
+  /** Las columnas de la cuadrícula, según cuántos planes se muestran. */
+  className?: string
+  /** Lo que va dentro de la tarjeta de cada plan, entre su nombre y su botón. */
+  children: (plan: Item) => ReactNode
 }
 
-const PlanList = ({ plans }: PlanListProps) => {
+const PlanList = <Item extends ListedPlan>({ plans, className, children }: PlanListProps<Item>) => {
   return (
-    <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <ul className={cn('grid gap-6', className)}>
       {plans.map((plan) => (
         <li key={plan.id}>
-          <PlanCard plan={plan} />
+          <PlanCard name={plan.name} action={plan.action}>
+            {children(plan)}
+          </PlanCard>
         </li>
       ))}
     </ul>

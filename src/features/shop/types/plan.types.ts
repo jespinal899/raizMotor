@@ -1,24 +1,29 @@
-export type PlanId = 'propietario' | 'agente' | 'inmobiliaria'
-
-export type PlanPrice =
-  | { kind: 'free' }
-  /** Precio mensual de partida, en USD. */
-  | { kind: 'monthly'; from: number }
-  /** Plan anunciado cuyo precio y contenido aún no están definidos. */
-  | { kind: 'upcoming' }
-
 export interface PlanAction {
   label: string
   to: string
 }
 
-export interface Plan {
-  id: PlanId
+/** Lo que tiene cualquier plan que se muestra en una tarjeta: su nombre y su siguiente paso. */
+export interface ListedPlan {
+  id: string
   name: string
-  audience: string
-  price: PlanPrice
-  features: string[]
   action: PlanAction
-  /** Plan que se destaca visualmente como recomendado. */
-  highlighted?: boolean
+}
+
+export type PlanId = 'propietario' | 'agente' | 'inmobiliaria'
+
+/** Una forma de publicar según quién anuncia: lo que se elige en la página de planes. */
+export interface Plan extends ListedPlan {
+  id: PlanId
+  description: string
+}
+
+export type AgentPlanId = 'agente-plan-1' | 'agente-plan-2'
+
+/** Un plan de pago para agentes inmobiliarios. */
+export interface AgentPlan extends ListedPlan {
+  id: AgentPlanId
+  features: string[]
+  /** En lempiras, sin el impuesto sobre ventas. */
+  monthlyPrice: number
 }

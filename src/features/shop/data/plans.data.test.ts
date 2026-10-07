@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_IMAGES } from '@/features/properties/utils/imageFiles'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
-import { PLANS } from '@/features/shop/data/plans.data'
+import { AGENT_PLANS, PLANS } from '@/features/shop/data/plans.data'
 import { ROUTES } from '@/shared/constants/routes'
 
-const planById = (id: string) => PLANS.find((plan) => plan.id === id)!
-
 describe('PLANS', () => {
-  it('ofrece un plan para propietarios, agentes inmobiliarios e inmobiliarias, en ese orden', () => {
+  it('ofrece publicar como propietario, agente inmobiliario o inmobiliaria, en ese orden', () => {
     // Arrange
     const expectedNames = ['Propietario', 'Agente inmobiliario', 'Inmobiliarias']
 
@@ -19,78 +16,109 @@ describe('PLANS', () => {
     expect(PLANS.map((plan) => plan.id)).toEqual(['propietario', 'agente', 'inmobiliaria'])
   })
 
-  it('el plan Propietario es gratis y lleva al formulario de publicar', () => {
+  it('cada plan se presenta con su texto', () => {
     // Arrange
-    const owner = planById('propietario')
+    const expectedDescriptions = [
+      'Vende o arrienda rápido. Publica 1 propiedad gratis y aprovecha nuestra alta visualización para llegar a miles de interesados sin comisiones.',
+      'Impulsa tu carrera. Publica tu cartera de propiedades y accede a un panel exclusivo para administrar, dar seguimiento y ver reportes de tus anuncios. La herramienta definitiva para cerrar más ventas.',
+      'Para empresas con un equipo que gestiona varias propiedades.',
+    ]
 
     // Act
-    const { price, action } = owner
+    const descriptions = PLANS.map((plan) => plan.description)
 
     // Assert
-    expect(price).toEqual({ kind: 'free' })
-    expect(action).toEqual({ label: 'Publicar gratis', to: ROUTES.publish })
+    expect(descriptions).toEqual(expectedDescriptions)
   })
 
-  it('el plan Propietario dice sus límites: una publicación y diez fotos, los mismos que aplica el formulario', () => {
+  it('el plan Propietario promete las mismas publicaciones gratis que admite el formulario', () => {
     // Arrange
-    const owner = planById('propietario')
+    const owner = PLANS.find((plan) => plan.id === 'propietario')!
 
     // Act
-    const { features } = owner
+    const { description } = owner
 
     // Assert
     expect(MAX_FREE_PUBLICATIONS).toBe(1)
-    expect(MAX_IMAGES).toBe(10)
-    expect(features).toEqual(expect.arrayContaining(['1 publicación gratis', 'Hasta 10 fotos por publicación']))
+    expect(description).toContain(`Publica ${MAX_FREE_PUBLICATIONS} propiedad gratis`)
   })
 
-  it('los planes que aún no están definidos se anuncian sin precio y sin ventajas inventadas', () => {
+  it('cada botón dice como quién se publica y lleva a su siguiente paso', () => {
     // Arrange
-    const upcoming = [planById('agente'), planById('inmobiliaria')]
+    const expectedActions = [
+      { label: 'Publicar como propietario', to: ROUTES.publish },
+      { label: 'Publicar como inmobiliario', to: ROUTES.agentPlans },
+      { label: 'Publicar como inmobiliaria', to: '/contacto?plan=inmobiliaria' },
+    ]
 
     // Act
-    const summaries = upcoming.map(({ price, features }) => ({ price, features }))
+    const actions = PLANS.map((plan) => plan.action)
 
     // Assert
-    expect(summaries).toEqual([
-      { price: { kind: 'upcoming' }, features: [] },
-      { price: { kind: 'upcoming' }, features: [] },
-    ])
+    expect(actions).toEqual(expectedActions)
+  })
+})
+
+describe('AGENT_PLANS', () => {
+  it('ofrece dos planes mensuales para agentes, del más pequeño al más grande', () => {
+    // Arrange
+    const expectedPlans = [
+      {
+        name: 'Plan 1',
+        features: ['Publica hasta 25 propiedades', '1 usuario por agente inmobiliario'],
+        monthlyPrice: 599,
+      },
+      {
+        name: 'Plan 2',
+        features: ['Publica hasta 100 propiedades', '2 usuarios por agente inmobiliario'],
+        monthlyPrice: 999,
+      },
+    ]
+
+    // Act
+    const plans = AGENT_PLANS.map(({ name, features, monthlyPrice }) => ({ name, features, monthlyPrice }))
+
+    // Assert
+    expect(plans).toEqual(expectedPlans)
   })
 
-  it('los planes por definir envían al contacto indicando de qué plan se trata', () => {
+  it('contratar un plan abre el contacto indicando cuál: todavía no hay pagos en línea', () => {
     // Arrange
-    const upcoming = PLANS.filter((plan) => plan.price.kind === 'upcoming')
+    const expectedActions = [
+      { label: 'Contratar', to: '/contacto?plan=agente-plan-1' },
+      { label: 'Contratar', to: '/contacto?plan=agente-plan-2' },
+    ]
 
     // Act
-    const actions = upcoming.map((plan) => plan.action)
+    const actions = AGENT_PLANS.map((plan) => plan.action)
 
     // Assert
-    expect(actions).toEqual([
-      { label: 'Quiero saber más', to: '/contacto?plan=agente' },
-      { label: 'Quiero saber más', to: '/contacto?plan=inmobiliaria' },
-    ])
+    expect(actions).toEqual(expectedActions)
+  })
+})
+
+describe('todos los planes', () => {
+  const allPlans = [...PLANS, ...AGENT_PLANS]
+
+  it('ningún identificador se repite: el contacto distingue por él sobre qué plan se consulta', () => {
+    // Arrange
+    const total = allPlans.length
+
+    // Act
+    const ids = new Set(allPlans.map((plan) => plan.id))
+
+    // Assert
+    expect(ids.size).toBe(total)
   })
 
   it('cada botón lleva a una página que existe', () => {
     // Arrange
-    const knownPages: string[] = [ROUTES.publish, ROUTES.contact]
+    const knownPages: string[] = [ROUTES.publish, ROUTES.agentPlans, ROUTES.contact]
 
     // Act
-    const destinations = PLANS.map((plan) => plan.action.to.split('?')[0])
+    const destinations = allPlans.map((plan) => plan.action.to.split('?')[0])
 
     // Assert
     expect(knownPages).toEqual(expect.arrayContaining(destinations))
-  })
-
-  it('destaca un único plan: el que ya se puede usar', () => {
-    // Arrange
-    const isHighlighted = (plan: (typeof PLANS)[number]) => plan.highlighted === true
-
-    // Act
-    const highlighted = PLANS.filter(isHighlighted).map((plan) => plan.id)
-
-    // Assert
-    expect(highlighted).toEqual(['propietario'])
   })
 })

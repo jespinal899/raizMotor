@@ -10,6 +10,7 @@ import TermsPage from '@/features/legal/pages/TermsPage'
 import LazyPublishPropertyPage from '@/features/properties/pages/LazyPublishPropertyPage'
 import PropertyDetailPage from '@/features/properties/pages/PropertyDetailPage'
 import SearchPage from '@/features/search/pages/SearchPage'
+import AgentPlansPage from '@/features/shop/pages/AgentPlansPage'
 import PricingPage from '@/features/shop/pages/PricingPage'
 import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
@@ -29,6 +30,7 @@ export const routes: RouteObject[] = [
       { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
       { path: ROUTES.publish, element: <LazyPublishPropertyPage /> },
       { path: ROUTES.pricing, element: <PricingPage /> },
+      { path: ROUTES.agentPlans, element: <AgentPlansPage /> },
       { path: ROUTES.terms, element: <TermsPage /> },
       { path: ROUTES.privacy, element: <PrivacyPage /> },
       { path: '*', element: <NotFoundPage /> },

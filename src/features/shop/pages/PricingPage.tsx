@@ -1,10 +1,9 @@
 import PageHeader from '@/components/PageHeader'
-import TextLink from '@/components/TextLink'
 import Container from '@/components/layout/Container'
+import PlanHelp from '@/features/shop/components/PlanHelp'
 import PlanList from '@/features/shop/components/PlanList'
 import { PLANS } from '@/features/shop/data/plans.data'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { ROUTES } from '@/shared/constants/routes'
 
 const PricingPage = () => {
   usePageTitle('Planes')
@@ -12,16 +11,17 @@ const PricingPage = () => {
   return (
     <Container className="grid gap-10 py-10">
       <PageHeader
-        title="Planes"
-        description="Elige cómo quieres publicar. Hoy puedes anunciar gratis como propietario; los planes para agentes e inmobiliarias llegarán pronto."
+        title="Publica tu propiedad en"
+        highlight="simples pasos"
+        description="Elige el plan que mejor se adapte a tus necesidades. Empieza gratis hoy mismo y llega a miles de personas."
+        centered
       />
 
-      <PlanList plans={PLANS} />
+      <PlanList plans={PLANS} className="md:grid-cols-2 lg:grid-cols-3">
+        {(plan) => <p className="text-sm leading-relaxed text-muted-foreground">{plan.description}</p>}
+      </PlanList>
 
-      <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-        ¿No sabes cuál te conviene?{' '}
-        <TextLink to={ROUTES.contact}>Escríbenos y te ayudamos a elegir</TextLink>
-      </p>
+      <PlanHelp />
     </Container>
   )
 }

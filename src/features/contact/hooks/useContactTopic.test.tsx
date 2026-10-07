@@ -67,6 +67,21 @@ describe('useContactTopic', () => {
     expect(result.current.topic).toMatchObject({ id: 'plan:agente', title: 'Agente inmobiliario' })
   })
 
+  it('reconoce también un plan para agentes, el que se elige al pulsar "Contratar"', () => {
+    // Arrange
+    const route = '/contacto?plan=agente-plan-2'
+
+    // Act
+    const { result } = renderTopic(route)
+
+    // Assert
+    expect(result.current.topic).toMatchObject({
+      id: 'plan:agente-plan-2',
+      title: 'Agente inmobiliario · Plan 2',
+      defaultDescription: 'Me interesa el plan Agente inmobiliario · Plan 2. ¿Me pueden dar más información?',
+    })
+  })
+
   it('ignora un plan que no existe', () => {
     // Arrange
     const route = '/contacto?plan=inventado'

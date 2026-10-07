@@ -15,6 +15,7 @@ export const ROUTES = {
   forgotPassword: '/recuperar-contrasena',
   publish: '/publicar',
   pricing: '/planes',
+  agentPlans: '/planes/agente-inmobiliario',
   terms: '/terminos',
   privacy: '/privacidad',
   about: `/#${SECTION_IDS.about}`,

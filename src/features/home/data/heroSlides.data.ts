@@ -26,7 +26,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     id: 'inmobiliarias',
     badge: '🏢 PARA PROFESIONALES',
     title: 'Planes para agentes e inmobiliarias',
-    description: `Estamos preparando los planes de ${BRAND.name} para agentes inmobiliarios e inmobiliarias. Escríbenos y te avisamos cuando estén listos.`,
+    description: `Conoce los planes de ${BRAND.name} para publicar tu cartera de propiedades como agente inmobiliario o como inmobiliaria.`,
     image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1600',
     primaryAction: { label: 'Ver planes', to: ROUTES.pricing },
     secondaryAction: { label: 'Quiero saber más', to: ROUTES.contact },

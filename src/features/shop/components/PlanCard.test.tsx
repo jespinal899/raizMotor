@@ -1,107 +1,49 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import PlanCard from '@/features/shop/components/PlanCard'
-import type { Plan } from '@/features/shop/types/plan.types'
+import type { PlanAction } from '@/features/shop/types/plan.types'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
-const buildPlan = (overrides: Partial<Plan> = {}): Plan => ({
-  id: 'inmobiliaria',
-  name: 'Inmobiliaria',
-  audience: 'Para equipos.',
-  price: { kind: 'monthly', from: 50 },
-  features: ['Hasta 25 propiedades', 'Reportes'],
-  action: { label: 'Solicitar este plan', to: '/contacto?plan=inmobiliaria' },
-  ...overrides,
-})
+const ACTION: PlanAction = { label: 'Publicar como propietario', to: '/publicar' }
 
-const textOf = (element: HTMLElement) => element.textContent?.replace(/\s+/g, ' ').trim()
+const setup = (action: PlanAction = ACTION) =>
+  renderWithRouter(
+    <PlanCard name="Propietario" action={action}>
+      <p>Vende o arrienda rápido.</p>
+    </PlanCard>,
+  )
 
 describe('PlanCard', () => {
-  it('muestra el nombre, a quién va dirigido y sus ventajas', () => {
-    // Arrange
-    const plan = buildPlan()
+  it('muestra el nombre del plan como encabezado y, debajo, su contenido', () => {
+    // Arrange: tarjeta de un plan con un texto
 
     // Act
-    renderWithRouter(<PlanCard plan={plan} />)
+    setup()
 
     // Assert
-    expect(screen.getByRole('heading', { name: 'Inmobiliaria' })).toBeInTheDocument()
-    expect(screen.getByText('Para equipos.')).toBeInTheDocument()
-    expect(screen.getAllByRole('listitem').map(textOf)).toEqual(['Hasta 25 propiedades', 'Reportes'])
-  })
-
-  it('muestra el precio mensual como "Desde … / mes"', () => {
-    // Arrange
-    const plan = buildPlan({ price: { kind: 'monthly', from: 50 } })
-
-    // Act
-    renderWithRouter(<PlanCard plan={plan} />)
-
-    // Assert
-    expect(textOf(screen.getByText(/50/).parentElement as HTMLElement)).toBe('Desde $ 50 / mes')
-  })
-
-  it('muestra "Gratis" en un plan sin coste', () => {
-    // Arrange
-    const plan = buildPlan({ price: { kind: 'free' } })
-
-    // Act
-    renderWithRouter(<PlanCard plan={plan} />)
-
-    // Assert
-    expect(screen.getByText('Gratis')).toBeInTheDocument()
-    expect(screen.queryByText('/ mes')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Propietario' })).toBeInTheDocument()
+    expect(screen.getByText('Vende o arrienda rápido.')).toBeInTheDocument()
   })
 
   it('el botón lleva al destino del plan', () => {
     // Arrange
-    const plan = buildPlan({ action: { label: 'Quiero saber más', to: '/contacto?plan=agente' } })
+    const action = { label: 'Contratar', to: '/contacto?plan=agente-plan-1' }
 
     // Act
-    renderWithRouter(<PlanCard plan={plan} />)
+    setup(action)
 
     // Assert
-    expect(screen.getByRole('link', { name: 'Quiero saber más' })).toHaveAttribute('href', '/contacto?plan=agente')
+    expect(screen.getByRole('link', { name: 'Contratar' })).toHaveAttribute('href', '/contacto?plan=agente-plan-1')
   })
 
-  it('marca como recomendado solo el plan destacado', () => {
-    // Arrange
-    const highlighted = buildPlan({ highlighted: true })
-    const regular = buildPlan({ id: 'propietario', name: 'Propietario', highlighted: false })
+  it('el botón lleva el estilo principal: todos los planes se ofrecen igual, sin destacar ninguno', () => {
+    // Arrange: tarjeta de un plan
 
     // Act
-    renderWithRouter(
-      <>
-        <PlanCard plan={highlighted} />
-        <PlanCard plan={regular} />
-      </>,
-    )
+    setup()
 
     // Assert
-    expect(screen.getAllByText('Recomendado')).toHaveLength(1)
-  })
-
-  it('un plan que aún no está definido dice "Próximamente" y que se está preparando, sin lista de ventajas', () => {
-    // Arrange
-    const plan = buildPlan({ price: { kind: 'upcoming' }, features: [] })
-
-    // Act
-    renderWithRouter(<PlanCard plan={plan} />)
-
-    // Assert
-    expect(screen.getByText('Próximamente')).toBeInTheDocument()
-    expect(screen.getByText('Estamos definiendo este plan. Escríbenos y te avisamos cuando esté listo.')).toBeInTheDocument()
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
-  })
-
-  it('un plan con ventajas no lleva el aviso de que se está preparando', () => {
-    // Arrange
-    const plan = buildPlan({ price: { kind: 'free' } })
-
-    // Act
-    renderWithRouter(<PlanCard plan={plan} />)
-
-    // Assert
-    expect(screen.queryByText(/Estamos definiendo este plan/)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: ACTION.label })).toHaveClass('bg-primary')
+    expect(screen.queryByText('Recomendado')).not.toBeInTheDocument()
   })
 })

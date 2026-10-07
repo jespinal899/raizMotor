@@ -1,6 +1,6 @@
 import type { ContactTopic } from '@/features/contact/types/contact.types'
 import type { Property } from '@/features/properties/types/property.types'
-import type { Plan } from '@/features/shop/types/plan.types'
+import type { PlanInquiry } from '@/features/shop/utils/planInquiry'
 
 export const buildPropertyTopic = (property: Property, reference: string): ContactTopic => ({
   id: `propiedad:${property.id}`,
@@ -11,10 +11,10 @@ export const buildPropertyTopic = (property: Property, reference: string): Conta
   reference,
 })
 
-export const buildPlanTopic = (plan: Plan): ContactTopic => ({
+export const buildPlanTopic = (plan: PlanInquiry): ContactTopic => ({
   id: `plan:${plan.id}`,
   label: 'Consulta sobre el plan',
   title: plan.name,
-  detail: plan.audience,
+  detail: plan.detail,
   defaultDescription: `Me interesa el plan ${plan.name}. ¿Me pueden dar más información?`,
 })
