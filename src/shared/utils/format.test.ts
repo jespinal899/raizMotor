@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { EXCHANGE_RATE } from '@/shared/constants/currency'
 import {
   formatArea,
+  formatLempiras,
+  formatLempirasInDollars,
   formatLongDate,
   formatNumber,
   formatPrice,
   formatPriceInLempiras,
+  toDollars,
   toLempiras,
 } from '@/shared/utils/format'
 
@@ -153,5 +156,67 @@ describe('formatLongDate', () => {
 
     // Assert
     expect(formatted).toBe('1 de marzo de 2026')
+  })
+})
+
+describe('formatLempiras', () => {
+  it('muestra un importe en lempiras con su símbolo, separador de miles y sin decimales', () => {
+    // Arrange
+    const lempiras = 1599
+
+    // Act
+    const formatted = formatLempiras(lempiras)
+
+    // Assert
+    expect(withPlainSpaces(formatted)).toBe('L 1,599')
+    expect(formatted).not.toContain(' ')
+  })
+})
+
+describe('toDollars', () => {
+  it('convierte lempiras a dólares con el tipo de cambio indicado', () => {
+    // Arrange
+    const lempiras = 2500
+
+    // Act
+    const dollars = toDollars(lempiras, 25)
+
+    // Assert
+    expect(dollars).toBe(100)
+  })
+
+  it('redondea al dólar: los centavos de una conversión aproximada no dicen nada', () => {
+    // Arrange
+    const lempiras = 599
+
+    // Act
+    const dollars = toDollars(lempiras, 26.89)
+
+    // Assert
+    expect(dollars).toBe(22)
+  })
+
+  it('si no se indica otro, usa el tipo de cambio de referencia', () => {
+    // Arrange
+    const lempiras = 1000
+
+    // Act
+    const dollars = toDollars(lempiras)
+
+    // Assert
+    expect(dollars).toBe(Math.round(1000 / EXCHANGE_RATE.lempirasPerDollar))
+  })
+})
+
+describe('formatLempirasInDollars', () => {
+  it('muestra en dólares un importe en lempiras, con su símbolo', () => {
+    // Arrange
+    const lempiras = 999
+
+    // Act
+    const formatted = formatLempirasInDollars(lempiras, 26.89)
+
+    // Assert
+    expect(withPlainSpaces(formatted)).toBe('$ 37')
   })
 })

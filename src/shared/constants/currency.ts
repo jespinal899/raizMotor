@@ -9,3 +9,6 @@ export const EXCHANGE_RATE = {
   lempirasPerDollar: 26.89,
   asOf: '2026-10-02',
 } as const
+
+/** Junto a un importe convertido: de dónde sale, para que nadie lo tome por un importe exacto. */
+export const CONVERSION_NOTE = `Conversión aproximada: L ${EXCHANGE_RATE.lempirasPerDollar} por $ 1, tipo de cambio de referencia del Banco Central de Honduras.`

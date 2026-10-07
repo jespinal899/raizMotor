@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
-import { EXCHANGE_RATE } from '@/shared/constants/currency'
+import { CONVERSION_NOTE } from '@/shared/constants/currency'
 import { formatPriceInLempiras } from '@/shared/utils/format'
 
 const textOf = (element: HTMLElement) => element.textContent?.replace(/\s+/g, ' ').trim()
@@ -74,10 +74,7 @@ describe('PropertyPrice', () => {
     render(<PropertyPrice property={property} />)
 
     // Assert
-    expect(screen.getByText(/^≈/)).toHaveAttribute(
-      'title',
-      `Conversión aproximada: L ${EXCHANGE_RATE.lempirasPerDollar} por $ 1, tipo de cambio de referencia del Banco Central de Honduras.`,
-    )
+    expect(screen.getByText(/^≈/)).toHaveAttribute('title', CONVERSION_NOTE)
   })
 
   it('el texto de delante convive con la aclaración del alquiler', () => {

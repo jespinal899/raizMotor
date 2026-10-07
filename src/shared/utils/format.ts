@@ -18,8 +18,18 @@ export const formatPrice = (dollars: number) => withSymbol('$', dollars)
 export const toLempiras = (dollars: number, rate: number = EXCHANGE_RATE.lempirasPerDollar) =>
   Math.round(dollars * rate)
 
+/** Un importe en lempiras, sin decimales: "L 599". */
+export const formatLempiras = (lempiras: number) => withSymbol('L', lempiras)
+
 /** Un precio en dólares convertido a lempiras: "L 7,663,650". Es aproximado: depende del tipo de cambio. */
-export const formatPriceInLempiras = (dollars: number, rate?: number) => withSymbol('L', toLempiras(dollars, rate))
+export const formatPriceInLempiras = (dollars: number, rate?: number) => formatLempiras(toLempiras(dollars, rate))
+
+/** Lo que vale en dólares un importe en lempiras, redondeado al dólar. */
+export const toDollars = (lempiras: number, rate: number = EXCHANGE_RATE.lempirasPerDollar) =>
+  Math.round(lempiras / rate)
+
+/** Un importe en lempiras convertido a dólares: "$ 22". Es aproximado: depende del tipo de cambio. */
+export const formatLempirasInDollars = (lempiras: number, rate?: number) => formatPrice(toDollars(lempiras, rate))
 
 // Las partes se piden una a una: el estilo "largo" de la región escribe el día con un cero delante.
 const longDateFormatter = new Intl.DateTimeFormat(LOCALE, {

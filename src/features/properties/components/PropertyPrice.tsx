@@ -1,12 +1,9 @@
 import type { Property } from '@/features/properties/types/property.types'
 import { cn } from '@/lib/utils'
-import { EXCHANGE_RATE } from '@/shared/constants/currency'
+import { CONVERSION_NOTE } from '@/shared/constants/currency'
 import { formatPrice, formatPriceInLempiras } from '@/shared/utils/format'
 
 const detailStyle = 'text-sm font-normal text-muted-foreground'
-
-/** Al pasar por encima del importe en lempiras: de dónde sale, para que nadie lo tome por un precio exacto. */
-const CONVERSION_NOTE = `Conversión aproximada: L ${EXCHANGE_RATE.lempirasPerDollar} por $ 1, tipo de cambio de referencia del Banco Central de Honduras.`
 
 interface PropertyPriceProps {
   property: Pick<Property, 'price' | 'operation'>
