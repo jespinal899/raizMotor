@@ -23,6 +23,8 @@ export const FILLED_PUBLICATION: PropertyPublication = {
   landArea: 250,
   bedrooms: 3,
   bathrooms: 2,
+  parking: 2,
+  features: ['Jardín', 'Terraza'],
   title: 'Casa amplia con patio',
   description: 'Casa de una planta con patio amplio y cochera.',
   operation: 'venta',
@@ -76,13 +78,15 @@ export const fillLocationScreen = async (user: UserEvent, fakeMap: FakeLocationM
   await confirmLocationOnMap(user, fakeMap)
 }
 
-/** Pantalla 2: una casa con sus medidas. */
+/** Pantalla 2: una casa con sus medidas, sus estacionamientos y un par de comodidades. */
 export const fillTypeScreen = async (user: UserEvent) => {
   await user.click(screen.getByRole('radio', { name: 'Casa' }))
   await typeIn(user, 'spinbutton', 'Superficie construida (m²)', listing.builtArea ?? '')
   await typeIn(user, 'spinbutton', 'Superficie del terreno (m²)', listing.landArea ?? '')
   await typeIn(user, 'spinbutton', 'Cuartos', listing.bedrooms ?? '')
   await typeIn(user, 'spinbutton', 'Baños', listing.bathrooms ?? '')
+  await typeIn(user, 'spinbutton', 'Estacionamientos (opcional)', listing.parking ?? '')
+  for (const amenity of listing.features) await user.click(screen.getByRole('checkbox', { name: amenity }))
 }
 
 /** Pantalla 3: título y descripción del anuncio. */

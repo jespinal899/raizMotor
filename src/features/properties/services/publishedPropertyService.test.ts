@@ -74,6 +74,33 @@ describe('toPublishedProperty', () => {
     expect(createObjectUrl).not.toHaveBeenCalled()
   })
 
+  it('conserva los estacionamientos y las comodidades que se declararon al publicar', () => {
+    // Arrange
+    const stored = record('casa-publicada')
+    const publication = { ...stored, publication: { ...stored.publication, parking: 2, features: ['Piscina', 'Terraza'] } }
+
+    // Act
+    const property = toPublishedProperty(publication)
+
+    // Assert
+    expect(property.parking).toBe(2)
+    expect(property.features).toEqual(['Piscina', 'Terraza'])
+  })
+
+  it('un anuncio guardado antes de que se pidieran las comodidades se muestra sin ellas, sin fallar', () => {
+    // Arrange
+    const stored = record('anuncio-antiguo')
+    const { features: _features, ...legacy } = stored.publication
+    const publication = { ...stored, publication: legacy } as StoredPropertyPublication
+
+    // Act
+    const property = toPublishedProperty(publication)
+
+    // Assert
+    expect(property.features).toEqual([])
+    expect(property.parking).toBeUndefined()
+  })
+
   it('marca el anuncio como guardado solo en este navegador', () => {
     // Arrange
     const publication = record('casa-publicada')

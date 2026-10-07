@@ -204,4 +204,37 @@ describe('validatePublication', () => {
     // Assert
     expect(errors.images).toBe('Agrega al menos una foto.')
   })
+
+  it('los estacionamientos son opcionales', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'casa', parking: '' })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors.parking).toBeUndefined()
+  })
+
+  it('si se indican, los estacionamientos deben ser un número entero', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'casa', parking: '1.5' })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors.parking).toBe('Los estacionamientos deben ser un número entero.')
+  })
+
+  it('en un terreno no se reclaman los estacionamientos, aunque quedara algo escrito', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'terreno', landArea: '900', parking: 'muchos' })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors.parking).toBeUndefined()
+  })
 })

@@ -3,7 +3,7 @@ import type {
   PropertyPublication,
   PublicationFormValues,
 } from '@/features/properties/types/publication.types'
-import { getDetailFields } from '@/features/properties/utils/propertyDetailFields'
+import { getAmenities, getDetailFields } from '@/features/properties/utils/propertyDetailFields'
 
 /** Convierte un formulario ya validado en la publicación que se envía. */
 export const toPublication = (values: PublicationFormValues): PropertyPublication => {
@@ -14,8 +14,14 @@ export const toPublication = (values: PublicationFormValues): PropertyPublicatio
   }
 
   // Solo viajan los datos que aplican al tipo elegido, aunque se hubieran escrito otros antes de cambiarlo.
+  // Uno en blanco es opcional y no se declara: convertirlo daría un cero que nadie escribió.
   const details: Pick<PropertyPublication, DetailField> = {}
-  for (const field of getDetailFields(type)) details[field] = Number(values[field])
+  for (const field of getDetailFields(type)) {
+    if (values[field].trim() !== '') details[field] = Number(values[field])
+  }
+
+  // Lo mismo con las comodidades, que además salen en el orden en que se ofrecen y no en el que se marcaron.
+  const features = getAmenities(type).filter((amenity) => values.features.includes(amenity))
 
   return {
     location: {
@@ -27,6 +33,7 @@ export const toPublication = (values: PublicationFormValues): PropertyPublicatio
     },
     type,
     ...details,
+    features,
     title: values.title.trim(),
     description: values.description.trim(),
     operation,

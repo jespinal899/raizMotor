@@ -48,6 +48,8 @@ describe('usePublicationForm', () => {
       landArea: '',
       bedrooms: '',
       bathrooms: '',
+      parking: '',
+      features: [],
       title: '',
       description: '',
       operation: '',

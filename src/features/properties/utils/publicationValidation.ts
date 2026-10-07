@@ -1,7 +1,15 @@
 import type { DetailField, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { isCityOf, isDepartmentId } from '@/features/properties/utils/departments'
 import { getDetailFields } from '@/features/properties/utils/propertyDetailFields'
-import { maxLength, minLength, positiveNumber, required, validate, wholeNumber } from '@/shared/utils/validators'
+import {
+  maxLength,
+  minLength,
+  optional,
+  positiveNumber,
+  required,
+  validate,
+  wholeNumber,
+} from '@/shared/utils/validators'
 import type { FieldErrors, Validator } from '@/shared/utils/validators'
 
 const MIN_ADDRESS_LENGTH = 5
@@ -21,6 +29,8 @@ const DETAIL_VALIDATORS: Record<DetailField, Validator[]> = {
   ],
   bedrooms: [required('Indica cuántos cuartos tiene.'), wholeNumber('Los cuartos deben ser un número entero.')],
   bathrooms: [required('Indica cuántos baños tiene.'), wholeNumber('Los baños deben ser un número entero.')],
+  // No todas las propiedades los tienen ni todo el mundo los cuenta: se puede dejar en blanco.
+  parking: [optional(wholeNumber('Los estacionamientos deben ser un número entero.'))],
 }
 
 export const validatePublication = (values: PublicationFormValues): FieldErrors<PublicationFormValues> => {
@@ -44,6 +54,7 @@ export const validatePublication = (values: PublicationFormValues): FieldErrors<
     landArea: validateDetail('landArea'),
     bedrooms: validateDetail('bedrooms'),
     bathrooms: validateDetail('bathrooms'),
+    parking: validateDetail('parking'),
     title: validate(values.title, [
       required('Escribe un título para el anuncio.'),
       minLength(MIN_TITLE_LENGTH, `El título debe tener al menos ${MIN_TITLE_LENGTH} caracteres.`),

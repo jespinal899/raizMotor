@@ -41,6 +41,7 @@ describe('toPublication', () => {
       landArea: 250.5,
       bedrooms: 3,
       bathrooms: 2,
+      features: [],
       title: 'Casa amplia con patio',
       description: 'Casa de una planta con patio amplio y cochera techada.',
       operation: 'venta',
@@ -76,5 +77,60 @@ describe('toPublication', () => {
 
     // Assert
     expect(convert).toThrow('El formulario debe validarse antes de crear la publicación.')
+  })
+
+  it('incluye los estacionamientos cuando se indican', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'casa', parking: '2' })
+
+    // Act
+    const publication = toPublication(values)
+
+    // Assert
+    expect(publication.parking).toBe(2)
+  })
+
+  it('si los estacionamientos se dejan en blanco, no los declara: en blanco no es cero', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'casa', parking: '  ' })
+
+    // Act
+    const publication = toPublication(values)
+
+    // Assert
+    expect(publication).not.toHaveProperty('parking')
+  })
+
+  it('un terreno no lleva estacionamientos aunque se hubieran escrito', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'terreno', landArea: '900', parking: '2' })
+
+    // Act
+    const publication = toPublication(values)
+
+    // Assert
+    expect(publication).not.toHaveProperty('parking')
+  })
+
+  it('lleva las comodidades marcadas, en el orden en que se ofrecen y no en el que se pulsaron', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'casa', features: ['Terraza', 'Piscina'] })
+
+    // Act
+    const publication = toPublication(values)
+
+    // Assert
+    expect(publication.features).toEqual(['Piscina', 'Terraza'])
+  })
+
+  it('deja fuera las comodidades que no son del tipo elegido, aunque se hubieran marcado antes de cambiarlo', () => {
+    // Arrange
+    const values = buildPublicationValues({ type: 'terreno', landArea: '900', features: ['Piscina', 'Cercado'] })
+
+    // Act
+    const publication = toPublication(values)
+
+    // Assert
+    expect(publication.features).toEqual(['Cercado'])
   })
 })

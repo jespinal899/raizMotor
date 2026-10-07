@@ -21,6 +21,8 @@ const EMPTY_PUBLICATION: PublicationFormValues = {
   landArea: '',
   bedrooms: '',
   bathrooms: '',
+  parking: '',
+  features: [],
   title: '',
   description: '',
   operation: '',

@@ -31,6 +31,8 @@ export const buildPublicationValues = (overrides: Partial<PublicationFormValues>
   landArea: '250',
   bedrooms: '3',
   bathrooms: '2',
+  parking: '',
+  features: [],
   title: 'Casa amplia con patio en Palmira',
   description: 'Casa de dos plantas con patio amplio, cochera techada y cuarto de servicio.',
   operation: 'venta',

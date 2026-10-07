@@ -24,7 +24,7 @@ export interface LocatedAddress {
 }
 
 /** Datos que dependen del tipo de propiedad: un terreno, por ejemplo, no tiene cuartos. */
-export type DetailField = 'builtArea' | 'landArea' | 'bedrooms' | 'bathrooms'
+export type DetailField = 'builtArea' | 'landArea' | 'bedrooms' | 'bathrooms' | 'parking'
 
 /** Lo que se escribe en el formulario. Los números siguen siendo texto hasta que se validan. */
 export interface PublicationFormValues {
@@ -39,6 +39,10 @@ export interface PublicationFormValues {
   landArea: string
   bedrooms: string
   bathrooms: string
+  /** Opcional: en blanco significa que no se declara, no que sean cero. */
+  parking: string
+  /** Comodidades marcadas, con el mismo texto con que se ofrecen. */
+  features: string[]
   title: string
   description: string
   operation: PropertyOperation | ''
@@ -62,6 +66,9 @@ export interface PropertyPublication {
   landArea?: number
   bedrooms?: number
   bathrooms?: number
+  parking?: number
+  /** Comodidades que declara quien publica, de las que se ofrecen para su tipo de propiedad. */
+  features: string[]
   title: string
   description: string
   operation: PropertyOperation

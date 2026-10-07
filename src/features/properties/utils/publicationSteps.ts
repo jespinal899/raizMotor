@@ -29,7 +29,7 @@ export const PUBLICATION_SCREENS: PublicationScreen[] = [
     title: 'Tipo de propiedad',
     description: 'Los datos que se piden cambian según el tipo.',
     step: 0,
-    fields: ['type', 'builtArea', 'landArea', 'bedrooms', 'bathrooms'],
+    fields: ['type', 'builtArea', 'landArea', 'bedrooms', 'bathrooms', 'parking', 'features'],
   },
   {
     title: 'Título y descripción',

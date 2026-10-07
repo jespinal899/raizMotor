@@ -12,8 +12,11 @@ import { getDepartmentName } from '@/features/properties/utils/departments'
  * archivos guardados: quien las pinta crea su dirección temporal y la libera al dejar de mostrarlas.
  */
 export const toPublishedProperty = ({ id, publication }: StoredPropertyPublication): Property => {
-  const { location, type, operation, builtArea, landArea, bedrooms, bathrooms, title, description, price, images } =
+  const { location, type, operation, builtArea, landArea, bedrooms, bathrooms, parking, title, description, price } =
     publication
+  const { images } = publication
+  // Los anuncios guardados antes de que se pidieran las comodidades no las traen.
+  const features: string[] | undefined = publication.features
 
   return {
     id,
@@ -29,7 +32,8 @@ export const toPublishedProperty = ({ id, publication }: StoredPropertyPublicati
     landArea,
     bedrooms,
     bathrooms,
-    features: [],
+    parking,
+    features: features ?? [],
     image: images[0],
     gallery: images,
     location: {
