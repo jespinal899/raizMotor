@@ -6,10 +6,12 @@ import EmailField from '@/components/EmailField'
 import PhoneField from '@/components/PhoneField'
 import SubmitButton from '@/components/SubmitButton'
 import TextField from '@/components/TextField'
+import TextLink from '@/components/TextLink'
 import QuoteFormAlert from '@/features/properties/components/QuoteFormAlert'
 import { useQuoteForm } from '@/features/properties/hooks/useQuoteForm'
 import type { QuoteApplicant } from '@/features/properties/types/quote.types'
 import { MAX_FULL_NAME_LENGTH } from '@/features/properties/utils/quoteValidation'
+import { ROUTES } from '@/shared/constants/routes'
 
 interface PropertyQuoteFormProps {
   /** Se resuelve cuando la solicitud queda entregada. La clave identifica el envío, para no registrarlo dos veces. */
@@ -73,7 +75,16 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
       />
 
       <CheckboxField
-        label="Acepto los términos y condiciones"
+        // Se abren en otra pestaña: salir de la ficha haría perder lo que ya se escribió en el formulario.
+        label={
+          <span>
+            Acepto los{' '}
+            {/* `leading-none`, como la etiqueta: con el interlineado de un botón la casilla crecería. */}
+            <TextLink to={ROUTES.terms} target="_blank" rel="noopener noreferrer" className="leading-none font-normal">
+              términos y condiciones
+            </TextLink>
+          </span>
+        }
         error={errors.acceptsTerms}
         name="terms"
         checked={values.acceptsTerms}

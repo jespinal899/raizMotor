@@ -80,4 +80,20 @@ describe('CheckboxField', () => {
     // Assert
     expect(onChange).not.toHaveBeenCalled()
   })
+
+  it('su texto puede llevar un enlace, que sigue formando parte del nombre de la casilla', () => {
+    // Arrange
+    const label = (
+      <>
+        Acepto los <a href="/terminos">términos y condiciones</a>
+      </>
+    )
+
+    // Act
+    render(<CheckboxField label={label} checked={false} onChange={vi.fn()} />)
+
+    // Assert
+    expect(screen.getByRole('checkbox', { name: LABEL })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'términos y condiciones' })).toHaveAttribute('href', '/terminos')
+  })
 })

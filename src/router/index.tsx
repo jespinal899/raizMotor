@@ -5,6 +5,8 @@ import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage'
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 import ContactPage from '@/features/contact/pages/ContactPage'
+import PrivacyPage from '@/features/legal/pages/PrivacyPage'
+import TermsPage from '@/features/legal/pages/TermsPage'
 import LazyPublishPropertyPage from '@/features/properties/pages/LazyPublishPropertyPage'
 import PropertyDetailPage from '@/features/properties/pages/PropertyDetailPage'
 import SearchPage from '@/features/search/pages/SearchPage'
@@ -27,6 +29,8 @@ export const routes: RouteObject[] = [
       { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
       { path: ROUTES.publish, element: <LazyPublishPropertyPage /> },
       { path: ROUTES.pricing, element: <PricingPage /> },
+      { path: ROUTES.terms, element: <TermsPage /> },
+      { path: ROUTES.privacy, element: <PrivacyPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import PropertyQuoteForm from '@/features/properties/components/PropertyQuoteForm'
@@ -6,6 +6,7 @@ import { QuoteUnavailableError } from '@/features/properties/services/quoteServi
 import { deferred } from '@/test/deferred'
 import { anyOperationKey } from '@/test/operationKey'
 import { fillQuoteForm, quoteForm } from '@/test/quoteForm'
+import { renderWithRouter } from '@/test/renderWithRouter'
 
 const sent = () => vi.fn(async () => {})
 
@@ -15,7 +16,7 @@ describe('PropertyQuoteForm', () => {
     const onSubmit = sent()
 
     // Act
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
 
     // Assert
     expect(within(quoteForm.form()).getByRole('heading', { name: 'Cotizar esta propiedad' })).toBeInTheDocument()
@@ -31,7 +32,7 @@ describe('PropertyQuoteForm', () => {
     const onSubmit = sent()
 
     // Act
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
 
     // Assert
     const message = 'Recibe en tu correo un valor estimado en segundos.'
@@ -44,7 +45,7 @@ describe('PropertyQuoteForm', () => {
   it('el teléfono trae fijo el prefijo de Honduras: solo se escribe el número', async () => {
     // Arrange
     const user = userEvent.setup()
-    render(<PropertyQuoteForm onSubmit={sent()} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={sent()} />)
 
     // Act
     await user.type(quoteForm.phone(), '99998888')
@@ -58,7 +59,7 @@ describe('PropertyQuoteForm', () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = sent()
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
     await fillQuoteForm(user)
 
     // Act
@@ -75,7 +76,7 @@ describe('PropertyQuoteForm', () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = sent()
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
 
     // Act
     await user.click(quoteForm.submitButton())
@@ -92,7 +93,7 @@ describe('PropertyQuoteForm', () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = sent()
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
     await fillQuoteForm(user)
     await user.click(quoteForm.terms())
 
@@ -107,7 +108,7 @@ describe('PropertyQuoteForm', () => {
   it('al aceptar los términos se retira su aviso', async () => {
     // Arrange
     const user = userEvent.setup()
-    render(<PropertyQuoteForm onSubmit={sent()} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={sent()} />)
     await user.click(quoteForm.submitButton())
 
     // Act
@@ -123,7 +124,7 @@ describe('PropertyQuoteForm', () => {
     const user = userEvent.setup()
     const sending = deferred()
     const onSubmit = vi.fn(() => sending.promise)
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
     await fillQuoteForm(user)
 
     // Act
@@ -141,7 +142,7 @@ describe('PropertyQuoteForm', () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = vi.fn(() => Promise.reject(new QuoteUnavailableError()))
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
     await fillQuoteForm(user)
 
     // Act
@@ -158,7 +159,7 @@ describe('PropertyQuoteForm', () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = vi.fn(() => Promise.reject(new Error('sin conexión')))
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
     await fillQuoteForm(user)
 
     // Act
@@ -173,7 +174,7 @@ describe('PropertyQuoteForm', () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = sent()
-    render(<PropertyQuoteForm onSubmit={onSubmit} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
     await fillQuoteForm(user)
 
     // Act
@@ -187,7 +188,7 @@ describe('PropertyQuoteForm', () => {
   it('al cambiar un dato después de enviar, el botón vuelve a activarse', async () => {
     // Arrange
     const user = userEvent.setup()
-    render(<PropertyQuoteForm onSubmit={sent()} />)
+    renderWithRouter(<PropertyQuoteForm onSubmit={sent()} />)
     await fillQuoteForm(user)
     await user.click(quoteForm.submitButton())
     await screen.findByRole('status')
@@ -198,5 +199,19 @@ describe('PropertyQuoteForm', () => {
     // Assert
     expect(quoteForm.submitButton()).toBeEnabled()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('la casilla enlaza con los términos y condiciones, que se abren en otra pestaña para no perder lo escrito', () => {
+    // Arrange
+    const onSubmit = sent()
+
+    // Act
+    renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
+
+    // Assert
+    const terms = within(quoteForm.form()).getByRole('link', { name: 'términos y condiciones' })
+    expect(terms).toHaveAttribute('href', '/terminos')
+    expect(terms).toHaveAttribute('target', '_blank')
+    expect(terms).toHaveAttribute('rel', 'noopener noreferrer')
   })
 })

@@ -50,9 +50,23 @@ describe('routes', () => {
   })
 
   it.each([
+    ['Términos y condiciones', ROUTES.terms],
+    ['Política de privacidad', ROUTES.privacy],
+  ])('abre la página "%s" en su dirección', async (title, route) => {
+    // Arrange: aplicación sin abrir
+
+    // Act
+    await openAt(route)
+
+    // Assert
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+  })
+
+  it.each([
     ['planes', ROUTES.pricing],
     ['contacto', ROUTES.contact],
     ['recuperar la contraseña', ROUTES.forgotPassword],
+    ['términos y condiciones', ROUTES.terms],
   ])('en la página de %s el pie sigue completo, con la marca y sus enlaces', async (_page, route) => {
     // Arrange: aplicación sin abrir
 

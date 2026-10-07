@@ -1,10 +1,12 @@
 import { useId } from 'react'
+import type { ReactNode } from 'react'
 import FieldError from '@/components/FieldError'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 
 interface CheckboxFieldProps {
-  label: string
+  /** El texto de la casilla. Puede llevar un enlace, p. ej. a lo que se acepta al marcarla. */
+  label: ReactNode
   checked: boolean
   error?: string
   name?: string

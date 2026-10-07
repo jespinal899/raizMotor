@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { EXCHANGE_RATE } from '@/shared/constants/currency'
-import { formatArea, formatNumber, formatPrice, formatPriceInLempiras, toLempiras } from '@/shared/utils/format'
+import {
+  formatArea,
+  formatLongDate,
+  formatNumber,
+  formatPrice,
+  formatPriceInLempiras,
+  toLempiras,
+} from '@/shared/utils/format'
 
 // El símbolo y la cifra van separados por un espacio de no separación.
 const withPlainSpaces = (text: string) => text.replace(/\s/g, ' ')
@@ -122,5 +129,29 @@ describe('formatNumber', () => {
 
     // Assert
     expect(formatted).toBe('12,500')
+  })
+})
+
+describe('formatLongDate', () => {
+  it('escribe una fecha con el mes en letras, como se lee en Honduras', () => {
+    // Arrange
+    const date = '2026-10-02'
+
+    // Act
+    const formatted = formatLongDate(date)
+
+    // Assert
+    expect(formatted).toBe('2 de octubre de 2026')
+  })
+
+  it('no cambia de día según la zona horaria de quien la lee', () => {
+    // Arrange
+    const firstOfMonth = '2026-03-01'
+
+    // Act
+    const formatted = formatLongDate(firstOfMonth)
+
+    // Assert
+    expect(formatted).toBe('1 de marzo de 2026')
   })
 })

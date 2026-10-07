@@ -15,6 +15,8 @@ export const ROUTES = {
   forgotPassword: '/recuperar-contrasena',
   publish: '/publicar',
   pricing: '/planes',
+  terms: '/terminos',
+  privacy: '/privacidad',
   about: `/#${SECTION_IDS.about}`,
   howItWorks: `/#${SECTION_IDS.howItWorks}`,
 } as const

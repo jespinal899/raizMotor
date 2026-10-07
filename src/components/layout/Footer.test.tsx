@@ -50,7 +50,12 @@ describe('Footer', () => {
       'Planes → /planes',
       'Publicar → /publicar',
     ])
-    expect(linksOf('Ayuda')).toEqual(['Contáctenos → /contacto', 'Iniciar sesión → /iniciar-sesion'])
+    expect(linksOf('Ayuda')).toEqual([
+      'Contáctenos → /contacto',
+      'Iniciar sesión → /iniciar-sesion',
+      'Términos y condiciones → /terminos',
+      'Política de privacidad → /privacidad',
+    ])
   })
 
   it('muestra el aviso de derechos con el año en curso', () => {

@@ -27,6 +27,8 @@ export const NAV = {
   pricing: { label: 'Planes', to: ROUTES.pricing },
   about: { label: 'Quiénes somos', to: ROUTES.about },
   howItWorks: { label: 'Cómo funciona', to: ROUTES.howItWorks },
+  terms: { label: 'Términos y condiciones', to: ROUTES.terms },
+  privacy: { label: 'Política de privacidad', to: ROUTES.privacy },
 } satisfies Record<string, NavItem>
 
 const CATEGORY_ORDER: PropertyType[] = ['terreno', 'casa', 'apartamento']
@@ -53,5 +55,5 @@ export const FOOTER_SECTIONS: FooterSection[] = [
     ],
   },
   { title: 'Plataforma', links: [NAV.about, NAV.howItWorks, NAV.pricing, NAV.publish] },
-  { title: 'Ayuda', links: [NAV.contact, NAV.login] },
+  { title: 'Ayuda', links: [NAV.contact, NAV.login, NAV.terms, NAV.privacy] },
 ]

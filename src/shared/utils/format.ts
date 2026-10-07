@@ -21,6 +21,20 @@ export const toLempiras = (dollars: number, rate: number = EXCHANGE_RATE.lempira
 /** Un precio en dólares convertido a lempiras: "L 7,663,650". Es aproximado: depende del tipo de cambio. */
 export const formatPriceInLempiras = (dollars: number, rate?: number) => withSymbol('L', toLempiras(dollars, rate))
 
+// Las partes se piden una a una: el estilo "largo" de la región escribe el día con un cero delante.
+const longDateFormatter = new Intl.DateTimeFormat(LOCALE, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+/**
+ * Una fecha `AAAA-MM-DD` con el mes en letras: "2 de octubre de 2026". Se lee como día del calendario,
+ * sin hora, para que no cambie según la zona horaria de quien la ve.
+ */
+export const formatLongDate = (isoDate: string) => longDateFormatter.format(new Date(`${isoDate}T00:00:00Z`))
+
 /** Una cantidad con su separador de miles. */
 export const formatNumber = (value: number) => numberFormatter.format(value)
 
