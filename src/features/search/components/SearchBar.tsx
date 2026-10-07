@@ -63,7 +63,7 @@ const SearchBar = ({ initialFilters = DEFAULT_FILTERS, className }: SearchBarPro
             aria-labelledby={locationLabelId}
             value={filters.location ?? ''}
             onChange={(event) => update({ location: event.target.value })}
-            placeholder="Distrito o ciudad"
+            placeholder="Colonia o ciudad"
             autoComplete="off"
             className="h-11 pl-9"
           />
