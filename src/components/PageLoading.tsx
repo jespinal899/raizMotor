@@ -1,7 +1,7 @@
 import Container from '@/components/layout/Container'
 import { Skeleton } from '@/components/ui/skeleton'
 
-/** Marcador mientras se descarga el código de una página que no viene en la carga inicial. */
+/** Marcador mientras una página aún no puede mostrarse: se descarga su código o se comprueba un dato del que depende. */
 const PageLoading = () => {
   return (
     <Container className="py-10">

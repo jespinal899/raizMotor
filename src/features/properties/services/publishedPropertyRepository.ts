@@ -16,6 +16,7 @@ export interface StoredPropertyPublication {
 export interface PublishedPropertyRepository {
   publish(publication: PropertyPublication, operationKey: string): Promise<string>
   getById(id: string): Promise<StoredPropertyPublication | undefined>
+  /** Del más reciente al más antiguo. */
   getAll(): Promise<StoredPropertyPublication[]>
 }
 

@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { usePublicationForm } from '@/features/properties/hooks/usePublicationForm'
+import { PublicationLimitError } from '@/features/properties/services/publicationService'
 import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { toPublication } from '@/features/properties/utils/toPublication'
 import { deferred } from '@/test/deferred'
@@ -111,6 +112,18 @@ describe('usePublicationForm', () => {
     // Assert
     expect(statusWhileSubmitting).toBe('submitting')
     expect(result.current.status).toBe('published')
+  })
+
+  it('distingue de un fallo que el plan gratuito ya se usó', async () => {
+    // Arrange
+    const { result } = setup(() => Promise.reject(new PublicationLimitError()))
+    fillForm(result)
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(result.current.status).toBe('limitReached')
   })
 
   it('queda como fallida cuando no se puede guardar el anuncio', async () => {

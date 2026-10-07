@@ -38,4 +38,17 @@ describe('PublicationAlert', () => {
     expect(alert).toHaveTextContent('No pudimos guardar tu propiedad')
     expect(alert).toHaveTextContent('Revisa que el navegador permita guardar datos de este sitio y vuelve a intentarlo.')
   })
+
+  it('si ya se usó la publicación gratuita, lo dice y aclara que este anuncio no se guardó', () => {
+    // Arrange
+    const status = 'limitReached'
+
+    // Act
+    render(<PublicationAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('Ya usaste tu publicación gratuita')
+    expect(alert).toHaveTextContent('El plan Propietario incluye una sola publicación. Este anuncio no se guardó.')
+  })
 })

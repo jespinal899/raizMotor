@@ -78,4 +78,5 @@ export interface PropertyPublication {
   images: File[]
 }
 
-export type PublicationStatus = 'idle' | 'submitting' | 'published' | 'failed'
+/** `limitReached`: no se guardó porque la publicación gratuita ya estaba usada. */
+export type PublicationStatus = 'idle' | 'submitting' | 'published' | 'failed' | 'limitReached'
