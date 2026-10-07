@@ -19,12 +19,12 @@ Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con
 | Cotizar una propiedad desde su ficha | Interfaz lista; falta el servidor que reciba la solicitud |
 | Reportar una publicación desde su ficha | Interfaz lista; falta el servidor que reciba el reporte |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
-| Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Guarda el anuncio y las fotos en IndexedDB de este navegador |
+| Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes. Guarda el anuncio y hasta 10 fotos en IndexedDB de este navegador, y admite una sola publicación gratuita por navegador |
 | Contacto | Interfaz lista; falta el servicio de correo |
 | Iniciar sesión, registro y acceso con Google | Interfaz lista; falta el servicio de cuentas |
 | Recuperar contraseña | Solo avisa de que aún no está disponible |
 | Términos y condiciones, y política de privacidad | Texto preliminar; pendiente de revisión legal |
-| Planes | Contenido provisional |
+| Planes: Propietario, Agente inmobiliario e Inmobiliarias | El botón «Publicar» lleva aquí. Propietario es gratis (1 publicación, hasta 10 fotos); los otros dos se anuncian como «Próximamente», sin precio |
 | Panel de administración | Sin implementar |
 
 ## Tecnologías
@@ -127,5 +127,6 @@ El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. E
 - Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
-- Confirmar el contenido de los planes.
+- Definir el precio y el contenido de los planes Agente inmobiliario e Inmobiliarias.
+- Contar la publicación gratuita por cuenta: hoy se cuenta por navegador, así que borrar los datos del sitio o usar otro navegador la devuelve.
 - Panel de administración y pagos.

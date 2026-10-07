@@ -126,7 +126,7 @@ La aplicación se organiza por funcionalidades. Cada carpeta de `src/features` r
 %%{init: {"flowchart": {"wrappingWidth": 190}}}%%
 flowchart TB
     accTitle: Componentes de la aplicación web
-    accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Inicio usa Búsqueda y Propiedades, Búsqueda usa Propiedades y Contacto usa Propiedades y Planes. Propiedades consulta los sistemas externos. Todas usan las piezas compartidas.
+    accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Inicio usa Búsqueda y Propiedades, Búsqueda usa Propiedades, Contacto usa Propiedades y Planes, y Planes usa Propiedades. Propiedades consulta los sistemas externos. Todas usan las piezas compartidas.
 
     router["<b>Enrutador</b><br/>[React Router]<br/>Asocia cada dirección con su página"]
     layout["<b>Estructura común</b><br/>[src/components/layout]<br/>Cabecera, menú y pie"]
@@ -136,7 +136,7 @@ flowchart TB
         contact["<b>Contacto</b> · contact<br/>Consulta sobre una propiedad o un plan"]
         auth["<b>Acceso</b> · auth<br/>Iniciar sesión, registro y recuperación"]
         search["<b>Búsqueda</b> · search<br/>Filtros, orden y resultados paginados"]
-        shop["<b>Planes</b> · shop<br/>Planes para cada tipo de anunciante"]
+        shop["<b>Planes</b> · shop<br/>Propietario, Agente inmobiliario e Inmobiliarias"]
         admin["<b>Administración</b> · admin<br/>Sin implementar"]
         properties["<b>Propiedades</b> · properties<br/>Catálogo, ficha y formulario de publicar"]
 
@@ -144,6 +144,7 @@ flowchart TB
         home --> properties
         contact --> shop
         contact --> properties
+        shop --> properties
         %% Enlaces invisibles: solo ordenan las cajas en tres columnas para que el diagrama no se ensanche.
         contact ~~~ search
         auth ~~~ admin
@@ -175,6 +176,7 @@ Una flecha entre dos funcionalidades significa que la primera usa piezas de la s
 - **Inicio** muestra el buscador de Búsqueda y las propiedades destacadas de Propiedades. Las fotos de su carrusel también vienen de Unsplash.
 - **Búsqueda** lista el catálogo de Propiedades.
 - **Contacto** lee de Propiedades y de Planes sobre qué propiedad o plan se consulta.
+- **Planes** lee de Propiedades los límites del plan gratuito (una publicación y diez fotos): la tarjeta del plan dice los mismos que aplica el formulario de publicar.
 
 | Funcionalidad | Carpeta | Páginas | Servicios |
 | --- | --- | --- | --- |
@@ -247,6 +249,7 @@ Repetir una acción deja el mismo resultado que hacerla una vez. Vale para quien
 | La búsqueda de una misma dirección | No se vuelve a consultar Nominatim. Un fallo no se recuerda, para poder reintentar. | `geocodingService` |
 | Una búsqueda de dirección antes de que termine otra | Cuenta la última pedida, aunque la anterior responda después. | `useAddressSearch` |
 | La misma foto en un anuncio | Se rechaza como duplicada. | `imageFiles` |
+| La publicación gratuita | Reintentar el mismo envío devuelve el anuncio que ya se guardó. Un anuncio distinto se rechaza: el plan Propietario incluye una sola publicación. | `publicationService`, `publicationLimit` |
 | La visita a una ficha (recarga, efecto repetido) | Cuenta una sola vista por visita: el total no sube hasta abrir la ficha en otra pestaña o sesión. | `propertyViewService` |
 | El cierre del mapa | La segunda vez no hace nada. | `locationMap` |
 | Una lectura del catálogo | Devuelve lo mismo y no cambia nada; las respuestas de peticiones anteriores se descartan. | `propertyService`, `useAsyncData` |
@@ -260,7 +263,7 @@ Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: rep
 - **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
 - **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
 
-La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Las cuentas y el contacto siguen pendientes de sus servicios externos.
+La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Por eso el límite de una publicación gratuita distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Mientras no haya cuentas, el límite se cuenta por navegador. Las cuentas y el contacto siguen pendientes de sus servicios externos.
 
 Iniciar sesión no lleva clave: repetirlo deja la misma sesión.
 
