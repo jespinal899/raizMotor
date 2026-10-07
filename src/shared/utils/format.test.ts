@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { formatArea, formatNumber, formatPrice } from '@/shared/utils/format'
+import { EXCHANGE_RATE } from '@/shared/constants/currency'
+import { formatArea, formatNumber, formatPrice, formatPriceInLempiras, toLempiras } from '@/shared/utils/format'
 
-// Intl separa el símbolo y la cifra con un espacio de no separación.
+// El símbolo y la cifra van separados por un espacio de no separación.
 const withPlainSpaces = (text: string) => text.replace(/\s/g, ' ')
 
 describe('formatPrice', () => {
@@ -25,6 +26,76 @@ describe('formatPrice', () => {
 
     // Assert
     expect(withPlainSpaces(formatted)).toBe('$ 1,500')
+  })
+
+  it('no deja que el símbolo y la cifra se separen en dos líneas', () => {
+    // Arrange
+    const price = 285000
+
+    // Act
+    const formatted = formatPrice(price)
+
+    // Assert
+    expect(formatted).not.toContain(' ')
+  })
+})
+
+describe('toLempiras', () => {
+  it('convierte dólares a lempiras con el tipo de cambio indicado', () => {
+    // Arrange
+    const dollars = 1000
+
+    // Act
+    const lempiras = toLempiras(dollars, 25)
+
+    // Assert
+    expect(lempiras).toBe(25000)
+  })
+
+  it('redondea al lempira: los centavos de una conversión aproximada no dicen nada', () => {
+    // Arrange
+    const dollars = 3
+
+    // Act
+    const lempiras = toLempiras(dollars, 26.89)
+
+    // Assert
+    expect(lempiras).toBe(81)
+  })
+
+  it('si no se indica otro, usa el tipo de cambio de referencia', () => {
+    // Arrange
+    const dollars = 100
+
+    // Act
+    const lempiras = toLempiras(dollars)
+
+    // Assert
+    expect(lempiras).toBe(Math.round(100 * EXCHANGE_RATE.lempirasPerDollar))
+  })
+})
+
+describe('formatPriceInLempiras', () => {
+  it('muestra en lempiras un precio en dólares, con su símbolo y separador de miles', () => {
+    // Arrange
+    const dollars = 145000
+
+    // Act
+    const formatted = formatPriceInLempiras(dollars, 25)
+
+    // Assert
+    expect(withPlainSpaces(formatted)).toBe('L 3,625,000')
+  })
+
+  it('tampoco deja que el símbolo y la cifra se separen', () => {
+    // Arrange
+    const dollars = 145000
+
+    // Act
+    const formatted = formatPriceInLempiras(dollars, 25)
+
+    // Assert
+    expect(formatted).not.toContain(' ')
   })
 })
 

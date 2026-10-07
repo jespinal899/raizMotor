@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import SharePropertyDialog from '@/features/properties/components/SharePropertyDialog'
 import type { Property } from '@/features/properties/types/property.types'
+import { formatPriceInLempiras } from '@/shared/utils/format'
 import { buildProperty } from '@/test/factories'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
@@ -75,7 +76,10 @@ describe('SharePropertyDialog', () => {
     const whatsApp = within(dialog).getByRole('link', { name: 'WhatsApp' })
     const message = new URL(whatsApp.getAttribute('href') ?? '').searchParams.get('text') ?? ''
     expect(whatsApp).toHaveAttribute('href', expect.stringContaining('https://wa.me/'))
-    expect(message.replace(/[^\S\n]+/g, ' ')).toBe(`Casa amplia con patio · $ 145,000 · Colonia Trejo, San Pedro Sula\n${LINK}`)
+    const lempiras = formatPriceInLempiras(145000).replace(/\s+/g, ' ')
+    expect(message.replace(/[^\S\n]+/g, ' ')).toBe(
+      `Casa amplia con patio · $ 145,000 (≈ ${lempiras}) · Colonia Trejo, San Pedro Sula\n${LINK}`,
+    )
   })
 
   it('WhatsApp se abre en otra pestaña, sin dar a esa página acceso a esta', async () => {

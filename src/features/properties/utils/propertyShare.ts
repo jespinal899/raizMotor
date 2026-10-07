@@ -1,13 +1,17 @@
 import type { Property } from '@/features/properties/types/property.types'
-import { formatPrice } from '@/shared/utils/format'
+import { formatPrice, formatPriceInLempiras } from '@/shared/utils/format'
 
 type ShareSource = Pick<Property, 'title' | 'price' | 'operation' | 'district' | 'city'>
 
 const WHATSAPP_SHARE_URL = 'https://wa.me/'
 
-/** Resumen de una línea que acompaña al enlace al compartir la ficha: título, precio y ubicación. */
+/**
+ * Resumen de una línea que acompaña al enlace al compartir la ficha: título, precio y ubicación. El precio
+ * va en dólares y, entre paréntesis, su equivalente aproximado en lempiras.
+ */
 export const buildShareText = ({ title, price, operation, district, city }: ShareSource): string => {
-  const amount = operation === 'alquiler' ? `${formatPrice(price)} al mes` : formatPrice(price)
+  const bothCurrencies = `${formatPrice(price)} (≈ ${formatPriceInLempiras(price)})`
+  const amount = operation === 'alquiler' ? `${bothCurrencies} al mes` : bothCurrencies
 
   return [title, amount, `${district}, ${city}`].join(' · ')
 }

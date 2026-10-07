@@ -123,6 +123,6 @@ El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. E
 - Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además de cuentas, envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
 - Redactar los términos y condiciones que se aceptan al cotizar: hoy la casilla no enlaza a ningún texto.
 - Verificar el teléfono del registro con un código por SMS.
-- Alinear el catálogo de ejemplo con Honduras: hoy usa propiedades de Lima y el formato regional `es-PE`.
+- Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Confirmar el contenido de los planes.
 - Panel de administración y pagos.
