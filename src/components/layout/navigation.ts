@@ -23,7 +23,8 @@ export const NAV = {
   properties: { label: 'Propiedades', to: ROUTES.properties },
   contact: { label: 'Contáctenos', to: ROUTES.contact },
   login: { label: 'Iniciar sesión', to: ROUTES.login },
-  publish: { label: 'Publicar', to: ROUTES.publish },
+  // Publicar empieza por elegir plan: el formulario se abre desde el plan Propietario.
+  publish: { label: 'Publicar', to: ROUTES.pricing },
   pricing: { label: 'Planes', to: ROUTES.pricing },
   about: { label: 'Quiénes somos', to: ROUTES.about },
   howItWorks: { label: 'Cómo funciona', to: ROUTES.howItWorks },
@@ -54,6 +55,6 @@ export const FOOTER_SECTIONS: FooterSection[] = [
       ...PROPERTY_CATEGORIES.map(({ label, to }) => ({ label, to })),
     ],
   },
-  { title: 'Plataforma', links: [NAV.about, NAV.howItWorks, NAV.pricing, NAV.publish] },
+  { title: 'Plataforma', links: [NAV.about, NAV.howItWorks, NAV.pricing] },
   { title: 'Ayuda', links: [NAV.contact, NAV.login, NAV.terms, NAV.privacy] },
 ]

@@ -28,6 +28,18 @@ describe('HERO_SLIDES', () => {
     expect(emptyTexts).toEqual([])
   })
 
+  it('publicar empieza por elegir plan: el botón "Publicar gratis" de la portada lleva a los planes', () => {
+    // Arrange
+    const actions = HERO_SLIDES.flatMap((slide) => [slide.primaryAction, slide.secondaryAction])
+
+    // Act
+    const publish = actions.find((action) => action.label === 'Publicar gratis')
+
+    // Assert
+    expect(publish?.to).toBe(ROUTES.pricing)
+    expect(actions.map((action) => action.to)).not.toContain(ROUTES.publish)
+  })
+
   it('ningún slide anuncia precios ni cupos de planes que aún no están definidos', () => {
     // Arrange
     const priceOrQuota = /\$\s?\d|\d+\s+propiedades/

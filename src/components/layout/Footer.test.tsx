@@ -48,7 +48,6 @@ describe('Footer', () => {
       'Quiénes somos → /#quienes-somos',
       'Cómo funciona → /#como-funciona',
       'Planes → /planes',
-      'Publicar → /publicar',
     ])
     expect(linksOf('Ayuda')).toEqual([
       'Contáctenos → /contacto',
