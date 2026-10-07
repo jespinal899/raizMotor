@@ -135,7 +135,7 @@ flowchart TB
         home["<b>Inicio</b> · home<br/>Carrusel, destacadas, Quiénes somos y Cómo funciona"]
         contact["<b>Contacto</b> · contact<br/>Consulta sobre una propiedad o un plan"]
         auth["<b>Acceso</b> · auth<br/>Iniciar sesión, registro y recuperación"]
-        search["<b>Búsqueda</b> · search<br/>Filtros y resultados paginados"]
+        search["<b>Búsqueda</b> · search<br/>Filtros, orden y resultados paginados"]
         shop["<b>Planes</b> · shop<br/>Planes para cada tipo de anunciante"]
         admin["<b>Administración</b> · admin<br/>Sin implementar"]
         properties["<b>Propiedades</b> · properties<br/>Catálogo, ficha y formulario de publicar"]

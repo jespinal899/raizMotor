@@ -13,15 +13,17 @@ Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con
 | Función | Estado |
 | --- | --- |
 | Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona |
-| Búsqueda con filtros y paginación | Funciona con el catálogo de ejemplo y anuncios locales |
+| Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona con el catálogo de ejemplo y anuncios locales |
+| Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
 | Ficha de una propiedad | Muestra anuncios de ejemplo y los publicados en este navegador; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Cotizar una propiedad desde su ficha | Interfaz lista; falta el servidor que reciba la solicitud |
 | Reportar una publicación desde su ficha | Interfaz lista; falta el servidor que reciba el reporte |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
-| Publicar una propiedad: formulario por pasos con mapa | Guarda el anuncio y las fotos en IndexedDB de este navegador |
+| Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Guarda el anuncio y las fotos en IndexedDB de este navegador |
 | Contacto | Interfaz lista; falta el servicio de correo |
 | Iniciar sesión, registro y acceso con Google | Interfaz lista; falta el servicio de cuentas |
 | Recuperar contraseña | Solo avisa de que aún no está disponible |
+| Términos y condiciones, y política de privacidad | Texto preliminar; pendiente de revisión legal |
 | Planes | Contenido provisional |
 | Panel de administración | Sin implementar |
 
@@ -79,6 +81,7 @@ src/
 │   ├── contact/         Formulario de contacto
 │   ├── auth/            Iniciar sesión, registro y recuperación
 │   ├── shop/            Planes
+│   ├── legal/           Términos y condiciones, y política de privacidad
 │   └── admin/           Panel de administración (sin implementar)
 ├── components/          Componentes compartidos por varias funcionalidades
 │   ├── layout/          Cabecera, menú y pie
@@ -121,7 +124,7 @@ El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. E
 ## Pendiente
 
 - Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además de cuentas, envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
-- Redactar los términos y condiciones que se aceptan al cotizar: hoy la casilla no enlaza a ningún texto.
+- Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Confirmar el contenido de los planes.
