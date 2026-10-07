@@ -28,6 +28,8 @@ const openViewer = async (images: string[] = IMAGES) => {
   render(<PropertyGallery images={images} title={TITLE} />)
   await user.click(enlargeButton())
   const dialog = await viewer()
+  // El visor recibe el foco un fotograma después de aparecer; hasta entonces el teclado no le llega.
+  await waitFor(() => expect(dialog).toContainElement(document.activeElement as HTMLElement))
 
   return { user, dialog, ...inViewer(dialog) }
 }
