@@ -10,10 +10,10 @@ import SearchField from '@/features/search/components/SearchField'
 import SelectField from '@/features/search/components/SelectField'
 import { useSearch } from '@/features/search/hooks/useSearch'
 import {
-  ANY_OPTION,
   TYPE_OPTIONS,
   getMaxPriceOptions,
   toOptionValue,
+  toOptionalNumber,
 } from '@/features/search/utils/searchOptions'
 import { cn } from '@/lib/utils'
 
@@ -74,7 +74,7 @@ const SearchBar = ({ initialFilters = DEFAULT_FILTERS, className }: SearchBarPro
         label="Precio máximo"
         options={priceOptions}
         value={toOptionValue(priceOptions, filters.maxPrice)}
-        onChange={(value) => update({ maxPrice: value === ANY_OPTION ? undefined : Number(value) })}
+        onChange={(value) => update({ maxPrice: toOptionalNumber(value) })}
       />
 
       <Button type="submit" size="lg" className="h-11 px-6 text-base md:col-span-2 lg:col-span-1">

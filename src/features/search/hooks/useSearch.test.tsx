@@ -95,4 +95,26 @@ describe('useSearch', () => {
     // Assert
     expect(result.current.path).toBe('/propiedades/terrenos?operacion=venta')
   })
+
+  it('changeOperation descarta también el precio mínimo, que es de la otra escala', () => {
+    // Arrange
+    const { result } = renderSearch({ operation: 'venta', minPrice: 100000, minBedrooms: 3 })
+
+    // Act
+    act(() => result.current.search.changeOperation('alquiler'))
+
+    // Assert
+    expect(result.current.search.filters).toEqual({ operation: 'alquiler', minBedrooms: 3 })
+  })
+
+  it('submit conserva en la URL los filtros que afinan la búsqueda', () => {
+    // Arrange
+    const { result } = renderSearch({ operation: 'venta', minBedrooms: 3, sort: 'price-asc' })
+
+    // Act
+    act(() => void result.current.search.submit())
+
+    // Assert
+    expect(result.current.path).toBe('/propiedades?operacion=venta&dormitorios=3&orden=price-asc')
+  })
 })

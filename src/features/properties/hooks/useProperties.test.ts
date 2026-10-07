@@ -84,6 +84,47 @@ describe('useProperties', () => {
     expect(service.search).toHaveBeenCalledTimes(2)
   })
 
+  it.each<[string, PropertyFilters]>([
+    ['el precio mínimo', { minPrice: 100000 }],
+    ['el precio máximo', { maxPrice: 350000 }],
+    ['los dormitorios', { minBedrooms: 3 }],
+    ['los baños', { minBathrooms: 2 }],
+    ['el orden', { sort: 'price-asc' }],
+    ['la zona', { location: 'Tegucigalpa' }],
+    ['la operación', { operation: 'alquiler' }],
+  ])('vuelve a buscar cuando cambia %s: ningún filtro se queda sin aplicar', async (_filter, change) => {
+    // Arrange
+    const service = buildPropertyService()
+    const { result, rerender } = renderHook(
+      ({ filters, pageRequest }: Props) => useProperties(filters, pageRequest, service),
+      { initialProps: { filters: { type: 'casa' }, pageRequest: FIRST_PAGE } },
+    )
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    // Act
+    rerender({ filters: { type: 'casa', ...change }, pageRequest: FIRST_PAGE })
+
+    // Assert
+    await waitFor(() => expect(service.search).toHaveBeenLastCalledWith({ type: 'casa', ...change }, FIRST_PAGE))
+    expect(service.search).toHaveBeenCalledTimes(2)
+  })
+
+  it('no repite la búsqueda si los mismos filtros llegan en otro orden o con huecos sin valor', async () => {
+    // Arrange
+    const service = buildPropertyService()
+    const { result, rerender } = renderHook(
+      ({ filters, pageRequest }: Props) => useProperties(filters, pageRequest, service),
+      { initialProps: { filters: { type: 'casa', minBedrooms: 3 }, pageRequest: FIRST_PAGE } },
+    )
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    // Act
+    rerender({ filters: { minBedrooms: 3, sort: undefined, type: 'casa' }, pageRequest: FIRST_PAGE })
+
+    // Assert
+    expect(service.search).toHaveBeenCalledTimes(1)
+  })
+
   it('vuelve a buscar cuando cambia la página', async () => {
     // Arrange
     const service = buildPropertyService()

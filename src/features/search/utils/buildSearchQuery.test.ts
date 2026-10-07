@@ -174,4 +174,61 @@ describe('parseSearchFilters', () => {
     // Assert
     expect(parsed).toEqual(original)
   })
+
+  it('escribe en la consulta el precio mínimo, los dormitorios, los baños y el orden', () => {
+    // Arrange
+    const filters: PropertyFilters = {
+      minPrice: 100000,
+      maxPrice: 350000,
+      minBedrooms: 3,
+      minBathrooms: 2,
+      sort: 'price-asc',
+    }
+
+    // Act
+    const path = buildSearchPath(filters)
+
+    // Assert
+    expect(path).toBe('/propiedades?precioMin=100000&precioMax=350000&dormitorios=3&banos=2&orden=price-asc')
+  })
+
+  it('lee de la consulta el precio mínimo, los dormitorios, los baños y el orden', () => {
+    // Arrange
+    const params = new URLSearchParams('precioMin=100000&dormitorios=3&banos=2&orden=price-desc')
+
+    // Act
+    const filters = parseSearchFilters(undefined, params)
+
+    // Assert
+    expect(filters).toEqual({ minPrice: 100000, minBedrooms: 3, minBathrooms: 2, sort: 'price-desc' })
+  })
+
+  it('ignora lo que no es válido en la consulta: un orden desconocido o cuartos que no son un entero', () => {
+    // Arrange
+    const params = new URLSearchParams('precioMin=barato&dormitorios=2.5&banos=-1&orden=constructor')
+
+    // Act
+    const filters = parseSearchFilters(undefined, params)
+
+    // Assert
+    expect(filters).toEqual({})
+  })
+
+  it('los filtros nuevos también sobreviven a la ida y vuelta por la URL', () => {
+    // Arrange
+    const original: PropertyFilters = {
+      operation: 'alquiler',
+      minPrice: 500,
+      minBedrooms: 2,
+      minBathrooms: 1,
+      sort: 'area-desc',
+    }
+    const url = new URL(buildSearchPath(original), 'https://ejemplo.test')
+
+    // Act
+    const parsed = parseSearchFilters(undefined, url.searchParams)
+
+    // Assert
+    expect(parsed).toEqual(original)
+  })
 })

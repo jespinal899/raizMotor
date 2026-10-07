@@ -10,9 +10,9 @@ export const useSearch = (initialFilters: PropertyFilters) => {
 
   const update = (changes: Partial<PropertyFilters>) => setFilters((current) => ({ ...current, ...changes }))
 
-  // Las escalas de precio de venta y alquiler son distintas, así que el máximo elegido deja de ser válido.
+  // Las escalas de precio de venta y alquiler son distintas, así que los precios elegidos dejan de ser válidos.
   const changeOperation = (operation: PropertyOperation | undefined) =>
-    update({ operation, maxPrice: undefined })
+    update({ operation, minPrice: undefined, maxPrice: undefined })
 
   const submit = () => {
     const results = buildSearchPath(filters)

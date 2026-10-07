@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import type {
   AdvertiserKind,
   PropertyOperation,
+  PropertySort,
   PropertyType,
 } from '@/features/properties/types/property.types'
 import type { PropertyHighlightKey } from '@/features/properties/utils/propertyHighlights'
@@ -41,7 +42,20 @@ export const PROPERTY_FACT_ICONS: Record<PropertyHighlightKey, LucideIcon> = {
   area: Scaling,
 }
 
+/** En dólares. Venta y alquiler tienen escalas distintas: uno es el total y el otro, la mensualidad. */
+export const MIN_PRICE_OPTIONS: Record<PropertyOperation, number[]> = {
+  venta: [50000, 100000, 200000, 350000],
+  alquiler: [300, 500, 700, 1000],
+}
+
 export const MAX_PRICE_OPTIONS: Record<PropertyOperation, number[]> = {
   venta: [100000, 200000, 350000, 500000],
   alquiler: [700, 1000, 1500, 2500],
+}
+
+/** Cómo se ofrece cada orden de resultados. */
+export const PROPERTY_SORTS: Record<PropertySort, string> = {
+  'price-asc': 'Precio: de menor a mayor',
+  'price-desc': 'Precio: de mayor a menor',
+  'area-desc': 'Superficie: de mayor a menor',
 }

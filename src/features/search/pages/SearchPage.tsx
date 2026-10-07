@@ -5,6 +5,7 @@ import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyO
 import { useProperties } from '@/features/properties/hooks/useProperties'
 import type { PropertyFilters } from '@/features/properties/types/property.types'
 import SearchBar from '@/features/search/components/SearchBar'
+import SearchFilters from '@/features/search/components/SearchFilters'
 import SearchResults from '@/features/search/components/SearchResults'
 import { buildSearchPath, parseSearchFilters, parseSearchPage } from '@/features/search/utils/buildSearchQuery'
 import { RESULTS_PER_PAGE } from '@/features/search/utils/searchOptions'
@@ -34,6 +35,7 @@ const SearchPage = () => {
       <h1 className="font-heading text-3xl font-semibold tracking-tight">{heading}</h1>
       {/* La clave reinicia el formulario cuando la URL cambia desde fuera (menú, botón atrás). */}
       <SearchBar key={pathname + search} initialFilters={filters} className="shadow-sm" />
+      <SearchFilters filters={filters} />
       <SearchResults
         properties={properties}
         total={total}

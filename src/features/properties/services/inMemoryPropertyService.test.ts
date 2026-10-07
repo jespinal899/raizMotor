@@ -112,4 +112,19 @@ describe('createInMemoryPropertyService', () => {
     // Assert
     expect(result).toBeUndefined()
   })
+
+  it('search ordena los resultados como se le pide antes de paginarlos', async () => {
+    // Arrange
+    const expensive = buildProperty({ id: 'cara', price: 300000 })
+    const cheap = buildProperty({ id: 'barata', price: 100000 })
+    const middle = buildProperty({ id: 'media', price: 200000 })
+    const service = createInMemoryPropertyService([expensive, cheap, middle])
+
+    // Act
+    const result = await service.search({ sort: 'price-asc' }, { page: 1, pageSize: 2 })
+
+    // Assert
+    expect(result.items).toEqual([cheap, middle])
+    expect(result.total).toBe(3)
+  })
 })

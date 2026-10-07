@@ -54,9 +54,19 @@ export interface Property {
   localOnly?: boolean
 }
 
+/** Orden de los resultados de una búsqueda. Sin él se conserva el del catálogo. */
+export type PropertySort = 'price-asc' | 'price-desc' | 'area-desc'
+
+/** Lo que se pide en una búsqueda: qué propiedades entran y en qué orden se muestran. */
 export interface PropertyFilters {
   type?: PropertyType
   operation?: PropertyOperation
   location?: string
+  minPrice?: number
   maxPrice?: number
+  /** Deja fuera lo que no declara dormitorios, como los terrenos. */
+  minBedrooms?: number
+  /** Deja fuera lo que no declara baños. */
+  minBathrooms?: number
+  sort?: PropertySort
 }
