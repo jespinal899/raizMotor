@@ -24,7 +24,8 @@ Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con
 | Iniciar sesión, registro y acceso con Google | Interfaz lista; falta el servicio de cuentas |
 | Recuperar contraseña | Solo avisa de que aún no está disponible |
 | Términos y condiciones, y política de privacidad | Texto preliminar; pendiente de revisión legal |
-| Planes: Propietario, Agente inmobiliario e Inmobiliarias | El botón «Publicar» lleva aquí. Propietario es gratis (1 publicación, hasta 10 fotos); los otros dos se anuncian como «Próximamente», sin precio |
+| Planes: Propietario, Agente inmobiliario e Inmobiliarias | El botón «Publicar» lleva aquí. Propietario abre el formulario (1 publicación gratis), Agente inmobiliario abre sus planes mensuales e Inmobiliarias abre el contacto |
+| Planes para agentes inmobiliarios: precio mensual en lempiras, con su equivalente en dólares | Se muestran; «Contratar» abre el contacto con el plan indicado, porque aún no hay pagos ni cuentas |
 | Panel de administración | Sin implementar |
 
 ## Tecnologías
@@ -127,6 +128,7 @@ El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. E
 - Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
-- Definir el precio y el contenido de los planes Agente inmobiliario e Inmobiliarias.
+- Confirmar los nombres, el contenido y los precios de los planes para agentes, y definir el plan para inmobiliarias.
+- Construir lo que los planes anuncian y aún no existe: el panel del agente con seguimiento y reportes, los usuarios por plan y el alcance de los anuncios, que hoy solo se ven en el navegador de quien publica.
 - Contar la publicación gratuita por cuenta: hoy se cuenta por navegador, así que borrar los datos del sitio o usar otro navegador la devuelve.
 - Panel de administración y pagos.

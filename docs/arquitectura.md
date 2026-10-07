@@ -136,7 +136,7 @@ flowchart TB
         contact["<b>Contacto</b> · contact<br/>Consulta sobre una propiedad o un plan"]
         auth["<b>Acceso</b> · auth<br/>Iniciar sesión, registro y recuperación"]
         search["<b>Búsqueda</b> · search<br/>Filtros, orden y resultados paginados"]
-        shop["<b>Planes</b> · shop<br/>Propietario, Agente inmobiliario e Inmobiliarias"]
+        shop["<b>Planes</b> · shop<br/>Formas de publicar y planes para agentes"]
         admin["<b>Administración</b> · admin<br/>Sin implementar"]
         properties["<b>Propiedades</b> · properties<br/>Catálogo, ficha y formulario de publicar"]
 
@@ -176,7 +176,7 @@ Una flecha entre dos funcionalidades significa que la primera usa piezas de la s
 - **Inicio** muestra el buscador de Búsqueda y las propiedades destacadas de Propiedades. Las fotos de su carrusel también vienen de Unsplash.
 - **Búsqueda** lista el catálogo de Propiedades.
 - **Contacto** lee de Propiedades y de Planes sobre qué propiedad o plan se consulta.
-- **Planes** lee de Propiedades los límites del plan gratuito (una publicación y diez fotos): la tarjeta del plan dice los mismos que aplica el formulario de publicar.
+- **Planes** lee de Propiedades cuántas publicaciones incluye el plan gratuito: la tarjeta del plan promete las mismas que admite el formulario de publicar.
 
 | Funcionalidad | Carpeta | Páginas | Servicios |
 | --- | --- | --- | --- |
@@ -184,7 +184,7 @@ Una flecha entre dos funcionalidades significa que la primera usa piezas de la s
 | Búsqueda | `src/features/search` | `/propiedades`, `/propiedades/:tipo` | Usa `propertyService` |
 | Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar` | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
 | Contacto | `src/features/contact` | `/contacto` | `contactService` |
-| Planes | `src/features/shop` | `/planes` | Ninguno |
+| Planes | `src/features/shop` | `/planes`, `/planes/agente-inmobiliario` | Ninguno |
 | Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena` | `authService` |
 | Administración | `src/features/admin` | Ninguna todavía | Ninguno |
 
