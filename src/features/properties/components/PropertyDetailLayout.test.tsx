@@ -87,6 +87,36 @@ describe('PropertyDetailLayout', () => {
     expect(order.slice(1).every((block, position) => follows(order[position], block))).toBe(true)
   })
 
+  it('lo que ocupa el ancho de las dos columnas va bajo ellas, dentro de los márgenes de la ficha', () => {
+    // Arrange
+    const withWideBlock = (
+      <PropertyDetailLayout
+        aria-label="Ficha de prueba"
+        breadcrumb={<nav aria-label="Ruta">Ruta</nav>}
+        header={<h1>Título</h1>}
+        gallery={<div>Fotos</div>}
+        sidebar={<p>Formulario</p>}
+        wide={<div>Mapa</div>}
+      >
+        <p>Descripción</p>
+      </PropertyDetailLayout>
+    )
+
+    // Act
+    render(withWideBlock)
+
+    // Assert
+    const article = screen.getByRole('article', { name: 'Ficha de prueba' })
+    const map = within(article).getByText('Mapa')
+    const columns = screen.getByRole('complementary').parentElement
+    // Los márgenes los pone el mismo bloque que contiene la ruta: el mapa tiene que estar dentro de él.
+    const margins = screen.getByRole('navigation', { name: 'Ruta' }).parentElement?.parentElement
+    expect(follows(screen.getByText('Descripción'), map)).toBe(true)
+    expect(margins).toContainElement(map)
+    expect(columns).toContainElement(screen.getByText('Descripción'))
+    expect(columns).not.toContainElement(map)
+  })
+
   it('sin acciones, como en el esqueleto de carga, la ruta va sola', () => {
     // Arrange
     const withoutActions = (

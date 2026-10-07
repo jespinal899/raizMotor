@@ -100,6 +100,20 @@ describe('LocationMapView', () => {
     expect(fake.map.showPoint).toHaveBeenCalledExactlyOnceWith(TEGUCIGALPA)
   })
 
+  it('admite clases propias para ajustar su marco, por ejemplo su alto o sus esquinas', () => {
+    // Arrange
+    const fake = buildFakeLocationMap()
+    const frame = 'rounded-none'
+
+    // Act
+    render(<LocationMapView view={TEGUCIGALPA} label={LABEL} createMap={fake.createMap} className={frame} />)
+
+    // Assert
+    const frameElement = mapElement().parentElement
+    expect(frameElement).toHaveClass(frame, 'overflow-hidden')
+    expect(frameElement).not.toHaveClass('rounded-lg')
+  })
+
   it('al dejar de mostrarse destruye el mapa', () => {
     // Arrange
     const { fake, unmount } = setup()

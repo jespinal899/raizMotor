@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useRef } from 'react'
 import { createLeafletLocationMap } from '@/features/properties/services/locationMap'
 import type { CreateLocationMap, LocationMap } from '@/features/properties/services/locationMap'
 import type { Coordinates, MapView } from '@/features/properties/types/publication.types'
+import { cn } from '@/lib/utils'
 
 interface LocationMapViewProps {
   /** Punto que se muestra, con el marcador encima. Al cambiar, el mapa se desplaza hasta él. */
@@ -14,12 +15,20 @@ interface LocationMapViewProps {
    */
   onMarkerMove?: (point: Coordinates) => void
   createMap?: CreateLocationMap
+  /** Para ajustar el marco del mapa: su alto, sus bordes y sus esquinas. */
+  className?: string
 }
 
 const MARKER_LABEL = 'Ubicación de la propiedad'
 
 /** Mapa con un marcador en un punto. Para elegirlo, la persona lo arrastra o lo coloca con un clic. */
-const LocationMapView = ({ view, label, onMarkerMove, createMap = createLeafletLocationMap }: LocationMapViewProps) => {
+const LocationMapView = ({
+  view,
+  label,
+  onMarkerMove,
+  createMap = createLeafletLocationMap,
+  className,
+}: LocationMapViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LocationMap | null>(null)
   const reportMove = useEffectEvent((point: Coordinates) => onMarkerMove?.(point))
@@ -48,7 +57,12 @@ const LocationMapView = ({ view, label, onMarkerMove, createMap = createLeafletL
   }, [lat, lng, zoom])
 
   return (
-    <div className="relative isolate h-72 overflow-hidden rounded-lg border has-focus-visible:ring-3 has-focus-visible:ring-ring/50 sm:h-80">
+    <div
+      className={cn(
+        'relative isolate h-72 overflow-hidden rounded-lg border has-focus-visible:ring-3 has-focus-visible:ring-ring/50 sm:h-80',
+        className,
+      )}
+    >
       <div ref={containerRef} role="application" aria-label={label} tabIndex={0} className="size-full outline-none" />
     </div>
   )

@@ -316,6 +316,26 @@ describe('PropertyDetail', () => {
     expect(directions).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
+  it('la ubicación va bajo las dos columnas de la ficha, a lo ancho de ambas, con su mapa dentro', async () => {
+    // Arrange
+    const property = buildProperty({ location: LOCATION })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const location = screen.getByRole('region', { name: 'Ubicación' })
+    const map = await within(location).findByRole('application', { name: 'Mapa de la propiedad' })
+    const columns = screen.getByRole('complementary').parentElement
+    expect(screen.getByRole('article')).toContainElement(location)
+    expect(columns).toContainElement(screen.getByRole('region', { name: 'Descripción' }))
+    expect(columns).not.toContainElement(location)
+    expect(location).toContainElement(map)
+    expect(screen.getByRole('region', { name: 'Descripción' }).compareDocumentPosition(location)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+  })
+
   it('sin un punto publicado no ofrece "Cómo llegar": no hay destino que dar', () => {
     // Arrange
     const property = buildProperty({ location: undefined })
