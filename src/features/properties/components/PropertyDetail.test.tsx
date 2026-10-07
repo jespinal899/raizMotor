@@ -28,24 +28,31 @@ describe('PropertyDetail', () => {
     vi.spyOn(propertyViewService, 'registerView').mockReturnValue(new Promise(() => {}))
   })
 
-  it('muestra el título como encabezado principal, la ubicación y las etiquetas', () => {
+  it('muestra el título como encabezado principal y, debajo, la ubicación', () => {
     // Arrange
-    const property = buildProperty({
-      title: 'Casa con jardín',
-      type: 'casa',
-      operation: 'alquiler',
-      district: 'Barranco',
-      city: 'Lima',
-    })
+    const property = buildProperty({ title: 'Casa con jardín', district: 'Barranco', city: 'Lima' })
 
     // Act
     renderWithRouter(<PropertyDetail property={property} />)
 
     // Assert
-    expect(screen.getByRole('heading', { level: 1, name: 'Casa con jardín' })).toBeInTheDocument()
-    expect(screen.getByText('Barranco, Lima')).toBeInTheDocument()
-    expect(screen.getByText('Alquiler')).toBeInTheDocument()
-    expect(screen.getByText('Casa')).toBeInTheDocument()
+    const title = screen.getByRole('heading', { level: 1, name: 'Casa con jardín' })
+    const location = screen.getByText('Barranco, Lima')
+    expect(title.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('el título encabeza la ficha: no lleva encima las etiquetas de operación y tipo', () => {
+    // Arrange
+    const property = buildProperty({ title: 'Casa con jardín', type: 'casa', operation: 'alquiler' })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const header = screen.getByRole('heading', { level: 1, name: 'Casa con jardín' }).parentElement
+    expect(header?.firstElementChild).toBe(screen.getByRole('heading', { level: 1 }))
+    expect(screen.queryByText('Alquiler')).not.toBeInTheDocument()
+    expect(screen.queryByText('Casa')).not.toBeInTheDocument()
   })
 
   it('la ruta de navegación lleva a inicio, propiedades y el tipo', () => {

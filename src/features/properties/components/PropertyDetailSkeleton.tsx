@@ -9,9 +9,9 @@ const PropertyDetailSkeleton = () => {
       breadcrumb={<Skeleton className="h-4 w-64 max-w-full" />}
       header={
         <div className="grid gap-3">
-          <Skeleton className="h-5 w-32" />
           <Skeleton className="h-9 w-2/3" />
           <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-8 w-44" />
         </div>
       }
       gallery={<Skeleton className="aspect-3/2 rounded-2xl lg:aspect-auto" />}

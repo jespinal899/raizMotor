@@ -3,7 +3,6 @@ import { MapPin, Navigation } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
 import type { BreadcrumbItem } from '@/components/Breadcrumb'
 import ExternalButtonLink from '@/components/ExternalButtonLink'
-import { Badge } from '@/components/ui/badge'
 import PropertyContactCard from '@/features/properties/components/PropertyContactCard'
 import PropertyDetailLayout from '@/features/properties/components/PropertyDetailLayout'
 import PropertyDetailSection from '@/features/properties/components/PropertyDetailSection'
@@ -11,7 +10,7 @@ import PropertyGallery from '@/features/properties/components/PropertyGallery'
 import PropertyHighlights from '@/features/properties/components/PropertyHighlights'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
 import PropertyToolbar from '@/features/properties/components/PropertyToolbar'
-import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
+import { PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { Property } from '@/features/properties/types/property.types'
 import { buildDirectionsUrl } from '@/features/properties/utils/propertyDirections'
 import { ROUTES, propertyTypePath } from '@/shared/constants/routes'
@@ -34,7 +33,7 @@ interface PropertyDetailProps {
 }
 
 const PropertyDetail = ({ property }: PropertyDetailProps) => {
-  const { title, description, type, operation, district, city, gallery, location } = property
+  const { title, description, district, city, gallery, location } = property
 
   return (
     <PropertyDetailLayout
@@ -42,10 +41,6 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
       actions={<PropertyToolbar property={property} />}
       header={
         <header className="grid gap-3">
-          <div className="flex gap-1.5">
-            <Badge>{OPERATIONS[operation].label}</Badge>
-            <Badge variant="secondary">{PROPERTY_TYPES[type].label}</Badge>
-          </div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance md:text-4xl">{title}</h1>
           <p className="flex items-center gap-1.5 text-muted-foreground">
             <MapPin className="size-4 shrink-0" aria-hidden="true" />
