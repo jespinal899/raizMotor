@@ -17,7 +17,7 @@ const PricingPage = () => {
         centered
       />
 
-      <PlanList plans={PLANS} className="md:grid-cols-2 lg:grid-cols-3">
+      <PlanList plans={PLANS} accented className="md:grid-cols-2 lg:grid-cols-3">
         {(plan) => <p className="text-sm leading-relaxed text-muted-foreground">{plan.description}</p>}
       </PlanList>
 

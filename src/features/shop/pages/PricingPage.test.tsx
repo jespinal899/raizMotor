@@ -77,6 +77,41 @@ describe('PricingPage', () => {
     expect(actions).toEqual(expectedActions)
   })
 
+  it('cada tarjeta tiene el título azul y un botón azul con texto blanco', () => {
+    // Arrange: página con los tres planes
+
+    // Act
+    renderWithRouter(<PricingPage />, { route: '/planes' })
+
+    // Assert
+    for (const name of PLAN_NAMES) {
+      const card = planCard(name)
+      expect(within(card).getByRole('heading', { level: 2, name })).toHaveClass('text-primary')
+
+      const action = within(card).getByRole('link')
+      expect(action).toHaveClass('bg-primary', 'text-primary-foreground')
+      expect(action).not.toHaveClass('bg-transparent', 'text-primary')
+    }
+  })
+
+  it('cada botón incluye un icono lineal y un hover azul suave con elevación', () => {
+    // Arrange: página con los tres planes
+
+    // Act
+    renderWithRouter(<PricingPage />, { route: '/planes' })
+
+    // Assert
+    for (const name of PLAN_NAMES) {
+      const action = within(planCard(name)).getByRole('link')
+      const icon = action.querySelector('svg')
+
+      expect(icon).toBeInTheDocument()
+      expect(icon).toHaveAttribute('fill', 'none')
+      expect(icon).toHaveAttribute('stroke', 'currentColor')
+      expect(action).toHaveClass('hover:bg-primary/80', 'hover:-translate-y-0.5', 'hover:shadow-md')
+    }
+  })
+
   it('las tarjetas llevan solo el nombre, el texto y el botón: sin precio, insignia ni lista', () => {
     // Arrange
     const removedTexts = ['Gratis', 'Próximamente', 'Recomendado', /Estamos definiendo este plan/]

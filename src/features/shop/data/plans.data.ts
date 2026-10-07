@@ -1,3 +1,4 @@
+import { Building2, House, UserRound } from 'lucide-react'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
 import type { AgentPlan, AgentPlanId, Plan } from '@/features/shop/types/plan.types'
 import { ROUTES, planContactPath } from '@/shared/constants/routes'
@@ -13,7 +14,7 @@ export const PLANS: Plan[] = [
     description:
       `Vende o arrienda rápido. Publica ${MAX_FREE_PUBLICATIONS} propiedad gratis y aprovecha nuestra alta ` +
       'visualización para llegar a miles de interesados sin comisiones.',
-    action: { label: 'Publicar como propietario', to: ROUTES.publish },
+    action: { label: 'Publicar como propietario', to: ROUTES.publish, icon: House },
   },
   {
     id: 'agente',
@@ -21,13 +22,13 @@ export const PLANS: Plan[] = [
     description:
       'Impulsa tu carrera. Publica tu cartera de propiedades y accede a un panel exclusivo para administrar, ' +
       'dar seguimiento y ver reportes de tus anuncios. La herramienta definitiva para cerrar más ventas.',
-    action: { label: 'Publicar como inmobiliario', to: ROUTES.agentPlans },
+    action: { label: 'Publicar como inmobiliario', to: ROUTES.agentPlans, icon: UserRound },
   },
   {
     id: 'inmobiliaria',
     name: 'Inmobiliarias',
     description: 'Para empresas con un equipo que gestiona varias propiedades.',
-    action: { label: 'Publicar como inmobiliaria', to: planContactPath('inmobiliaria') },
+    action: { label: 'Publicar como inmobiliaria', to: planContactPath('inmobiliaria'), icon: Building2 },
   },
 ]
 

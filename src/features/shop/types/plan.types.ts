@@ -1,6 +1,10 @@
+import type { LucideIcon } from 'lucide-react'
+
 export interface PlanAction {
   label: string
   to: string
+  /** Icono decorativo que acompaña el enlace cuando la tarjeta lo presenta. */
+  icon?: LucideIcon
 }
 
 /** Lo que tiene cualquier plan que se muestra en una tarjeta: su nombre y su siguiente paso. */

@@ -52,7 +52,7 @@ describe('PLANS', () => {
     ]
 
     // Act
-    const actions = PLANS.map((plan) => plan.action)
+    const actions = PLANS.map(({ action: { label, to } }) => ({ label, to }))
 
     // Assert
     expect(actions).toEqual(expectedActions)
