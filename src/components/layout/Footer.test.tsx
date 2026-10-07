@@ -63,4 +63,19 @@ describe('Footer', () => {
     // Assert
     expect(screen.getByText(`© ${year} ${BRAND.name}. Todos los derechos reservados.`)).toBeInTheDocument()
   })
+
+  it('en su versión compacta deja solo el aviso de derechos: ni marca ni enlaces', () => {
+    // Arrange
+    const year = new Date().getFullYear()
+
+    // Act
+    renderWithRouter(<Footer compact />)
+
+    // Assert
+    const footer = screen.getByRole('contentinfo')
+    expect(within(footer).getByText(`© ${year} ${BRAND.name}. Todos los derechos reservados.`)).toBeInTheDocument()
+    expect(within(footer).queryByRole('navigation')).not.toBeInTheDocument()
+    expect(within(footer).queryByRole('link')).not.toBeInTheDocument()
+    expect(within(footer).queryByText(BRAND.tagline)).not.toBeInTheDocument()
+  })
 })
