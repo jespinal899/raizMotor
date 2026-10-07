@@ -13,7 +13,8 @@ interface BreadcrumbProps {
 
 const Breadcrumb = ({ items }: BreadcrumbProps) => {
   return (
-    <nav aria-label="Ruta de navegación">
+    // `min-w-0`: junto a otros elementos en una fila, la ruta se parte o se recorta antes que empujarlos fuera.
+    <nav aria-label="Ruta de navegación" className="min-w-0">
       <ol className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
         {items.map(({ label, to }, position) => (
           <li key={label} className="flex min-w-0 items-center gap-1.5">

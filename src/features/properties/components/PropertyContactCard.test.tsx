@@ -75,7 +75,7 @@ describe('PropertyContactCard', () => {
     expect(alert).toHaveTextContent('No se envió tu solicitud.')
   })
 
-  it('debajo de quién publica deja escribirle por esta propiedad', () => {
+  it('junto a quién publica deja escribirle por esta propiedad', () => {
     // Arrange: ficha con anunciante
 
     // Act
@@ -85,6 +85,32 @@ describe('PropertyContactCard', () => {
     const contact = screen.getByRole('link', { name: 'Contactar al anunciante' })
     expect(contact).toHaveAttribute('href', '/contacto?propiedad=casa-1')
     expect(follows(screen.getByText('Publicado por'), contact)).toBe(true)
+    expect(contact.parentElement).toContainElement(screen.getByText('Publicado por'))
+    expect(contact.parentElement).not.toContainElement(quoteForm.form())
+  })
+
+  it('el enlace se lee "Contactar": a quién, ya lo dice la fila en la que está', () => {
+    // Arrange: ficha con anunciante
+
+    // Act
+    renderCard()
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Contactar al anunciante' })).toHaveTextContent(/^Contactar$/)
+  })
+
+  it('aunque no se sepa quién publica, sigue ofreciendo contactar', () => {
+    // Arrange
+    const property = buildProperty({ id: 'casa-1', advertiser: undefined })
+
+    // Act
+    renderCard(property)
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Contactar al anunciante' })).toHaveAttribute(
+      'href',
+      '/contacto?propiedad=casa-1',
+    )
   })
 
   it('si no se sabe quién publica, la tarjeta no lo inventa', () => {

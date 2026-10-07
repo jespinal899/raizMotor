@@ -6,6 +6,7 @@ interface PropertyDetailLayoutProps {
   /** Lo que se puede hacer con la ficha (compartir, reportar…). Va en la fila de la ruta, a la derecha. */
   actions?: ReactNode
   header: ReactNode
+  /** En escritorio debe adaptarse al alto que se le dé: es lo que hace caber la primera pantalla. */
   gallery: ReactNode
   sidebar: ReactNode
   /** Contenido bajo la galería: descripción, características… */
@@ -28,9 +29,13 @@ const PropertyDetailLayout = ({
   ...accessibility
 }: PropertyDetailLayoutProps) => {
   return (
-    <Container as="article" className="grid gap-6 py-8" {...accessibility}>
-      {/* La ruta a la izquierda y las acciones a la derecha; si no caben en una fila, una debajo de la otra. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+    <Container as="article" className="grid gap-6 py-8 lg:gap-4 lg:pt-4" {...accessibility}>
+      {/*
+        La ruta a la izquierda y las acciones a la derecha. En móvil, si no caben, una debajo de la otra;
+        en escritorio comparten siempre la fila, y es la ruta la que se parte si el título es largo: una
+        fila de más empujaría las fotos fuera de la primera pantalla.
+      */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 lg:flex-nowrap">
         {breadcrumb}
         {actions}
       </div>
@@ -42,7 +47,13 @@ const PropertyDetailLayout = ({
         quedaría fuera de la vista.
       */}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="grid gap-6 lg:col-start-1">
+        {/*
+          Primera pantalla: en escritorio el título y las fotos ocupan lo que queda de ventana bajo la barra
+          de navegación y la ruta (10.5rem), de modo que las fotos se ven enteras sin desplazarse; el resto
+          empieza justo debajo. La galería se queda con el alto que deja el título, con un mínimo para que
+          no se aplaste y un tope (44rem) para que en monitores muy altos no quede una foto estirada.
+        */}
+        <div className="grid gap-6 lg:col-start-1 lg:min-h-[min(100dvh-10.5rem,44rem)] lg:grid-rows-[auto_minmax(16rem,1fr)] lg:gap-4">
           {header}
           {gallery}
         </div>

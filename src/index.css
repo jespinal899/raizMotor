@@ -4,8 +4,11 @@
 @import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
-/* Ventanas con alto de sobra para dejar fija una columna larga, como la de la ficha de una propiedad. */
-@custom-variant tall (@media (min-height: 56rem));
+/*
+  Ventanas con alto de sobra para dejar fija la columna de la ficha de una propiedad: caben la barra de
+  navegación y la tarjeta de cotizar entera, también con los avisos de sus campos a la vista.
+*/
+@custom-variant tall (@media (min-height: 45rem));
 
 @theme inline {
     --font-heading: var(--font-sans);

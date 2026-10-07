@@ -11,22 +11,33 @@ interface PropertyContactCardProps {
   property: Property
 }
 
-/** Tarjeta de la ficha: el formulario para cotizar y, debajo, quién publica y cómo escribirle. */
+/**
+ * Tarjeta de la ficha: el formulario para cotizar y, debajo, quién publica y cómo escribirle. Va apretada
+ * a propósito: tiene que caber entera en la primera pantalla, junto a las fotos.
+ */
 const PropertyContactCard = ({ property }: PropertyContactCardProps) => {
   const { id } = property
 
   return (
-    <Card className="gap-5 p-5">
+    <Card className="gap-4 p-5 lg:py-4">
       <PropertyQuoteForm
         onSubmit={(applicant, operationKey) => quoteService.request({ propertyId: id, ...applicant }, operationKey)}
       />
 
-      <PropertyPublisher property={property} />
-
-      <ButtonLink to={propertyContactPath(id)} variant="outline" size="lg" className="h-11 text-base">
-        <MessageCircle />
-        Contactar al anunciante
-      </ButtonLink>
+      <div className="flex items-center gap-3 border-t pt-3">
+        <PropertyPublisher property={property} />
+        {/* `ml-auto`: a la derecha también cuando no se sabe quién publica y el enlace queda solo en la fila. */}
+        <ButtonLink
+          to={propertyContactPath(id)}
+          variant="outline"
+          size="lg"
+          aria-label="Contactar al anunciante"
+          className="ml-auto h-10 shrink-0 px-3"
+        >
+          <MessageCircle />
+          Contactar
+        </ButtonLink>
+      </div>
     </Card>
   )
 }

@@ -13,7 +13,11 @@ const PropertyToolbar = ({ property }: PropertyToolbarProps) => {
   const { id, localOnly } = property
 
   return (
-    <div role="group" aria-label="Acciones de la ficha" className="flex flex-wrap items-center gap-x-4 gap-y-1">
+    <div
+      role="group"
+      aria-label="Acciones de la ficha"
+      className="flex flex-wrap items-center gap-x-4 gap-y-1 lg:shrink-0"
+    >
       <div className="flex items-center gap-1">
         <SharePropertyDialog property={property} />
         {/* Un anuncio guardado solo en este navegador es de quien lo está viendo: no tiene a quién reportarlo. */}

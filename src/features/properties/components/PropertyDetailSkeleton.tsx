@@ -14,7 +14,7 @@ const PropertyDetailSkeleton = () => {
           <Skeleton className="h-4 w-40" />
         </div>
       }
-      gallery={<Skeleton className="aspect-3/2 rounded-2xl" />}
+      gallery={<Skeleton className="aspect-3/2 rounded-2xl lg:aspect-auto" />}
       sidebar={<Skeleton className="h-64 rounded-xl" />}
     />
   )

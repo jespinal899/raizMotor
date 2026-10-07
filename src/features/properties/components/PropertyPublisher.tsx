@@ -31,7 +31,7 @@ interface PropertyPublisherProps {
   property: PublisherSource
 }
 
-/** Quién publica la propiedad. No aparece si no se sabe. */
+/** Quién publica la propiedad, en una sola fila. No aparece si no se sabe. */
 const PropertyPublisher = ({ property }: PropertyPublisherProps) => {
   const publisher = toPublisher(property)
   if (!publisher) return null
@@ -39,16 +39,14 @@ const PropertyPublisher = ({ property }: PropertyPublisherProps) => {
   const { icon: Icon, name, detail } = publisher
 
   return (
-    <div className="grid gap-3 border-t pt-5">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Publicado por</p>
-      <div className="flex items-center gap-3">
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-          <Icon className="size-5" aria-hidden="true" />
-        </span>
-        <div className="grid gap-0.5">
-          <p className="font-medium">{name}</p>
-          <p className="text-sm text-muted-foreground">{detail}</p>
-        </div>
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <div className="grid min-w-0">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Publicado por</p>
+        <p className="leading-snug font-medium">{name}</p>
+        <p className="text-xs text-muted-foreground">{detail}</p>
       </div>
     </div>
   )
