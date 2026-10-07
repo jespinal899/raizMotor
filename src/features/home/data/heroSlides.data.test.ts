@@ -27,4 +27,15 @@ describe('HERO_SLIDES', () => {
     expect(new Set(ids).size).toBe(HERO_SLIDES.length)
     expect(emptyTexts).toEqual([])
   })
+
+  it('ningún slide anuncia precios ni cupos de planes que aún no están definidos', () => {
+    // Arrange
+    const priceOrQuota = /\$\s?\d|\d+\s+propiedades/
+
+    // Act
+    const texts = HERO_SLIDES.map((slide) => `${slide.title} ${slide.description}`)
+
+    // Assert
+    expect(texts.filter((text) => priceOrQuota.test(text))).toEqual([])
+  })
 })

@@ -109,7 +109,7 @@ describe('ContactPage', () => {
     renderPage(route)
 
     // Assert
-    expect(await descriptionField()).toHaveValue('Me interesa el plan Inmobiliaria. ¿Me pueden dar más información?')
+    expect(await descriptionField()).toHaveValue('Me interesa el plan Inmobiliarias. ¿Me pueden dar más información?')
     expect(screen.getByText('Consulta sobre el plan')).toBeInTheDocument()
     expect(getById).not.toHaveBeenCalled()
   })

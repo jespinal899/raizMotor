@@ -26,14 +26,14 @@ describe('formatPlanPrice', () => {
     expect(label.suffix).toBe('/ mes')
   })
 
-  it('rotula un plan a medida sin importe', () => {
+  it('rotula un plan aún sin definir como "Próximamente", sin importe', () => {
     // Arrange
-    const price = { kind: 'custom' } as const
+    const price = { kind: 'upcoming' } as const
 
     // Act
     const label = formatPlanPrice(price)
 
     // Assert
-    expect(label).toEqual({ amount: 'A medida' })
+    expect(label).toEqual({ amount: 'Próximamente' })
   })
 })

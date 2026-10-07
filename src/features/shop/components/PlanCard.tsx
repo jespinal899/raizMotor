@@ -6,6 +6,8 @@ import type { Plan } from '@/features/shop/types/plan.types'
 import { formatPlanPrice } from '@/features/shop/utils/planPrice'
 import { cn } from '@/lib/utils'
 
+const UPCOMING_NOTE = 'Estamos definiendo este plan. Escríbenos y te avisamos cuando esté listo.'
+
 interface PlanCardProps {
   plan: Plan
 }
@@ -31,14 +33,18 @@ const PlanCard = ({ plan }: PlanCardProps) => {
         {suffix && <span className="text-sm text-muted-foreground"> {suffix}</span>}
       </p>
 
-      <ul className="grid gap-2.5 text-sm">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-2">
-            <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-            {feature}
-          </li>
-        ))}
-      </ul>
+      {features.length > 0 && (
+        <ul className="grid gap-2.5 text-sm">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-start gap-2">
+              <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+              {feature}
+            </li>
+          ))}
+        </ul>
+      )}
+      {/* De un plan sin definir no se prometen ventajas: solo se dice que está en preparación. */}
+      {price.kind === 'upcoming' && <p className="text-sm text-muted-foreground">{UPCOMING_NOTE}</p>}
 
       <ButtonLink
         to={action.to}

@@ -13,7 +13,7 @@ const PricingPage = () => {
     <Container className="grid gap-10 py-10">
       <PageHeader
         title="Planes"
-        description="Planes que se adaptan tanto a quien publica una sola propiedad como a quien gestiona cientos."
+        description="Elige cómo quieres publicar. Hoy puedes anunciar gratis como propietario; los planes para agentes e inmobiliarias llegarán pronto."
       />
 
       <PlanList plans={PLANS} />

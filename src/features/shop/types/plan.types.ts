@@ -1,11 +1,11 @@
-export type PlanId = 'particular' | 'inmobiliaria' | 'constructora'
+export type PlanId = 'propietario' | 'agente' | 'inmobiliaria'
 
 export type PlanPrice =
   | { kind: 'free' }
   /** Precio mensual de partida, en USD. */
   | { kind: 'monthly'; from: number }
-  /** Se acuerda con ventas según el caso. */
-  | { kind: 'custom' }
+  /** Plan anunciado cuyo precio y contenido aún no están definidos. */
+  | { kind: 'upcoming' }
 
 export interface PlanAction {
   label: string

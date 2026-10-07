@@ -47,7 +47,7 @@ describe('HowItWorks', () => {
   it('explica cada paso con su descripción', () => {
     // Arrange
     const expectedFragments = [
-      /planes que se adaptan/,
+      /planes para propietarios, agentes inmobiliarios e inmobiliarias/,
       /tipo de propiedad, ubicación y precio/,
       /sin intermediarios ni comisiones ocultas/,
       /Compara fotos, características y precios/,

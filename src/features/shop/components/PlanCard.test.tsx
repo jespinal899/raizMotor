@@ -55,19 +55,19 @@ describe('PlanCard', () => {
 
   it('el botón lleva al destino del plan', () => {
     // Arrange
-    const plan = buildPlan({ action: { label: 'Hablar con ventas', to: '/contacto?plan=constructora' } })
+    const plan = buildPlan({ action: { label: 'Quiero saber más', to: '/contacto?plan=agente' } })
 
     // Act
     renderWithRouter(<PlanCard plan={plan} />)
 
     // Assert
-    expect(screen.getByRole('link', { name: 'Hablar con ventas' })).toHaveAttribute('href', '/contacto?plan=constructora')
+    expect(screen.getByRole('link', { name: 'Quiero saber más' })).toHaveAttribute('href', '/contacto?plan=agente')
   })
 
   it('marca como recomendado solo el plan destacado', () => {
     // Arrange
     const highlighted = buildPlan({ highlighted: true })
-    const regular = buildPlan({ id: 'particular', name: 'Particular', highlighted: false })
+    const regular = buildPlan({ id: 'propietario', name: 'Propietario', highlighted: false })
 
     // Act
     renderWithRouter(
@@ -79,5 +79,29 @@ describe('PlanCard', () => {
 
     // Assert
     expect(screen.getAllByText('Recomendado')).toHaveLength(1)
+  })
+
+  it('un plan que aún no está definido dice "Próximamente" y que se está preparando, sin lista de ventajas', () => {
+    // Arrange
+    const plan = buildPlan({ price: { kind: 'upcoming' }, features: [] })
+
+    // Act
+    renderWithRouter(<PlanCard plan={plan} />)
+
+    // Assert
+    expect(screen.getByText('Próximamente')).toBeInTheDocument()
+    expect(screen.getByText('Estamos definiendo este plan. Escríbenos y te avisamos cuando esté listo.')).toBeInTheDocument()
+    expect(screen.queryByRole('list')).not.toBeInTheDocument()
+  })
+
+  it('un plan con ventajas no lleva el aviso de que se está preparando', () => {
+    // Arrange
+    const plan = buildPlan({ price: { kind: 'free' } })
+
+    // Act
+    renderWithRouter(<PlanCard plan={plan} />)
+
+    // Assert
+    expect(screen.queryByText(/Estamos definiendo este plan/)).not.toBeInTheDocument()
   })
 })

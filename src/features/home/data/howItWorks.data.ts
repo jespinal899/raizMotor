@@ -12,7 +12,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     icon: Megaphone,
     title: 'Publicar',
     description:
-      'Anuncia tu casa, apartamento o terreno con planes que se adaptan a particulares, inmobiliarias y constructoras.',
+      'Anuncia tu casa, apartamento o terreno con planes para propietarios, agentes inmobiliarios e inmobiliarias.',
   },
   {
     icon: Search,

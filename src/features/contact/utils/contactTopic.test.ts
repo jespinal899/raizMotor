@@ -36,8 +36,8 @@ describe('buildPlanTopic', () => {
     expect(topic).toMatchObject({
       id: 'plan:inmobiliaria',
       label: 'Consulta sobre el plan',
-      title: 'Inmobiliaria',
-      defaultDescription: 'Me interesa el plan Inmobiliaria. ¿Me pueden dar más información?',
+      title: 'Inmobiliarias',
+      defaultDescription: 'Me interesa el plan Inmobiliarias. ¿Me pueden dar más información?',
     })
     expect(topic.reference).toBeUndefined()
   })

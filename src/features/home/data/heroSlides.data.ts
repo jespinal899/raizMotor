@@ -24,11 +24,11 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     id: 'inmobiliarias',
-    badge: '🏢 PARA INMOBILIARIAS',
-    title: 'Publica hasta 25 propiedades',
-    description: `Planes desde $50/mes con reportes, gestión de equipo y visibilidad premium. ${BRAND.name} para profesionales.`,
+    badge: '🏢 PARA PROFESIONALES',
+    title: 'Planes para agentes e inmobiliarias',
+    description: `Estamos preparando los planes de ${BRAND.name} para agentes inmobiliarios e inmobiliarias. Escríbenos y te avisamos cuando estén listos.`,
     image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=1600',
     primaryAction: { label: 'Ver planes', to: ROUTES.pricing },
-    secondaryAction: { label: 'Hablar con ventas', to: ROUTES.contact },
+    secondaryAction: { label: 'Quiero saber más', to: ROUTES.contact },
   },
 ]

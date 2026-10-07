@@ -57,14 +57,14 @@ describe('useContactTopic', () => {
 
   it('reconoce el plan indicado en la URL sin esperar ninguna carga', () => {
     // Arrange
-    const route = '/contacto?plan=constructora'
+    const route = '/contacto?plan=agente'
 
     // Act
     const { result } = renderTopic(route)
 
     // Assert
     expect(result.current.isLoading).toBe(false)
-    expect(result.current.topic).toMatchObject({ id: 'plan:constructora', title: 'Constructora' })
+    expect(result.current.topic).toMatchObject({ id: 'plan:agente', title: 'Agente inmobiliario' })
   })
 
   it('ignora un plan que no existe', () => {
