@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import PropertyGallery from '@/features/properties/components/PropertyGallery'
@@ -11,8 +11,26 @@ const TITLE = 'Casa de prueba'
 const mainPhoto = () => screen.getByRole('img', { name: /Casa de prueba, foto/ })
 const thumbnails = () => screen.getAllByRole('button', { name: /^Ver foto \d+$/ })
 const moreTile = (remaining: number) => screen.getByRole('button', { name: `Ver ${remaining} fotos más` })
-const nextButton = () => screen.getByRole('button', { name: 'Foto siguiente' })
-const previousButton = () => screen.getByRole('button', { name: 'Foto anterior' })
+const enlargeButton = () => screen.getByRole('button', { name: /^Ver a pantalla completa/ })
+const viewer = () => screen.findByRole('dialog', { name: 'Fotos de Casa de prueba' })
+
+/** Lo que enseña el visor: la foto, su contador y sus flechas, buscados dentro de él. */
+const inViewer = (dialog: HTMLElement) => ({
+  photo: () => within(dialog).getByRole('img', { name: /Casa de prueba, foto/ }),
+  next: () => within(dialog).getByRole('button', { name: 'Foto siguiente' }),
+  previous: () => within(dialog).getByRole('button', { name: 'Foto anterior' }),
+  close: () => within(dialog).getByRole('button', { name: 'Cerrar' }),
+})
+
+/** Abre el visor como lo haría una persona: pulsando la foto grande. */
+const openViewer = async (images: string[] = IMAGES) => {
+  const user = userEvent.setup()
+  render(<PropertyGallery images={images} title={TITLE} />)
+  await user.click(enlargeButton())
+  const dialog = await viewer()
+
+  return { user, dialog, ...inViewer(dialog) }
+}
 
 describe('PropertyGallery', () => {
   it('muestra la primera foto como principal', () => {
@@ -41,7 +59,7 @@ describe('PropertyGallery', () => {
     expect(thumbnails()[1]).not.toHaveAttribute('aria-current')
   })
 
-  it('cambia la foto principal al elegir una miniatura', async () => {
+  it('elegir una miniatura cambia la foto principal ahí mismo, sin abrir el visor', async () => {
     // Arrange
     const user = userEvent.setup()
     render(<PropertyGallery images={IMAGES} title={TITLE} />)
@@ -53,9 +71,10 @@ describe('PropertyGallery', () => {
     expect(mainPhoto()).toHaveAttribute('src', IMAGES[2])
     expect(screen.getByText('3 / 3')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Ver foto 3' })).toHaveAttribute('aria-current', 'true')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('con una sola foto no muestra miniaturas, contador ni flechas', () => {
+  it('con una sola foto no muestra miniaturas ni contador', () => {
     // Arrange
     const images = IMAGES.slice(0, 1)
 
@@ -64,7 +83,7 @@ describe('PropertyGallery', () => {
 
     // Assert
     expect(mainPhoto()).toHaveAttribute('src', IMAGES[0])
-    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    expect(screen.queryByRole('list')).not.toBeInTheDocument()
     expect(screen.queryByText('1 / 1')).not.toBeInTheDocument()
   })
 
@@ -108,7 +127,36 @@ describe('PropertyGallery', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(4)
   })
 
-  it('pulsar la casilla "+7" muestra en grande la primera foto que no cabía en la tira', async () => {
+  it('en la ficha la foto grande no lleva flechas: el carrusel está en el visor', () => {
+    // Arrange
+    const images = IMAGES
+
+    // Act
+    render(<PropertyGallery images={images} title={TITLE} />)
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Foto siguiente' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Foto anterior' })).not.toBeInTheDocument()
+    expect(enlargeButton()).toHaveAccessibleName('Ver a pantalla completa: Casa de prueba, foto 1 de 3')
+  })
+
+  it('pulsar la foto grande abre el visor a pantalla completa en esa misma foto', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    render(<PropertyGallery images={IMAGES} title={TITLE} />)
+    await user.click(screen.getByRole('button', { name: 'Ver foto 2' }))
+
+    // Act
+    await user.click(enlargeButton())
+
+    // Assert
+    const dialog = await viewer()
+    expect(inViewer(dialog).photo()).toHaveAttribute('src', IMAGES[1])
+    expect(inViewer(dialog).photo()).toHaveAccessibleName('Casa de prueba, foto 2 de 3')
+    expect(within(dialog).getByText('2 / 3')).toBeInTheDocument()
+  })
+
+  it('pulsar la casilla "+7" abre el visor en la primera foto que no cabía en la tira', async () => {
     // Arrange
     const user = userEvent.setup()
     render(<PropertyGallery images={TEN_IMAGES} title={TITLE} />)
@@ -117,62 +165,84 @@ describe('PropertyGallery', () => {
     await user.click(moreTile(7))
 
     // Assert
+    const dialog = await viewer()
+    expect(inViewer(dialog).photo()).toHaveAttribute('src', TEN_IMAGES[3])
+    expect(within(dialog).getByText('4 / 10')).toBeInTheDocument()
+  })
+
+  it('en el visor, la flecha "siguiente" pasa a la foto siguiente', async () => {
+    // Arrange
+    const { user, dialog, photo, next } = await openViewer()
+
+    // Act
+    await user.click(next())
+
+    // Assert
+    expect(photo()).toHaveAttribute('src', IMAGES[1])
+    expect(within(dialog).getByText('2 / 3')).toBeInTheDocument()
+  })
+
+  it('en el visor, la flecha "anterior" desde la primera foto da la vuelta hasta la última', async () => {
+    // Arrange
+    const { user, dialog, photo, previous } = await openViewer()
+
+    // Act
+    await user.click(previous())
+
+    // Assert
+    expect(photo()).toHaveAttribute('src', IMAGES[2])
+    expect(within(dialog).getByText('3 / 3')).toBeInTheDocument()
+  })
+
+  it('en el visor también se pasa de foto con las flechas del teclado', async () => {
+    // Arrange
+    const { user, photo } = await openViewer()
+
+    // Act
+    await user.keyboard('{ArrowRight}{ArrowRight}{ArrowLeft}')
+
+    // Assert
+    expect(photo()).toHaveAttribute('src', IMAGES[1])
+  })
+
+  it('la X cierra el visor', async () => {
+    // Arrange
+    const { user, close } = await openViewer()
+
+    // Act
+    await user.click(close())
+
+    // Assert
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('al cerrar el visor, la ficha se queda en la última foto que se vio', async () => {
+    // Arrange
+    const { user, next, close } = await openViewer(TEN_IMAGES)
+    await user.click(next())
+    await user.click(next())
+    await user.click(next())
+
+    // Act
+    await user.click(close())
+
+    // Assert
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(mainPhoto()).toHaveAttribute('src', TEN_IMAGES[3])
-    expect(screen.getByText('4 / 10')).toBeInTheDocument()
-    expect(moreTile(7)).toHaveAttribute('aria-current', 'true')
-  })
-
-  it('la flecha "siguiente" pasa a la foto siguiente', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    render(<PropertyGallery images={IMAGES} title={TITLE} />)
-
-    // Act
-    await user.click(nextButton())
-
-    // Assert
-    expect(mainPhoto()).toHaveAttribute('src', IMAGES[1])
-    expect(screen.getByText('2 / 3')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Ver foto 2' })).toHaveAttribute('aria-current', 'true')
-  })
-
-  it('la flecha "anterior", desde la primera foto, da la vuelta hasta la última', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    render(<PropertyGallery images={IMAGES} title={TITLE} />)
-
-    // Act
-    await user.click(previousButton())
-
-    // Assert
-    expect(mainPhoto()).toHaveAttribute('src', IMAGES[2])
-    expect(screen.getByText('3 / 3')).toBeInTheDocument()
-  })
-
-  it('desde la última foto, "siguiente" vuelve a la primera', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    render(<PropertyGallery images={IMAGES} title={TITLE} />)
-    await user.click(screen.getByRole('button', { name: 'Ver foto 3' }))
-
-    // Act
-    await user.click(nextButton())
-
-    // Assert
-    expect(mainPhoto()).toHaveAttribute('src', IMAGES[0])
-  })
-
-  it('con las flechas se llega a las fotos que no caben en la tira, y entonces se marca la casilla "+N"', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    render(<PropertyGallery images={TEN_IMAGES} title={TITLE} />)
-
-    // Act
-    await user.click(previousButton())
-
-    // Assert
-    expect(mainPhoto()).toHaveAccessibleName('Casa de prueba, foto 10 de 10')
     expect(moreTile(7)).toHaveAttribute('aria-current', 'true')
     expect(thumbnails().every((thumbnail) => !thumbnail.hasAttribute('aria-current'))).toBe(true)
+  })
+
+  it('con una sola foto, el visor la amplía sin flechas ni contador', async () => {
+    // Arrange
+    const images = IMAGES.slice(0, 1)
+
+    // Act
+    const { dialog, photo } = await openViewer(images)
+
+    // Assert
+    expect(photo()).toHaveAttribute('src', IMAGES[0])
+    expect(within(dialog).queryByRole('button', { name: /Foto (siguiente|anterior)/ })).not.toBeInTheDocument()
+    expect(within(dialog).queryByText('1 / 1')).not.toBeInTheDocument()
   })
 })

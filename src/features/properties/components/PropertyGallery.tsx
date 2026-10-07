@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { Expand } from 'lucide-react'
 import PropertyPhoto from '@/features/properties/components/PropertyPhoto'
+import PropertyPhotoViewer from '@/features/properties/components/PropertyPhotoViewer'
 import type { PhotoSource } from '@/features/properties/types/property.types'
-import { stepPhoto, toThumbnailStrip } from '@/features/properties/utils/gallery'
+import { toThumbnailStrip } from '@/features/properties/utils/gallery'
 import { cn } from '@/lib/utils'
 
 interface ThumbnailProps {
@@ -37,39 +37,16 @@ const Thumbnail = ({ image, label, isCurrent, onSelect, children }: ThumbnailPro
   )
 }
 
-interface ArrowProps {
-  icon: LucideIcon
-  label: string
-  onClick: () => void
-  className: string
-}
-
-/** Flecha del carrusel, sobre la foto grande. */
-const Arrow = ({ icon: Icon, label, onClick, className }: ArrowProps) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={cn(
-        'absolute top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-slate-950/60 text-white outline-none transition hover:bg-slate-950/80 focus-visible:ring-3 focus-visible:ring-white/70',
-        className,
-      )}
-    >
-      <Icon className="size-5" aria-hidden="true" />
-    </button>
-  )
-}
-
 interface PropertyGalleryProps {
   images: PhotoSource[]
   title: string
 }
 
 /**
- * Fotos de la propiedad, como carrusel: la foto grande con flechas para pasar a la anterior o la
- * siguiente, y una tira de miniaturas. Si hay más fotos de las que caben en la tira, la última casilla
- * dice cuántas faltan y lleva a la primera de ellas.
+ * Fotos de la propiedad: la foto grande y una tira de miniaturas que la cambian ahí mismo. Pulsar la foto
+ * grande la abre en el visor a pantalla completa, que es donde se pasa de una a otra con flechas. Si hay
+ * más fotos de las que caben en la tira, la última casilla dice cuántas faltan y abre el visor en la
+ * primera de ellas.
  *
  * En móvil la tira va debajo de la foto. En escritorio va a la izquierda, y la foto ocupa todo el alto
  * que le dé quien la coloca: así cabe en la primera pantalla. Allí la foto y la tira van superpuestas a
@@ -77,39 +54,44 @@ interface PropertyGalleryProps {
  */
 const PropertyGallery = ({ images, title }: PropertyGalleryProps) => {
   const [selected, setSelected] = useState(0)
+  const [isViewerOpen, setIsViewerOpen] = useState(false)
   const total = images.length
   const hasSeveral = total > 1
   const { shown, remaining } = toThumbnailStrip(total)
+  const photoName = `${title}, foto ${selected + 1} de ${total}`
+
+  const openViewerAt = (position: number) => {
+    setSelected(position)
+    setIsViewerOpen(true)
+  }
 
   return (
     <div className={cn('grid gap-3', hasSeveral && 'lg:grid-cols-[6.5rem_minmax(0,1fr)]')}>
       {/* Va primero en el documento, para que en móvil quede arriba; en escritorio, a la derecha de la tira. */}
-      <div className={cn('relative overflow-hidden rounded-2xl bg-muted', hasSeveral && 'lg:col-start-2 lg:row-start-1')}>
+      <button
+        type="button"
+        onClick={() => openViewerAt(selected)}
+        aria-label={`Ver a pantalla completa: ${photoName}`}
+        className={cn(
+          'group relative block cursor-zoom-in overflow-hidden rounded-2xl bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+          hasSeveral && 'lg:col-start-2 lg:row-start-1',
+        )}
+      >
         <PropertyPhoto
           source={images[selected]}
-          alt={`${title}, foto ${selected + 1} de ${total}`}
+          alt={photoName}
           className="aspect-3/2 w-full object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full"
         />
+        {/* Señala que la foto se puede ampliar; se nota más al pasar por encima. */}
+        <span className="absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-slate-950/60 text-white transition group-hover:bg-slate-950/85">
+          <Expand className="size-4" aria-hidden="true" />
+        </span>
         {hasSeveral && (
-          <>
-            <Arrow
-              icon={ChevronLeft}
-              label="Foto anterior"
-              onClick={() => setSelected(stepPhoto(selected, -1, total))}
-              className="left-3"
-            />
-            <Arrow
-              icon={ChevronRight}
-              label="Foto siguiente"
-              onClick={() => setSelected(stepPhoto(selected, 1, total))}
-              className="right-3"
-            />
-            <span className="absolute right-3 bottom-3 rounded-full bg-slate-950/70 px-2.5 py-1 text-xs font-medium text-white">
-              {selected + 1} / {total}
-            </span>
-          </>
+          <span className="absolute right-3 bottom-3 rounded-full bg-slate-950/70 px-2.5 py-1 text-xs font-medium text-white">
+            {selected + 1} / {total}
+          </span>
         )}
-      </div>
+      </button>
 
       {hasSeveral && (
         <div className="lg:relative lg:col-start-1 lg:row-start-1">
@@ -132,7 +114,7 @@ const PropertyGallery = ({ images, title }: PropertyGalleryProps) => {
                 image={images[shown]}
                 label={`Ver ${remaining} fotos más`}
                 isCurrent={selected >= shown}
-                onSelect={() => setSelected(shown)}
+                onSelect={() => openViewerAt(shown)}
               >
                 <span className="absolute inset-0 grid place-items-center bg-slate-950/60 text-lg font-semibold text-white">
                   +{remaining}
@@ -142,6 +124,15 @@ const PropertyGallery = ({ images, title }: PropertyGalleryProps) => {
           </ul>
         </div>
       )}
+
+      <PropertyPhotoViewer
+        images={images}
+        title={title}
+        selected={selected}
+        isOpen={isViewerOpen}
+        onSelect={setSelected}
+        onClose={() => setIsViewerOpen(false)}
+      />
     </div>
   )
 }
