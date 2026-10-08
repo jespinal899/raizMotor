@@ -87,12 +87,12 @@ El sistema tiene dos contenedores: el sitio estático que entrega los archivos y
 %%{init: {"flowchart": {"wrappingWidth": 280}}}%%
 flowchart TB
     accTitle: Contenedores de DomusRaíz
-    accDescr: La persona abre el sitio estático de GitHub Pages, que entrega la aplicación web al navegador. La aplicación consulta OpenStreetMap, Nominatim y Unsplash.
+    accDescr: La persona abre el sitio estático de Vercel, que entrega la aplicación web al navegador. La aplicación consulta OpenStreetMap, Nominatim y Unsplash.
 
     usuario(["<b>Visitante o anunciante</b><br/>[Persona]"])
 
     subgraph domus ["DomusRaíz [Sistema]"]
-        pages["<b>Sitio estático</b><br/>[Contenedor: GitHub Pages]<br/>Entrega el HTML, el JavaScript y los estilos ya compilados"]
+        pages["<b>Sitio estático</b><br/>[Contenedor: Vercel]<br/>Entrega el HTML, el JavaScript y los estilos ya compilados"]
         spa["<b>Aplicación web</b><br/>[Contenedor: React 19, TypeScript, Vite]<br/>Aplicación de una sola página que se ejecuta en el navegador: catálogo, búsqueda, publicación, contacto y acceso"]
     end
 
@@ -116,7 +116,7 @@ flowchart TB
     style domus fill:none,stroke:#0f4c81,stroke-dasharray:4 4
 ```
 
-GitHub Pages no reescribe rutas. Por eso el sitio incluye una copia de `index.html` como `404.html`: al entrar por un enlace directo, como `/propiedades`, Pages devuelve esa copia y la aplicación muestra la página correcta.
+Las rutas las resuelve la aplicación en el navegador, no el sitio estático. Por eso `vercel.json` le dice a Vercel que entregue `index.html` en cualquier dirección: al entrar por un enlace directo, como `/propiedades`, llega la aplicación y esta muestra la página correcta.
 
 ## Nivel 3 · Componentes de la aplicación web
 
@@ -254,7 +254,7 @@ Repetir una acción deja el mismo resultado que hacerla una vez. Vale para quien
 | La visita a una ficha (recarga, efecto repetido) | Cuenta una sola vista por visita: el total no sube hasta abrir la ficha en otra pestaña o sesión. | `propertyViewService` |
 | El cierre del mapa | La segunda vez no hace nada. | `locationMap` |
 | Una lectura del catálogo | Devuelve lo mismo y no cambia nada; las respuestas de peticiones anteriores se descartan. | `propertyService`, `useAsyncData` |
-| La instalación, la compilación o el despliegue | `npm ci` instala exactamente lo que fija `package-lock.json`, dos compilaciones del mismo código producen los mismos archivos y relanzar el pipeline publica lo mismo. | `.github/workflows/ci-cd.yml` |
+| La instalación, la compilación o el despliegue | `npm ci` instala exactamente lo que fija `package-lock.json`, dos compilaciones del mismo código producen los mismos archivos y volver a desplegar el mismo commit publica lo mismo. | `package-lock.json`, `.github/workflows/ci.yml`, Vercel |
 
 ### La clave de operación
 
@@ -270,32 +270,31 @@ Iniciar sesión no lleva clave: repetirlo deja la misma sesión.
 
 ## Despliegue
 
-Cada cambio en `master` pasa por el mismo pipeline, definido en `.github/workflows/ci-cd.yml`. Si un paso falla, el sitio publicado no cambia.
+Cada cambio en `master` sigue dos caminos a la vez: Vercel compila el sitio y lo publica, y GitHub Actions comprueba el linter, las pruebas y la compilación con el pipeline de `.github/workflows/ci.yml`.
 
 ```mermaid
 %%{init: {"flowchart": {"wrappingWidth": 170}}}%%
 flowchart TB
     accTitle: Despliegue de DomusRaíz
-    accDescr: Un push a master activa GitHub Actions, que ejecuta el linter, las pruebas y la compilación, prepara la copia 404 y publica el resultado en GitHub Pages, desde donde lo abre el navegador.
+    accDescr: Un push a master llega al repositorio de GitHub. Vercel compila el sitio y lo publica, y el navegador lo abre desde ahí. Por su lado, GitHub Actions ejecuta el linter, las pruebas y la compilación.
 
     dev(["<b>Quien desarrolla</b>"])
     repo["<b>Repositorio</b><br/>GitHub, rama master"]
 
-    subgraph ci ["GitHub Actions · ci-cd.yml"]
+    subgraph ci ["GitHub Actions · ci.yml"]
         direction LR
         lint["<b>Linter</b><br/>oxlint"]
         test["<b>Pruebas</b><br/>vitest"]
-        build["<b>Compilación</b><br/>tsc y vite build, con la base /raizMotor/"]
-        fallback["<b>Rutas</b><br/>Copia index.html como 404.html"]
-        lint --> test --> build --> fallback
+        build["<b>Compilación</b><br/>tsc y vite build"]
+        lint --> test --> build
     end
 
-    pages["<b>GitHub Pages</b><br/>jespinal899.github.io/raizMotor"]
+    pages["<b>Vercel</b><br/>Compila y publica en raiz-motor.vercel.app"]
     browser(["<b>Navegador</b>"])
 
     dev -- "git push" --> repo
     repo -- "Activa" --> ci
-    ci -- "Publica dist/" --> pages
+    repo -- "Activa" --> pages
     pages -- "HTTPS" --> browser
 
     classDef persona fill:#08304f,stroke:#041d30,color:#fff
@@ -304,11 +303,12 @@ flowchart TB
     classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
     class dev,browser persona
     class pages contenedor
-    class lint,test,build,fallback componente
+    class lint,test,build componente
     class repo externo
     style ci fill:none,stroke:#8c959f,stroke-dasharray:4 4
 ```
 
-- **En un pull request** se ejecutan el linter, las pruebas y la compilación, pero no se publica.
-- **El sitio se sirve bajo `/raizMotor/`**, no en la raíz del dominio. La compilación recibe esa base y el enrutador la toma de `import.meta.env.BASE_URL`.
-- **Si GitHub Pages está desactivado** en el repositorio, el pipeline lo avisa y omite la publicación. Se activa en Settings > Pages, con origen "GitHub Actions".
+- **Los dos caminos son independientes.** Vercel publica aunque el pipeline de GitHub falle: el pipeline avisa de un problema, no lo detiene. Por eso los mismos pasos se pasan en local antes de subir.
+- **En un pull request** se ejecutan el linter, las pruebas y la compilación.
+- **El sitio se sirve en la raíz del dominio.** Si alguna vez se publicara bajo un prefijo, la compilación lo recibiría con `--base` y el enrutador lo tomaría de `import.meta.env.BASE_URL`.
+- **Los enlaces directos** funcionan porque `vercel.json` entrega la aplicación en cualquier dirección.

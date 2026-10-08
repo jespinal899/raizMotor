@@ -1,10 +1,10 @@
 # DomusRaíz
 
-[![CI/CD](https://github.com/jespinal899/raizMotor/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/jespinal899/raizMotor/actions/workflows/ci-cd.yml)
+[![CI](https://github.com/jespinal899/raizMotor/actions/workflows/ci.yml/badge.svg)](https://github.com/jespinal899/raizMotor/actions/workflows/ci.yml)
 
 Plataforma web inmobiliaria para Honduras: reúne casas, apartamentos y terrenos en un solo lugar para publicarlos, encontrarlos y contactar a quien los anuncia, sin comisiones ocultas.
 
-**Sitio publicado:** https://jespinal899.github.io/raizMotor/
+**Sitio publicado:** https://raiz-motor.vercel.app/
 
 ## Estado actual
 
@@ -67,7 +67,7 @@ La aplicación queda en http://localhost:5173. `npm ci` instala exactamente las 
 La aplicación es una SPA sin servidor propio, organizada por funcionalidades. El modelo C4 completo, con sus diagramas, está en **[docs/arquitectura.md](docs/arquitectura.md)**:
 
 - **Contexto:** quién usa DomusRaíz y de qué servicios externos depende.
-- **Contenedores:** el sitio estático en GitHub Pages y la aplicación que se ejecuta en el navegador.
+- **Contenedores:** el sitio estático en Vercel y la aplicación que se ejecuta en el navegador.
 - **Componentes:** las funcionalidades de `src/features` y cómo se relacionan.
 - **Código:** las capas que sigue cada funcionalidad.
 - **Idempotencia:** qué pasa cuando una acción se repite.
@@ -112,17 +112,20 @@ Cada funcionalidad usa, según lo que necesite, las mismas carpetas: `pages`, `c
 
 ## Integración y despliegue continuos
 
-Cada push a `master` ejecuta el pipeline de `.github/workflows/ci-cd.yml`: linter, pruebas, compilación y publicación en GitHub Pages. En un pull request se ejecuta todo menos la publicación.
+Cada push a `master` sigue dos caminos a la vez:
 
-Antes de subir un cambio, comprueba en tu equipo los mismos pasos:
+- **Vercel** compila el sitio y lo publica en https://raiz-motor.vercel.app/.
+- **GitHub Actions** ejecuta el pipeline de `.github/workflows/ci.yml`: linter, pruebas y compilación. También se ejecuta en cada pull request.
+
+Son independientes: Vercel publica aunque el pipeline falle. Por eso, antes de subir un cambio, comprueba en tu equipo los mismos pasos:
 
 ```bash
 npm run lint
 npm test
-npm run build -- --base="/raizMotor/"
+npm run build
 ```
 
-El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. En Git Bash, antepón `MSYS_NO_PATHCONV=1` al último comando para que no convierta la base en una ruta de Windows.
+El archivo `vercel.json` hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página.
 
 ## Pendiente
 
