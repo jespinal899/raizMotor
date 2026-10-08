@@ -30,46 +30,80 @@ describe('AgentPlansPage', () => {
     expect(document.title).toBe(`${pageTitle} | ${BRAND.name}`)
   })
 
-  it('presenta los nombres, descripciones y beneficios de los dos planes', () => {
+  it('presenta los nombres y beneficios vigentes de los dos planes', () => {
     // Arrange
     const expectedFeatures = [
       [
         'Hasta 25 propiedades activas',
         '1 usuario por agente inmobiliario',
-        'Panel de administración de cartera',
-        'Reportes básicos de visitas',
       ],
       [
         'Hasta 100 propiedades activas',
         '2 usuarios por agente inmobiliario',
-        'Panel avanzado y reportes detallados',
       ],
-    ]
-    const expectedDescriptions = [
-      'Ideal para agentes independientes que están construyendo su cartera.',
-      'Para agentes de alto rendimiento que manejan un gran volumen de propiedades.',
     ]
 
     // Act
     renderWithRouter(<AgentPlansPage />, { route: ROUTE })
 
     // Assert
-    const plans = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
+    const plans = PLAN_NAMES.map((name) => screen.getByRole('heading', { level: 2, name }).textContent)
     const features = PLAN_NAMES.map((name) =>
       within(planCard(name))
         .getAllByRole('listitem')
         .map((item) => withPlainSpaces(item.textContent ?? '')),
     )
-    const descriptions = PLAN_NAMES.map((name) =>
-      within(planCard(name)).getByText(expectedDescriptions[PLAN_NAMES.indexOf(name)]),
-    )
     expect(plans).toEqual(PLAN_NAMES)
     expect(features).toEqual(expectedFeatures)
-    expect(descriptions).toHaveLength(2)
+    expect(
+      screen.queryByText('Ideal para agentes independientes que están construyendo su cartera.'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('Para agentes de alto rendimiento que manejan un gran volumen de propiedades.'),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('Panel avanzado y reportes detallados')).not.toBeInTheDocument()
+    expect(screen.queryByText('Panel de administración de cartera')).not.toBeInTheDocument()
+    expect(screen.queryByText('Reportes básicos de visitas')).not.toBeInTheDocument()
     expect(within(planCard('Agente Pro')).getByText('Hasta 25 propiedades').tagName).toBe('STRONG')
     expect(within(planCard('Agente Pro')).getByText('1 usuario').tagName).toBe('STRONG')
     expect(within(planCard('Agente Élite')).getByText('Hasta 100 propiedades').tagName).toBe('STRONG')
     expect(within(planCard('Agente Élite')).getByText('2 usuarios').tagName).toBe('STRONG')
+  })
+
+  it('presenta a la izquierda los beneficios de contratar con DomusRaíz', () => {
+    // Arrange
+    const expectedReasons = [
+      'Soporte y atención al cliente 24/7.',
+      'Administra todo desde un solo panel.',
+      'Tu marca en cada propiedad, sin anuncios externos.',
+    ]
+    const expectedBenefits = [
+      'Asesoría personalizada.',
+      'Reportes y métricas de tus propiedades.',
+      'Gestión centralizada de tus publicaciones.',
+      'Mayor exposición para tus propiedades.',
+      'Presencia profesional dentro de DomusRaíz.',
+    ]
+
+    // Act
+    renderWithRouter(<AgentPlansPage />, { route: ROUTE })
+
+    // Assert
+    const reasons = screen.getByRole('complementary', { name: '¿Por qué contratar en DomusRaíz?' })
+    const reasonItems = within(reasons)
+      .getAllByRole('listitem')
+      .slice(0, expectedReasons.length)
+      .map((item) => withPlainSpaces(item.textContent ?? ''))
+    const benefits = within(reasons).getByRole('heading', { level: 3, name: 'Con tu plan obtienes:' })
+    const benefitItems = within(reasons)
+      .getAllByRole('listitem')
+      .slice(expectedReasons.length)
+      .map((item) => withPlainSpaces(item.textContent ?? ''))
+
+    expect(reasonItems).toEqual(expectedReasons)
+    expect(benefits).toBeInTheDocument()
+    expect(benefitItems).toEqual(expectedBenefits)
+    expect(within(reasons).queryByText(/renovación automática/i)).not.toBeInTheDocument()
   })
 
   it('cada plan dice su precio mensual en lempiras, sin el impuesto, y su equivalente en dólares', () => {

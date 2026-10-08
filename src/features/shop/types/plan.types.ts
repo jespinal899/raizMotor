@@ -32,7 +32,6 @@ export interface AgentPlanFeature {
 /** Un plan de pago para agentes inmobiliarios. */
 export interface AgentPlan extends ListedPlan {
   id: AgentPlanId
-  description: string
   features: AgentPlanFeature[]
   /** En lempiras, sin el impuesto sobre ventas. */
   monthlyPrice: number

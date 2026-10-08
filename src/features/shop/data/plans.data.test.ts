@@ -65,31 +65,25 @@ describe('AGENT_PLANS', () => {
     const expectedPlans = [
       {
         name: 'Agente Pro',
-        description: 'Ideal para agentes independientes que están construyendo su cartera.',
         features: [
           { text: 'Hasta 25 propiedades activas', emphasized: 'Hasta 25 propiedades' },
           { text: '1 usuario por agente inmobiliario', emphasized: '1 usuario' },
-          { text: 'Panel de administración de cartera' },
-          { text: 'Reportes básicos de visitas' },
         ],
         monthlyPrice: 599,
       },
       {
         name: 'Agente Élite',
-        description: 'Para agentes de alto rendimiento que manejan un gran volumen de propiedades.',
         features: [
           { text: 'Hasta 100 propiedades activas', emphasized: 'Hasta 100 propiedades' },
           { text: '2 usuarios por agente inmobiliario', emphasized: '2 usuarios' },
-          { text: 'Panel avanzado y reportes detallados' },
         ],
         monthlyPrice: 999,
       },
     ]
 
     // Act
-    const plans = AGENT_PLANS.map(({ name, description, features, monthlyPrice }) => ({
+    const plans = AGENT_PLANS.map(({ name, features, monthlyPrice }) => ({
       name,
-      description,
       features,
       monthlyPrice,
     }))

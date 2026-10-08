@@ -39,12 +39,9 @@ export const AGENT_PLANS: AgentPlan[] = [
   {
     id: 'agente-plan-1',
     name: 'Agente Pro',
-    description: 'Ideal para agentes independientes que están construyendo su cartera.',
     features: [
       { text: 'Hasta 25 propiedades activas', emphasized: 'Hasta 25 propiedades' },
       { text: '1 usuario por agente inmobiliario', emphasized: '1 usuario' },
-      { text: 'Panel de administración de cartera' },
-      { text: 'Reportes básicos de visitas' },
     ],
     monthlyPrice: 599,
     action: contract('agente-plan-1', 'Comenzar con Pro'),
@@ -52,11 +49,9 @@ export const AGENT_PLANS: AgentPlan[] = [
   {
     id: 'agente-plan-2',
     name: 'Agente Élite',
-    description: 'Para agentes de alto rendimiento que manejan un gran volumen de propiedades.',
     features: [
       { text: 'Hasta 100 propiedades activas', emphasized: 'Hasta 100 propiedades' },
       { text: '2 usuarios por agente inmobiliario', emphasized: '2 usuarios' },
-      { text: 'Panel avanzado y reportes detallados' },
     ],
     monthlyPrice: 999,
     action: contract('agente-plan-2', 'Comenzar con Élite'),
