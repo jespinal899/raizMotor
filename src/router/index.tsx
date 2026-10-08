@@ -51,6 +51,6 @@ export const routes: RouteObject[] = [
 
 export const router = createBrowserRouter(
   routes,
-  // El sitio puede publicarse bajo un prefijo (GitHub Pages lo sirve en /<repositorio>/).
+  // Hoy el sitio va en la raíz del dominio, pero puede publicarse bajo un prefijo: la compilación lo indica.
   { basename: toRouterBasename(import.meta.env.BASE_URL) },
 )
