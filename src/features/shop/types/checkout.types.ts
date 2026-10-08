@@ -28,8 +28,8 @@ export type CheckoutField = keyof CheckoutFormValues
 
 export type CheckoutFormErrors = FieldErrors<CheckoutFormValues>
 
-/** La solicitud de un plan: quién lo pide, con sus datos ya listos para enviar, y cómo quiere pagar. */
-export interface PlanRequest {
+/** Quién pide un plan, con sus datos ya listos para enviar. */
+export interface PlanApplicant {
   firstName: string
   lastName: string
   /** Solo sus dígitos; vacío si la persona no lo dio. */
@@ -37,6 +37,10 @@ export interface PlanRequest {
   /** Completo y sin separadores: +50499999999. */
   phone: string
   email: string
+}
+
+/** La solicitud de un plan: quién lo pide y cómo quiere pagar. */
+export interface PlanRequest extends PlanApplicant {
   paymentMethod: PaymentMethodId
 }
 

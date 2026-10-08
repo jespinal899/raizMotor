@@ -6,7 +6,7 @@ describe('PAYMENT_METHODS', () => {
     // Arrange
     const expectedOptions = [
       { value: 'tarjeta', label: 'Tarjeta de débito o crédito' },
-      { value: 'transferencia', label: 'Transferencia o depósito' },
+      { value: 'transferencia', label: 'Transferencia bancaria' },
     ]
 
     // Act

@@ -5,7 +5,7 @@ import AgentPlanCheckoutPage from '@/features/shop/pages/AgentPlanCheckoutPage'
 import { planRequestService } from '@/features/shop/services/planRequestService'
 import { BRAND } from '@/shared/constants/brand'
 import { ROUTES, agentPlanCheckoutPath } from '@/shared/constants/routes'
-import { TRANSFER, checkoutForm, reachConfirmation } from '@/test/checkoutForm'
+import { TRANSFER, checkoutForm, reachPayment } from '@/test/checkoutForm'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
 vi.mock('@/features/shop/services/planRequestService', () => ({ planRequestService: { open: vi.fn() } }))
@@ -21,7 +21,7 @@ describe('AgentPlanCheckoutPage', { timeout: 20_000 }, () => {
     open.mockReturnValue('https://wa.me/50489150271?text=solicitud')
   })
 
-  it('presenta la contratación del plan indicado en la dirección y pone su título en la pestaña', () => {
+  it('contrata el plan indicado en la dirección: lo dice en la pestaña y en un título solo para lectores de pantalla', () => {
     // Arrange
     const planId = 'agente-plan-1'
 
@@ -29,12 +29,13 @@ describe('AgentPlanCheckoutPage', { timeout: 20_000 }, () => {
     openPage(planId)
 
     // Assert
-    const title = screen.getByRole('heading', { level: 1, name: 'Contratar Agente Pro' })
-    expect(within(title).getByText('Agente Pro')).toHaveClass('text-primary')
+    expect(screen.getByRole('heading', { level: 1, name: 'Contratar Agente Pro' })).toHaveClass('sr-only')
+    expect(screen.queryByText(/^Tres pasos:/)).not.toBeInTheDocument()
+    expect(within(checkoutForm.summary()).getByText('Agente Pro')).toBeInTheDocument()
     expect(document.title).toBe(`Contratar Agente Pro | ${BRAND.name}`)
   })
 
-  it('abre el formulario por pasos en el primero, el de los datos', async () => {
+  it('abre el formulario por pasos en el primero, el de los datos de suscripción', async () => {
     // Arrange
     const planId = 'agente-plan-1'
 
@@ -43,7 +44,7 @@ describe('AgentPlanCheckoutPage', { timeout: 20_000 }, () => {
 
     // Assert
     expect(checkoutForm.form()).toBeInTheDocument()
-    expect(await checkoutForm.step(1, 'Tus datos')).toBeInTheDocument()
+    expect(await checkoutForm.step(1, 'Datos de suscripción')).toBeInTheDocument()
   })
 
   it('si el plan de la dirección no existe, lo dice y ofrece volver a los planes', () => {
@@ -76,8 +77,8 @@ describe('AgentPlanCheckoutPage', { timeout: 20_000 }, () => {
     // Arrange
     const user = userEvent.setup()
     openPage('agente-plan-2')
-    await reachConfirmation(user, { method: TRANSFER })
-    await user.click(checkoutForm.terms())
+    await reachPayment(user)
+    await user.click(checkoutForm.method(TRANSFER))
 
     // Act
     await user.click(checkoutForm.send())

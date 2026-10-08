@@ -1,4 +1,5 @@
 import { ISV_RATE } from '@/shared/constants/tax'
+import { formatLempiras } from '@/shared/utils/format'
 
 /** Lo que se paga cada mes por un plan, en lempiras. */
 export interface PlanTotal {
@@ -16,3 +17,6 @@ export const toPlanTotal = (monthlyPrice: number, taxRate: number = ISV_RATE): P
 
   return { price: monthlyPrice, tax, total: toCents(monthlyPrice + tax) }
 }
+
+/** El precio de un plan como se anuncia, sin el impuesto sobre ventas: "L 599 + ISV". */
+export const formatPriceBeforeTax = (monthlyPrice: number): string => `${formatLempiras(monthlyPrice)} + ISV`

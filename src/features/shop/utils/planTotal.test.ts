@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toPlanTotal } from '@/features/shop/utils/planTotal'
+import { formatPriceBeforeTax, toPlanTotal } from '@/features/shop/utils/planTotal'
 import { ISV_RATE } from '@/shared/constants/tax'
 
 describe('toPlanTotal', () => {
@@ -38,5 +38,18 @@ describe('toPlanTotal', () => {
     // Assert
     expect(ISV_RATE).toBe(0.15)
     expect(tax).toBe(15)
+  })
+})
+
+describe('formatPriceBeforeTax', () => {
+  it('escribe el precio del plan como se anuncia: en lempiras y avisando de que falta el impuesto', () => {
+    // Arrange
+    const monthlyPrice = 599
+
+    // Act
+    const price = formatPriceBeforeTax(monthlyPrice)
+
+    // Assert
+    expect(price.replace(/\s/g, ' ')).toBe('L 599 + ISV')
   })
 })

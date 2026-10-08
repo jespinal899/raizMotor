@@ -11,7 +11,7 @@ export const PAYMENT_METHODS: Record<PaymentMethodId, PaymentMethod> = {
     icon: CreditCard,
   },
   transferencia: {
-    label: 'Transferencia o depósito',
+    label: 'Transferencia bancaria',
     description: 'Te enviamos por WhatsApp los datos de la cuenta en BAC Credomatic y nos mandas el comprobante.',
     icon: Landmark,
   },

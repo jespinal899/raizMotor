@@ -3,6 +3,7 @@ import type {
   CheckoutFormValues,
   DetailRow,
   PaymentMethodId,
+  PlanApplicant,
   PlanRequest,
 } from '@/features/shop/types/checkout.types'
 import type { AgentPlan } from '@/features/shop/types/plan.types'
@@ -19,30 +20,37 @@ type RequestedPlan = Pick<AgentPlan, 'name' | 'monthlyPrice'>
 const withoutExtraSpaces = (text: string) => text.trim().replace(/\s+/g, ' ')
 
 /**
- * Deja lo escrito en el formulario listo para enviar: sin espacios sobrantes, el documento en dígitos y el
- * celular completo. La forma de pago se recibe aparte, ya elegida.
+ * Deja los datos de la persona listos para enviar: sin espacios sobrantes, el documento en dígitos y el
+ * celular completo.
  */
-export const toPlanRequest = (values: CheckoutFormValues, paymentMethod: PaymentMethodId): PlanRequest => ({
+export const toPlanApplicant = (values: CheckoutFormValues): PlanApplicant => ({
   firstName: withoutExtraSpaces(values.firstName),
   lastName: withoutExtraSpaces(values.lastName),
   document: toDocumentDigits(values.document),
   phone: toInternationalPhone(values.phone),
   email: values.email.trim(),
+})
+
+/** La solicitud completa. La forma de pago se recibe aparte, ya elegida. */
+export const toPlanRequest = (values: CheckoutFormValues, paymentMethod: PaymentMethodId): PlanRequest => ({
+  ...toPlanApplicant(values),
   paymentMethod,
 })
 
-/**
- * La solicitud dato a dato: qué plan, cuánto se paga al mes, cómo y quién la pide. Es lo que se revisa en
- * pantalla y lo que lleva el mensaje, para que no puedan decir cosas distintas.
- */
+/** Quién pide el plan, dato a dato. Es lo que se revisa en pantalla antes de pagar. */
+export const describeApplicant = (applicant: PlanApplicant): DetailRow[] => [
+  { label: 'Nombre', value: `${applicant.firstName} ${applicant.lastName}` },
+  ...(applicant.document ? [{ label: 'Documento', value: describeDocument(applicant.document) }] : []),
+  { label: 'Celular', value: formatInternationalPhone(applicant.phone) },
+  { label: 'Correo', value: applicant.email },
+]
+
+/** La solicitud dato a dato: qué plan, cuánto se paga al mes, cómo y quién la pide. */
 export const describePlanRequest = (plan: RequestedPlan, request: PlanRequest): DetailRow[] => [
   { label: 'Plan', value: plan.name },
   { label: 'Total al mes', value: formatLempirasExact(toPlanTotal(plan.monthlyPrice).total) },
   { label: 'Forma de pago', value: PAYMENT_METHODS[request.paymentMethod].label },
-  { label: 'Nombre', value: `${request.firstName} ${request.lastName}` },
-  ...(request.document ? [{ label: 'Documento', value: describeDocument(request.document) }] : []),
-  { label: 'Celular', value: formatInternationalPhone(request.phone) },
-  { label: 'Correo', value: request.email },
+  ...describeApplicant(request),
 ]
 
 /** El mensaje con el que una persona pide un plan. */

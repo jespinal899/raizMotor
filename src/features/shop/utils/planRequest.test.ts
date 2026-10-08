@@ -3,14 +3,26 @@ import { AGENT_PLANS } from '@/features/shop/data/plans.data'
 import type { PlanRequest } from '@/features/shop/types/checkout.types'
 import {
   buildPlanRequestMessage,
+  describeApplicant,
   describePlanRequest,
   planRequestChatUrl,
+  toPlanApplicant,
   toPlanRequest,
 } from '@/features/shop/utils/planRequest'
 import { BRAND } from '@/shared/constants/brand'
 import { CONTACT } from '@/shared/constants/contact'
 
 const [PRO, ELITE] = AGENT_PLANS
+
+const WRITTEN = {
+  firstName: '  Ana   María ',
+  lastName: ' Mejía  López ',
+  document: '0801-1990-12345',
+  phone: '9999-9999',
+  email: ' ana@gmail.com ',
+  paymentMethod: 'transferencia' as const,
+  acceptsTerms: true,
+}
 
 const buildRequest = (overrides: Partial<PlanRequest> = {}): PlanRequest => ({
   firstName: 'Ana',
@@ -27,36 +39,64 @@ const withPlainSpaces = (text: string) => text.replace(/[^\S\n]/g, ' ')
 const asLines = (rows: { label: string; value: string }[]) =>
   rows.map(({ label, value }) => withPlainSpaces(`${label}: ${value}`))
 
-describe('toPlanRequest', () => {
-  it('deja los datos listos para enviar: sin espacios sobrantes, el documento en dígitos y el celular completo', () => {
+describe('toPlanApplicant', () => {
+  it('deja los datos de la persona listos: sin espacios sobrantes, el documento en dígitos y el celular completo', () => {
     // Arrange
-    const written = {
-      firstName: '  Ana   María ',
-      lastName: ' Mejía  López ',
-      document: '0801-1990-12345',
-      phone: '9999-9999',
-      email: ' ana@gmail.com ',
-      paymentMethod: 'transferencia' as const,
-      acceptsTerms: true,
-    }
+    const written = WRITTEN
 
     // Act
-    const request = toPlanRequest(written, written.paymentMethod)
+    const applicant = toPlanApplicant(written)
 
     // Assert
-    expect(request).toEqual({
+    expect(applicant).toEqual({
       firstName: 'Ana María',
       lastName: 'Mejía López',
       document: '0801199012345',
       phone: '+50499999999',
       email: 'ana@gmail.com',
-      paymentMethod: 'transferencia',
     })
   })
 })
 
+describe('toPlanRequest', () => {
+  it('añade a los datos de la persona la forma de pago elegida', () => {
+    // Arrange
+    const written = WRITTEN
+
+    // Act
+    const request = toPlanRequest(written, written.paymentMethod)
+
+    // Assert
+    expect(request).toEqual({ ...toPlanApplicant(written), paymentMethod: 'transferencia' })
+  })
+})
+
+describe('describeApplicant', () => {
+  it('dice quién pide el plan: nombre, celular y correo', () => {
+    // Arrange
+    const applicant = buildRequest()
+
+    // Act
+    const rows = describeApplicant(applicant)
+
+    // Assert
+    expect(asLines(rows)).toEqual(['Nombre: Ana Mejía', 'Celular: +504 9999-9999', 'Correo: ana@gmail.com'])
+  })
+
+  it('si la persona dio su documento, lo incluye diciendo si es DNI o RTN', () => {
+    // Arrange
+    const applicants = [buildRequest({ document: '0801199012345' }), buildRequest({ document: '08011990123456' })]
+
+    // Act
+    const documents = applicants.map((applicant) => asLines(describeApplicant(applicant))[1])
+
+    // Assert
+    expect(documents).toEqual(['Documento: DNI 0801199012345', 'Documento: RTN 08011990123456'])
+  })
+})
+
 describe('describePlanRequest', () => {
-  it('dice qué plan se pide, cuánto se paga al mes, cómo y quién lo pide', () => {
+  it('dice qué plan se pide, cuánto se paga al mes y cómo, y después quién lo pide', () => {
     // Arrange
     const request = buildRequest()
 
@@ -68,21 +108,8 @@ describe('describePlanRequest', () => {
       'Plan: Agente Pro',
       'Total al mes: L 688.85',
       'Forma de pago: Tarjeta de débito o crédito',
-      'Nombre: Ana Mejía',
-      'Celular: +504 9999-9999',
-      'Correo: ana@gmail.com',
+      ...asLines(describeApplicant(request)),
     ])
-  })
-
-  it('si la persona dio su documento, lo incluye diciendo si es DNI o RTN', () => {
-    // Arrange
-    const requests = [buildRequest({ document: '0801199012345' }), buildRequest({ document: '08011990123456' })]
-
-    // Act
-    const documents = requests.map((request) => asLines(describePlanRequest(PRO, request))[4])
-
-    // Assert
-    expect(documents).toEqual(['Documento: DNI 0801199012345', 'Documento: RTN 08011990123456'])
   })
 
   it('refleja el plan y la forma de pago elegidos', () => {
@@ -96,13 +123,13 @@ describe('describePlanRequest', () => {
     expect(lines.slice(0, 3)).toEqual([
       'Plan: Agente Élite',
       'Total al mes: L 1,148.85',
-      'Forma de pago: Transferencia o depósito',
+      'Forma de pago: Transferencia bancaria',
     ])
   })
 })
 
 describe('buildPlanRequestMessage', () => {
-  it('saluda diciendo qué se quiere y, debajo, lleva la misma solicitud que se revisó en pantalla', () => {
+  it('saluda diciendo qué se quiere y, debajo, lleva la solicitud dato a dato', () => {
     // Arrange
     const request = buildRequest({ document: '0801199012345' })
 

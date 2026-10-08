@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { CHECKOUT_STEPS, CHECKOUT_STEP_FIELDS } from '@/features/shop/utils/checkoutSteps'
 
 describe('CHECKOUT_STEPS', () => {
-  it('la contratación va en tres pasos: los datos, el pago y la confirmación', () => {
+  it('la contratación va en tres pasos: los datos de suscripción, el resumen y el medio de pago', () => {
     // Arrange
-    const expectedSteps = ['Tus datos', 'Pago', 'Confirmación']
+    const expectedSteps = ['Datos de suscripción', 'Resumen', 'Medio de pago']
 
     // Act
     const steps = CHECKOUT_STEPS
@@ -14,18 +14,18 @@ describe('CHECKOUT_STEPS', () => {
     expect(CHECKOUT_STEP_FIELDS).toHaveLength(expectedSteps.length)
   })
 
-  it('el primer paso pide a la persona; el segundo, cómo paga; el tercero, aceptar los términos', () => {
+  it('el primer paso pide a la persona; el resumen, aceptar los términos; el último, cómo paga', () => {
     // Arrange
-    const [person, payment, confirmation] = CHECKOUT_STEP_FIELDS
+    const [subscription, summary, payment] = CHECKOUT_STEP_FIELDS
 
     // Act
-    const fieldsByStep = { person, payment, confirmation }
+    const fieldsByStep = { subscription, summary, payment }
 
     // Assert
     expect(fieldsByStep).toEqual({
-      person: ['firstName', 'lastName', 'document', 'phone', 'email'],
+      subscription: ['firstName', 'lastName', 'document', 'phone', 'email'],
+      summary: ['acceptsTerms'],
       payment: ['paymentMethod'],
-      confirmation: ['acceptsTerms'],
     })
   })
 

@@ -10,7 +10,9 @@ import CardPaymentDemo from '@/features/shop/components/CardPaymentDemo'
 import CardPaymentDemoReceipt from '@/features/shop/components/CardPaymentDemoReceipt'
 import CheckoutPaymentFields from '@/features/shop/components/CheckoutPaymentFields'
 import CheckoutPersonFields from '@/features/shop/components/CheckoutPersonFields'
-import CheckoutReview from '@/features/shop/components/CheckoutReview'
+import CheckoutPurchaseDetail from '@/features/shop/components/CheckoutPurchaseDetail'
+import CouponBox from '@/features/shop/components/CouponBox'
+import PlanCostSummary from '@/features/shop/components/PlanCostSummary'
 import PlanRequestNotice from '@/features/shop/components/PlanRequestNotice'
 import { PAYMENT_MODE } from '@/features/shop/data/paymentMode'
 import type { PaymentMode } from '@/features/shop/data/paymentMode'
@@ -18,8 +20,7 @@ import { useCardPaymentDemo } from '@/features/shop/hooks/useCardPaymentDemo'
 import { useCheckoutForm } from '@/features/shop/hooks/useCheckoutForm'
 import type { AgentPlan } from '@/features/shop/types/plan.types'
 import { lastCardDigits } from '@/features/shop/utils/cardDemo'
-import { CHECKOUT_STEPS, CHECKOUT_STEP_FIELDS } from '@/features/shop/utils/checkoutSteps'
-import { toPlanRequest } from '@/features/shop/utils/planRequest'
+import { CHECKOUT_STEP, CHECKOUT_STEPS, CHECKOUT_STEP_FIELDS } from '@/features/shop/utils/checkoutSteps'
 import { toPlanTotal } from '@/features/shop/utils/planTotal'
 import { useInvalidFieldFocus } from '@/hooks/useInvalidFieldFocus'
 import { useSteps } from '@/hooks/useSteps'
@@ -37,9 +38,9 @@ interface FinalAction {
 }
 
 /**
- * Contratar un plan en tres pasos: los datos de la persona, el resumen con la forma de pago y la
- * confirmación. El último pide el plan por WhatsApp; con tarjeta y solo como demostración de diseño,
- * muestra una pantalla de pago que no cobra nada.
+ * Contratar un plan en tres pasos: los datos de suscripción, el resumen y el medio de pago, con el resumen
+ * de compra siempre a un lado. El último paso pide el plan por WhatsApp; con tarjeta y solo como
+ * demostración de diseño, muestra una pantalla de pago que no cobra nada.
  */
 const CheckoutSteps = ({ plan, paymentMode = PAYMENT_MODE }: CheckoutStepsProps) => {
   const { values, errors, chatUrl, change, validate, submit } = useCheckoutForm(plan)
@@ -95,43 +96,73 @@ const CheckoutSteps = ({ plan, paymentMode = PAYMENT_MODE }: CheckoutStepsProps)
     >
       <StepIndicator label="Pasos para contratar" steps={CHECKOUT_STEPS} current={steps.current} />
 
-      <StepScreen
-        key={steps.current}
-        heading={`Paso ${steps.current + 1} de ${CHECKOUT_STEPS.length}: ${CHECKOUT_STEPS[steps.current]}`}
-        direction={steps.direction}
-        isEntering={steps.hasMoved}
-      >
-        {steps.current === 0 && <CheckoutPersonFields values={values} errors={errors} change={change} />}
-        {steps.current === 1 && <CheckoutPaymentFields plan={plan} values={values} errors={errors} change={change} />}
-        {/* A la confirmación solo se llega con la forma de pago ya elegida. */}
-        {steps.isLast && values.paymentMethod !== '' && (
-          <>
-            {paysWithDemoCard ? (
-              <CardPaymentDemo total={total} values={card.values} errors={card.errors} change={card.change} />
-            ) : (
-              <CheckoutReview plan={plan} request={toPlanRequest(values, values.paymentMethod)} />
+      {/*
+        En pantallas anchas, el paso va a la izquierda y el resumen de compra a la derecha, acompañándolo. En
+        un teléfono van en este orden: el paso, el resumen y los botones, para ver cuánto se paga antes de seguir.
+        La tercera fila se queda con lo que el resumen tenga de más alto, y así los botones siguen junto al paso.
+      */}
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_auto_1fr]">
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+          <StepScreen
+            key={steps.current}
+            heading={`Paso ${steps.current + 1} de ${CHECKOUT_STEPS.length}: ${CHECKOUT_STEPS[steps.current]}`}
+            // El indicador de arriba ya dice a la vista en qué paso se está.
+            hideHeading
+            direction={steps.direction}
+            isEntering={steps.hasMoved}
+          >
+            {steps.current === CHECKOUT_STEP.subscription && (
+              <CheckoutPersonFields values={values} errors={errors} change={change} />
             )}
-            <TermsCheckboxField
-              checked={values.acceptsTerms}
-              error={errors.acceptsTerms}
-              onChange={(checked) => change('acceptsTerms', checked)}
-            />
-          </>
-        )}
-      </StepScreen>
-
-      <div className="grid gap-4">
-        {hasStepErrors && <p className="text-sm text-destructive">Revisa los campos marcados antes de continuar.</p>}
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {steps.isFirst ? <span /> : <StepBackButton onClick={steps.back} />}
-          <Button type="submit" size="lg" className="h-11 px-6 text-base">
-            <action.icon aria-hidden="true" />
-            {action.label}
-          </Button>
+            {steps.current === CHECKOUT_STEP.summary && <CheckoutPurchaseDetail plan={plan} />}
+            {steps.current === CHECKOUT_STEP.payment && (
+              <>
+                <CheckoutPaymentFields paymentMode={paymentMode} values={values} errors={errors} change={change} />
+                {paysWithDemoCard && (
+                  <CardPaymentDemo total={total} values={card.values} errors={card.errors} change={card.change} />
+                )}
+              </>
+            )}
+          </StepScreen>
         </div>
 
-        {steps.isLast && !paysWithDemoCard && <PlanRequestNotice chatUrl={chatUrl} />}
+        <aside
+          aria-label="Resumen de compra"
+          className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-3 lg:row-start-1"
+        >
+          <PlanCostSummary plan={plan}>
+            {/* En el resumen se cierra la compra: aquí va el código de descuento y se aceptan los términos. */}
+            {steps.current === CHECKOUT_STEP.summary && (
+              <>
+                <CouponBox />
+                <TermsCheckboxField
+                  lead="Declaro conocer y aceptar los"
+                  linkLabel="Términos y Condiciones de uso"
+                  multiline
+                  checked={values.acceptsTerms}
+                  error={errors.acceptsTerms}
+                  onChange={(checked) => change('acceptsTerms', checked)}
+                />
+              </>
+            )}
+          </PlanCostSummary>
+        </aside>
+
+        <div className="grid gap-4 lg:col-start-1 lg:row-start-2">
+          {hasStepErrors && (
+            <p className="text-sm text-destructive">Revisa los campos marcados antes de continuar.</p>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {steps.isFirst ? <span /> : <StepBackButton onClick={steps.back} />}
+            <Button type="submit" size="lg" className="h-11 px-6 text-base">
+              <action.icon aria-hidden="true" />
+              {action.label}
+            </Button>
+          </div>
+
+          {steps.isLast && !paysWithDemoCard && <PlanRequestNotice chatUrl={chatUrl} />}
+        </div>
       </div>
     </form>
   )

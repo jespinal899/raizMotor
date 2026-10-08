@@ -5,14 +5,7 @@ import CheckoutSteps from '@/features/shop/components/CheckoutSteps'
 import type { PaymentMode } from '@/features/shop/data/paymentMode'
 import { AGENT_PLANS } from '@/features/shop/data/plans.data'
 import { planRequestService } from '@/features/shop/services/planRequestService'
-import {
-  CARD,
-  TRANSFER,
-  checkoutForm,
-  completePersonStep,
-  fillPerson,
-  reachConfirmation,
-} from '@/test/checkoutForm'
+import { CARD, TRANSFER, checkoutForm, completePersonStep, fillPerson, reachPayment } from '@/test/checkoutForm'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
 vi.mock('@/features/shop/services/planRequestService', () => ({ planRequestService: { open: vi.fn() } }))
@@ -30,6 +23,14 @@ const setup = (paymentMode: PaymentMode = 'whatsapp') => {
 // El símbolo y la cifra van separados por un espacio de no separación.
 const textOf = (element: HTMLElement) => element.textContent?.replace(/\s+/g, ' ').trim() ?? ''
 
+/** Los datos de una lista, cada uno con su valor. */
+const rowsOf = (container: HTMLElement) =>
+  within(container)
+    .getAllByRole('term')
+    .map((term) => `${term.textContent}: ${textOf(term.nextElementSibling as HTMLElement)}`)
+
+const COST_ROWS = ['Subtotal: L 599.00', 'ISV (15 %): L 89.85', 'Total: L 688.85']
+
 // Recorrer los pasos lleva varias interacciones: se da más margen que el de una prueba normal.
 describe('CheckoutSteps', { timeout: 20_000 }, () => {
   beforeEach(() => {
@@ -37,20 +38,29 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     open.mockReturnValue(CHAT_URL)
   })
 
-  it('anuncia los tres pasos y empieza por los datos de la persona', async () => {
-    // Arrange: formulario recién abierto
+  it('anuncia los tres pasos, numerados y en orden, y empieza por los datos de suscripción', async () => {
+    // Arrange
+    const expectedSteps = ['Paso 1: Datos de suscripción', 'Paso 2: Resumen', 'Paso 3: Medio de pago']
 
     // Act
     setup()
 
     // Assert
     const steps = within(screen.getByRole('navigation', { name: 'Pasos para contratar' })).getAllByRole('listitem')
-    const expectedSteps = ['Paso 1: Tus datos', 'Paso 2: Pago', 'Paso 3: Confirmación']
     expect(steps).toHaveLength(expectedSteps.length)
     steps.forEach((step, position) => expect(step).toHaveTextContent(expectedSteps[position]))
     expect(steps[0]).toHaveAttribute('aria-current', 'step')
-    expect(await checkoutForm.step(1, 'Tus datos')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Atrás' })).not.toBeInTheDocument()
+  })
+
+  it('el paso no repite su nombre a la vista: ya lo dice el indicador, y el rótulo queda solo para lectores de pantalla', async () => {
+    // Arrange: formulario recién abierto
+
+    // Act
+    setup()
+
+    // Assert
+    expect(await checkoutForm.step(1, 'Datos de suscripción')).toHaveClass('sr-only')
   })
 
   it('el paso 1 pide nombre y apellido por separado, el DNI o RTN como opcional, el celular y el correo', () => {
@@ -65,6 +75,19 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     expect(checkoutForm.document()).toHaveAccessibleName(/opcional/)
     expect(checkoutForm.phone()).toHaveAttribute('type', 'tel')
     expect(checkoutForm.email()).toHaveAttribute('type', 'email')
+  })
+
+  it('junto a los datos de suscripción va el resumen de compra, todavía sin casillas', () => {
+    // Arrange: formulario recién abierto
+
+    // Act
+    setup()
+
+    // Assert
+    expect(textOf(checkoutForm.summary())).toContain('Agente Pro L 599 + ISV')
+    expect(within(checkoutForm.summary()).getByText('Suscripción mensual')).toBeInTheDocument()
+    expect(rowsOf(checkoutForm.summary())).toEqual(COST_ROWS)
+    expect(within(checkoutForm.summary()).queryByRole('checkbox')).not.toBeInTheDocument()
   })
 
   it('no deja pasar del paso 1 sin los datos y señala lo que falta, salvo el documento', async () => {
@@ -95,7 +118,7 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     expect(checkoutForm.document()).toHaveAccessibleDescription('Escribe los 13 dígitos del DNI o los 14 del RTN.')
   })
 
-  it('el paso 2 resume el plan con su total al mes y pide la forma de pago', async () => {
+  it('el paso 2 es el detalle de compra: el plan de pago mensual, con su facturación y su precio sin impuesto', async () => {
     // Arrange
     const { user } = setup()
 
@@ -103,14 +126,37 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     await completePersonStep(user)
 
     // Assert
-    const summary = screen.getByRole('region', { name: 'Resumen de tu plan' })
-    expect(within(summary).getByText('Agente Pro')).toBeInTheDocument()
-    expect(textOf(within(summary).getByText('Total al mes').nextElementSibling as HTMLElement)).toBe('L 688.85')
-    expect(checkoutForm.method(CARD)).toHaveAccessibleDescription(/enlace de pago seguro/)
-    expect(checkoutForm.method(TRANSFER)).toHaveAccessibleDescription(/cuenta en BAC Credomatic/)
+    const detail = screen.getByRole('region', { name: 'Detalle de compra' })
+    expect(within(detail).getByText('Revisa los detalles de tu suscripción.')).toBeInTheDocument()
+    const billing = [...(within(detail).getByText('Mensual').parentElement as HTMLElement).children]
+    expect(billing.map((line) => textOf(line as HTMLElement))).toEqual([
+      'Mensual',
+      'Facturación mensual',
+      'L 599 + ISV',
+    ])
+    expect(screen.queryByRole('region', { name: 'Tus datos' })).not.toBeInTheDocument()
   })
 
-  it('no deja pasar del paso 2 sin elegir cómo pagar', async () => {
+  it('en el paso 2 el resumen de compra lleva la casilla del código de descuento y la de los términos', async () => {
+    // Arrange
+    const { user } = setup()
+
+    // Act
+    await completePersonStep(user)
+
+    // Assert
+    expect(rowsOf(checkoutForm.summary())).toEqual(COST_ROWS)
+    expect(within(checkoutForm.summary()).getAllByRole('checkbox')).toEqual([
+      checkoutForm.hasDiscountCode(),
+      checkoutForm.terms(),
+    ])
+    expect(within(checkoutForm.summary()).getByRole('link', { name: 'Términos y Condiciones de uso' })).toHaveAttribute(
+      'href',
+      '/terminos',
+    )
+  })
+
+  it('sin aceptar los términos no se pasa al pago', async () => {
     // Arrange
     const { user } = setup()
     await completePersonStep(user)
@@ -119,9 +165,24 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     await user.click(checkoutForm.next())
 
     // Assert
-    expect(screen.getByRole('radiogroup', { name: 'Forma de pago' })).toHaveAccessibleDescription(
-      'Elige cómo quieres pagar.',
-    )
+    expect(checkoutForm.terms()).toHaveAccessibleDescription('Acepta los términos y condiciones para continuar.')
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument()
+  })
+
+  it('marcar que se tiene un código muestra dónde escribirlo; aplicarlo no cambia el total: todavía no hay códigos', async () => {
+    // Arrange
+    const { user } = setup()
+    await completePersonStep(user)
+    await user.click(checkoutForm.hasDiscountCode())
+    await user.type(checkoutForm.coupon(), 'PROMO10')
+
+    // Act
+    await user.click(checkoutForm.applyCoupon())
+
+    // Assert
+    expect(checkoutForm.coupon()).toHaveAccessibleDescription('Ese código de descuento no es válido.')
+    expect(rowsOf(checkoutForm.summary())).toEqual(COST_ROWS)
+    expect(open).not.toHaveBeenCalled()
   })
 
   it('se puede volver al paso anterior sin perder lo escrito', async () => {
@@ -133,52 +194,46 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     await user.click(checkoutForm.back())
 
     // Assert
-    expect(await checkoutForm.step(1, 'Tus datos')).toBeInTheDocument()
+    expect(await checkoutForm.step(1, 'Datos de suscripción')).toBeInTheDocument()
     expect(checkoutForm.firstName()).toHaveValue('Ana')
     expect(checkoutForm.phone()).toHaveValue('9999-9999')
   })
 
-  it('el paso 3 muestra la solicitud completa para revisarla antes de enviarla', async () => {
+  it('el paso 3 se titula "Medios de pago" y ofrece la tarjeta o la transferencia bancaria, con el resumen al lado', async () => {
     // Arrange
     const { user } = setup()
 
     // Act
-    await reachConfirmation(user, { document: '0801199012345', method: TRANSFER })
+    await reachPayment(user)
 
     // Assert
-    const review = screen.getByRole('region', { name: 'Revisa tu solicitud' })
-    const rows = within(review)
-      .getAllByRole('term')
-      .map((term) => `${term.textContent}: ${textOf(term.nextElementSibling as HTMLElement)}`)
-    expect(rows).toEqual([
-      'Plan: Agente Pro',
-      'Total al mes: L 688.85',
-      'Forma de pago: Transferencia o depósito',
-      'Nombre: Ana Mejía',
-      'Documento: DNI 0801199012345',
-      'Celular: +504 9999-9999',
-      'Correo: ana@gmail.com',
-    ])
+    const payment = screen.getByRole('region', { name: 'Medios de pago' })
+    expect(within(payment).getByText('Elige cómo quieres pagar.')).toBeInTheDocument()
+    expect(checkoutForm.methods()).toHaveAccessibleName('Selecciona el medio de pago que deseas usar')
+    expect(checkoutForm.method(CARD)).toHaveAccessibleDescription(/enlace de pago seguro/)
+    expect(checkoutForm.method(TRANSFER)).toHaveAccessibleDescription(/cuenta en BAC Credomatic/)
+    expect(rowsOf(checkoutForm.summary())).toEqual(COST_ROWS)
+    expect(within(checkoutForm.summary()).queryByRole('checkbox')).not.toBeInTheDocument()
   })
 
-  it('sin aceptar los términos no abre WhatsApp', async () => {
+  it('sin elegir el medio de pago no abre WhatsApp', async () => {
     // Arrange
     const { user } = setup()
-    await reachConfirmation(user)
+    await reachPayment(user)
 
     // Act
     await user.click(checkoutForm.send())
 
     // Assert
     expect(open).not.toHaveBeenCalled()
-    expect(checkoutForm.terms()).toHaveAccessibleDescription('Acepta los términos y condiciones para continuar.')
+    expect(checkoutForm.methods()).toHaveAccessibleDescription('Elige cómo quieres pagar.')
   })
 
-  it('con los términos aceptados abre WhatsApp con la solicitud del plan', async () => {
+  it('con el medio de pago elegido abre WhatsApp con la solicitud del plan', async () => {
     // Arrange
     const { user } = setup()
-    await reachConfirmation(user, { method: TRANSFER })
-    await user.click(checkoutForm.terms())
+    await reachPayment(user)
+    await user.click(checkoutForm.method(TRANSFER))
 
     // Act
     await user.click(checkoutForm.send())
@@ -197,8 +252,8 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
   it('después recuerda que falta enviar el mensaje y ofrece abrir el chat de nuevo, sin dar nada por recibido', async () => {
     // Arrange
     const { user } = setup()
-    await reachConfirmation(user)
-    await user.click(checkoutForm.terms())
+    await reachPayment(user)
+    await user.click(checkoutForm.method(CARD))
 
     // Act
     await user.click(checkoutForm.send())
@@ -210,17 +265,18 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     expect(screen.queryByText(/recibimos|pago exitoso|plan activado/i)).not.toBeInTheDocument()
   })
 
-  it('en el sitio publicado, pagar con tarjeta también termina en WhatsApp: no hay pantalla de pago', async () => {
+  it('en el sitio publicado, elegir tarjeta no abre ninguna pantalla de pago ni habla de suscribir una tarjeta', async () => {
     // Arrange
     const { user } = setup('whatsapp')
+    await reachPayment(user)
 
     // Act
-    await reachConfirmation(user, { method: CARD })
+    await user.click(checkoutForm.method(CARD))
 
     // Assert
     expect(checkoutForm.send()).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: 'Número de tarjeta' })).not.toBeInTheDocument()
-    expect(screen.queryByText(/Demostración/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Demostración|Suscribe tu tarjeta/)).not.toBeInTheDocument()
   })
 })
 
@@ -243,12 +299,26 @@ describe('CheckoutSteps: demostración del pago con tarjeta', { timeout: 20_000 
     open.mockReset()
   })
 
-  it('con tarjeta, el paso 3 es una pantalla de pago marcada como demostración que no cobra nada', async () => {
+  it('el paso 3 invita a suscribir la tarjeta y a elegir cuál usar', async () => {
     // Arrange
     const { user } = setup('demo')
 
     // Act
-    await reachConfirmation(user, { method: CARD })
+    await reachPayment(user)
+
+    // Assert
+    const payment = screen.getByRole('region', { name: 'Medios de pago' })
+    expect(within(payment).getByText('Suscribe tu tarjeta de forma rápida y fácil.')).toBeInTheDocument()
+    expect(checkoutForm.methods()).toHaveAccessibleName('Selecciona la tarjeta que deseas usar')
+  })
+
+  it('al elegir tarjeta aparece la pantalla de pago, marcada como demostración que no cobra nada', async () => {
+    // Arrange
+    const { user } = setup('demo')
+    await reachPayment(user)
+
+    // Act
+    await user.click(checkoutForm.method(CARD))
 
     // Assert
     expect(screen.getByRole('note')).toHaveTextContent('Demostración del pago con tarjeta')
@@ -260,8 +330,8 @@ describe('CheckoutSteps: demostración del pago con tarjeta', { timeout: 20_000 
   it('no pasa a la confirmación de muestra sin los datos de la tarjeta', async () => {
     // Arrange
     const { user } = setup('demo')
-    await reachConfirmation(user, { method: CARD })
-    await user.click(checkoutForm.terms())
+    await reachPayment(user)
+    await user.click(checkoutForm.method(CARD))
 
     // Act
     await user.click(checkoutForm.pay())
@@ -276,9 +346,9 @@ describe('CheckoutSteps: demostración del pago con tarjeta', { timeout: 20_000 
   it('al pulsar pagar muestra la confirmación de muestra, que dice que no se hizo ningún cobro, y no abre WhatsApp', async () => {
     // Arrange
     const { user } = setup('demo')
-    await reachConfirmation(user, { method: CARD })
+    await reachPayment(user)
+    await user.click(checkoutForm.method(CARD))
     await fillCard(user)
-    await user.click(checkoutForm.terms())
 
     // Act
     await user.click(checkoutForm.pay())
@@ -287,17 +357,21 @@ describe('CheckoutSteps: demostración del pago con tarjeta', { timeout: 20_000 
     const receipt = await screen.findByRole('status')
     expect(receipt).toHaveTextContent('Pago de demostración')
     expect(receipt).toHaveTextContent('No se hizo ningún cobro')
-    expect(textOf(receipt)).toContain('Tarjeta terminada en 4242')
-    expect(textOf(receipt)).toContain('L 688.85')
+    expect(rowsOf(receipt)).toEqual([
+      'Plan: Agente Pro',
+      'Total al mes: L 688.85',
+      'Forma de pago: Tarjeta terminada en 4242',
+    ])
     expect(open).not.toHaveBeenCalled()
   })
 
-  it('con transferencia, el paso 3 sigue siendo la solicitud por WhatsApp', async () => {
+  it('con transferencia no hay pantalla de pago: la solicitud sale por WhatsApp', async () => {
     // Arrange
     const { user } = setup('demo')
+    await reachPayment(user)
 
     // Act
-    await reachConfirmation(user, { method: TRANSFER })
+    await user.click(checkoutForm.method(TRANSFER))
 
     // Assert
     expect(checkoutForm.send()).toBeInTheDocument()

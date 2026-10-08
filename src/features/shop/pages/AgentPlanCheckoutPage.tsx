@@ -2,7 +2,6 @@ import { SearchX } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import BackLink from '@/components/BackLink'
 import ButtonLink from '@/components/ButtonLink'
-import PageHeader from '@/components/PageHeader'
 import PageMessage from '@/components/PageMessage'
 import Container from '@/components/layout/Container'
 import CheckoutSteps from '@/features/shop/components/CheckoutSteps'
@@ -17,8 +16,9 @@ const BACK_TO_PLANS = 'Ver los planes para agentes'
 const AgentPlanCheckoutPage = () => {
   const { plan: planId } = useParams()
   const plan = AGENT_PLANS.find(({ id }) => id === planId)
+  const title = plan ? `Contratar ${plan.name}` : NOT_FOUND_TITLE
 
-  usePageTitle(plan ? `Contratar ${plan.name}` : NOT_FOUND_TITLE)
+  usePageTitle(title)
 
   if (!plan) {
     return (
@@ -33,15 +33,10 @@ const AgentPlanCheckoutPage = () => {
   }
 
   return (
-    <Container className="grid max-w-3xl gap-8 py-10">
-      <div className="grid gap-4">
-        <BackLink to={ROUTES.agentPlans}>{BACK_TO_PLANS}</BackLink>
-        <PageHeader
-          title="Contratar"
-          highlight={plan.name}
-          description="Tres pasos: tus datos, el resumen con la forma de pago y la confirmación."
-        />
-      </div>
+    <Container className="grid max-w-5xl gap-8 py-10">
+      <BackLink to={ROUTES.agentPlans}>{BACK_TO_PLANS}</BackLink>
+      {/* La página no lleva título a la vista: empieza por el indicador de pasos y el resumen dice qué plan es. */}
+      <h1 className="sr-only">{title}</h1>
 
       {/* La clave reinicia el formulario al pasar de un plan a otro. */}
       <CheckoutSteps key={plan.id} plan={plan} />
