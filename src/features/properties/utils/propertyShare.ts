@@ -1,9 +1,8 @@
 import type { Property } from '@/features/properties/types/property.types'
 import { formatPrice, formatPriceInLempiras } from '@/shared/utils/format'
+import { whatsAppUrl } from '@/shared/utils/whatsApp'
 
 type ShareSource = Pick<Property, 'title' | 'price' | 'operation' | 'district' | 'city'>
-
-const WHATSAPP_SHARE_URL = 'https://wa.me/'
 
 /**
  * Resumen de una línea que acompaña al enlace al compartir la ficha: título, precio y ubicación. El precio
@@ -20,9 +19,4 @@ export const buildShareText = ({ title, price, operation, district, city }: Shar
  * Dirección que abre WhatsApp con el resumen y el enlace ya escritos. No lleva número: quien comparte
  * elige a quién enviarlo.
  */
-export const buildWhatsAppShareUrl = (text: string, url: string): string => {
-  const share = new URL(WHATSAPP_SHARE_URL)
-  share.searchParams.set('text', `${text}\n${url}`)
-
-  return share.href
-}
+export const buildWhatsAppShareUrl = (text: string, url: string): string => whatsAppUrl(`${text}\n${url}`)

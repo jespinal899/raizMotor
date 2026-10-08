@@ -1,17 +1,15 @@
 import { useId } from 'react'
 import type { FormEvent } from 'react'
 import { ReceiptText } from 'lucide-react'
-import CheckboxField from '@/components/CheckboxField'
 import EmailField from '@/components/EmailField'
 import PhoneField from '@/components/PhoneField'
 import SubmitButton from '@/components/SubmitButton'
+import TermsCheckboxField from '@/components/TermsCheckboxField'
 import TextField from '@/components/TextField'
-import TextLink from '@/components/TextLink'
 import QuoteFormAlert from '@/features/properties/components/QuoteFormAlert'
 import { useQuoteForm } from '@/features/properties/hooks/useQuoteForm'
 import type { QuoteApplicant } from '@/features/properties/types/quote.types'
 import { MAX_FULL_NAME_LENGTH } from '@/features/properties/utils/quoteValidation'
-import { ROUTES } from '@/shared/constants/routes'
 
 interface PropertyQuoteFormProps {
   /** Se resuelve cuando la solicitud queda entregada. La clave identifica el envío, para no registrarlo dos veces. */
@@ -74,20 +72,9 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
         readOnly={isSending}
       />
 
-      <CheckboxField
-        // Se abren en otra pestaña: salir de la ficha haría perder lo que ya se escribió en el formulario.
-        label={
-          <span>
-            Acepto los{' '}
-            {/* `leading-none`, como la etiqueta: con el interlineado de un botón la casilla crecería. */}
-            <TextLink to={ROUTES.terms} target="_blank" rel="noopener noreferrer" className="leading-none font-normal">
-              términos y condiciones
-            </TextLink>
-          </span>
-        }
-        error={errors.acceptsTerms}
-        name="terms"
+      <TermsCheckboxField
         checked={values.acceptsTerms}
+        error={errors.acceptsTerms}
         onChange={(checked) => change('acceptsTerms', checked)}
         readOnly={isSending}
       />
