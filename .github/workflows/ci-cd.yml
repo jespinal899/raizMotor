@@ -81,5 +81,15 @@ jobs:
       - name: Compilar para Vercel
         run: npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
 
+      # Si Vercel rechaza la publicación, su motivo sale como aviso del trabajo: se lee sin abrir el registro.
       - name: Publicar
-        run: npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        env:
+          NO_COLOR: 1
+        run: |
+          if ! npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN" > deploy.log 2>&1; then
+            cat deploy.log
+            reason="$(grep -i 'error' deploy.log | tail -n 3 | tr '\n' ' ')"
+            echo "::error title=Vercel no publicó::${reason:-Mira el registro de este paso.}"
+            exit 1
+          fi
+          cat deploy.log
