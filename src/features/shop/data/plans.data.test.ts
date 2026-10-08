@@ -92,6 +92,17 @@ describe('AGENT_PLANS', () => {
     expect(plans).toEqual(expectedPlans)
   })
 
+  it('cada tramo en negrita forma parte del texto de su punto: si no, la negrita se perdería sin avisar', () => {
+    // Arrange
+    const features = AGENT_PLANS.flatMap((plan) => plan.features)
+
+    // Act
+    const misplaced = features.filter(({ text, emphasized }) => emphasized !== undefined && !text.includes(emphasized))
+
+    // Assert
+    expect(misplaced).toEqual([])
+  })
+
   it('contratar un plan abre el contacto indicando cuál: todavía no hay pagos en línea', () => {
     // Arrange
     const expectedActions = [
