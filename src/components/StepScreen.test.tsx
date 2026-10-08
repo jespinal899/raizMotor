@@ -67,4 +67,30 @@ describe('StepScreen', () => {
     // Assert
     expect(heading().parentElement).toHaveClass(animation)
   })
+
+  it('puede no mostrar su título: sigue ahí para quien no ve la pantalla y recibe el foco igual', () => {
+    // Arrange
+    const isEntering = true
+
+    // Act
+    render(
+      <StepScreen heading={HEADING} direction="forward" isEntering={isEntering} hideHeading>
+        <p>Contenido del paso</p>
+      </StepScreen>,
+    )
+
+    // Assert
+    expect(heading()).toHaveClass('sr-only')
+    expect(heading()).toHaveFocus()
+  })
+
+  it('si no se pide otra cosa, el título va a la vista', () => {
+    // Arrange: pantalla de un paso
+
+    // Act
+    setup()
+
+    // Assert
+    expect(heading()).not.toHaveClass('sr-only')
+  })
 })
