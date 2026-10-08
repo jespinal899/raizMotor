@@ -15,7 +15,7 @@ describe('PlanMonthlyPrice', () => {
     render(<PlanMonthlyPrice lempiras={lempiras} />)
 
     // Assert
-    expect(textOf(screen.getByText(/^L\s/).parentElement as HTMLElement)).toBe('L 599/mes + ISV mensual')
+    expect(textOf(screen.getByText(/^L\s/).parentElement as HTMLElement)).toBe('L 599/mes + ISV')
   })
 
   it('no agrega un precio equivalente en otra moneda', () => {

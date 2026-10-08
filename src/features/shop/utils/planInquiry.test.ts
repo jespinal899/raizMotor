@@ -17,7 +17,7 @@ describe('findPlanInquiry', () => {
     })
   })
 
-  it('a un plan para agentes le antepone a quién va dirigido y resume lo que incluye', () => {
+  it('describe un plan para agentes con su nombre, que ya dice a quién va dirigido, y resume lo que incluye', () => {
     // Arrange
     const id = 'agente-plan-1'
 
@@ -27,7 +27,7 @@ describe('findPlanInquiry', () => {
     // Assert
     expect(inquiry).toEqual({
       id: 'agente-plan-1',
-      name: 'Agente inmobiliario · Agente Pro',
+      name: 'Agente Pro',
       detail: 'Hasta 25 propiedades activas · 1 usuario por agente inmobiliario',
     })
   })

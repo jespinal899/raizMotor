@@ -106,9 +106,9 @@ describe('AgentPlansPage', () => {
     expect(within(reasons).queryByText(/renovación automática/i)).not.toBeInTheDocument()
   })
 
-  it('cada plan dice su precio mensual en lempiras, sin el impuesto, y su equivalente en dólares', () => {
-    // Arrange: el precio y su equivalente van en dos líneas
-    const expectedPrices = ['L 599/mes + ISV mensual', 'L 999/mes + ISV mensual']
+  it('cada plan dice su precio mensual en lempiras, sin el impuesto y sin equivalente en otra moneda', () => {
+    // Arrange
+    const expectedPrices = ['L 599/mes + ISV', 'L 999/mes + ISV']
 
     // Act
     renderWithRouter(<AgentPlansPage />, { route: ROUTE })
@@ -116,6 +116,7 @@ describe('AgentPlansPage', () => {
     // Assert
     PLAN_NAMES.forEach((name, index) => {
       expect(textOfCard(name)).toContain(expectedPrices[index])
+      expect(textOfCard(name)).not.toContain('mensual')
       expect(within(planCard(name)).queryByText(/^≈/)).not.toBeInTheDocument()
     })
   })

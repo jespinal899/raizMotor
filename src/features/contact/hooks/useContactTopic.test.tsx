@@ -77,8 +77,8 @@ describe('useContactTopic', () => {
     // Assert
     expect(result.current.topic).toMatchObject({
       id: 'plan:agente-plan-2',
-      title: 'Agente inmobiliario · Agente Élite',
-      defaultDescription: 'Me interesa el plan Agente inmobiliario · Agente Élite. ¿Me pueden dar más información?',
+      title: 'Agente Élite',
+      defaultDescription: 'Me interesa el plan Agente Élite. ¿Me pueden dar más información?',
     })
   })
 

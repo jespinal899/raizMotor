@@ -3,9 +3,6 @@ import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLi
 import type { AgentPlan, AgentPlanId, Plan } from '@/features/shop/types/plan.types'
 import { ROUTES, planContactPath } from '@/shared/constants/routes'
 
-/** A quién van dirigidos los planes de pago para agentes; también los identifica al consultar por uno. */
-export const AGENT_AUDIENCE = 'Agente inmobiliario'
-
 export const PLANS: Plan[] = [
   {
     id: 'propietario',
@@ -18,7 +15,7 @@ export const PLANS: Plan[] = [
   },
   {
     id: 'agente',
-    name: AGENT_AUDIENCE,
+    name: 'Agente inmobiliario',
     description:
       'Impulsa tu carrera. Publica tu cartera de propiedades y accede a un panel exclusivo para administrar, ' +
       'dar seguimiento y ver reportes de tus anuncios. La herramienta definitiva para cerrar más ventas.',
