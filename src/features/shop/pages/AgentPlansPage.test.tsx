@@ -114,6 +114,28 @@ describe('AgentPlansPage', () => {
     expect(within(title).getByText(BRAND.name)).toHaveClass('text-primary')
   })
 
+  it('los planes van antes que los motivos en el documento, para que en un teléfono se vean primero', () => {
+    // Arrange: página de planes para agentes
+
+    // Act
+    renderWithRouter(<AgentPlansPage />, { route: ROUTE })
+
+    // Assert
+    const firstPlan = planCard(PLAN_NAMES[0])
+    const reasonsComeLater = firstPlan.compareDocumentPosition(reasonsPanel()) & Node.DOCUMENT_POSITION_FOLLOWING
+    expect(reasonsComeLater).toBeTruthy()
+  })
+
+  it('en pantallas anchas el panel de motivos pasa a la primera columna, a la izquierda de los planes', () => {
+    // Arrange: página de planes para agentes
+
+    // Act
+    renderWithRouter(<AgentPlansPage />, { route: ROUTE })
+
+    // Assert
+    expect(reasonsPanel()).toHaveClass('xl:order-first')
+  })
+
   it('cada plan dice su precio mensual en lempiras, sin el impuesto y sin equivalente en otra moneda', () => {
     // Arrange
     const expectedPrices = ['L 599/mes + ISV', 'L 999/mes + ISV']

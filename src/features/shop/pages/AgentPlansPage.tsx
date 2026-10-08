@@ -46,9 +46,20 @@ const AgentPlansPage = () => {
       </div>
 
       <section className="grid items-start gap-8 xl:grid-cols-[minmax(18rem,0.82fr)_minmax(0,1.18fr)] xl:gap-10">
+        {/* Los planes van primero en el documento: en un teléfono se ven antes que los motivos. En pantallas
+            anchas el panel de motivos pasa a la primera columna. */}
+        <PlanList plans={AGENT_PLANS} className="md:grid-cols-2">
+          {(plan) => (
+            <>
+              <PlanMonthlyPrice lempiras={plan.monthlyPrice} />
+              <PlanFeatures features={plan.features} />
+            </>
+          )}
+        </PlanList>
+
         <aside
           aria-labelledby="agent-plan-benefits-title"
-          className="h-fit rounded-2xl border border-primary/15 bg-transparent p-6 shadow-sm sm:p-8"
+          className="h-fit rounded-2xl border border-primary/15 bg-transparent p-6 shadow-sm sm:p-8 xl:order-first"
         >
           <h2 id="agent-plan-benefits-title" className="font-heading text-2xl font-semibold tracking-tight">
             ¿Por qué contratar en <span className="text-primary">{BRAND.name}</span>?
@@ -76,15 +87,6 @@ const AgentPlansPage = () => {
             </ul>
           </div>
         </aside>
-
-        <PlanList plans={AGENT_PLANS} className="md:grid-cols-2">
-          {(plan) => (
-            <>
-              <PlanMonthlyPrice lempiras={plan.monthlyPrice} />
-              <PlanFeatures features={plan.features} />
-            </>
-          )}
-        </PlanList>
       </section>
 
       <PlanHelp />
