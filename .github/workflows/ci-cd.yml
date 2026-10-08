@@ -1,0 +1,85 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+# Mínimo privilegio: el pipeline solo lee el código. Para publicar usa las credenciales de Vercel.
+permissions:
+  contents: read
+
+# En pull requests se cancela la ejecución anterior; en master nunca se interrumpe un despliegue.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Lint, pruebas y compilación
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Linter
+        run: npm run lint
+
+      - name: Pruebas unitarias
+        run: npm test
+
+      - name: Compilar
+        run: npm run build
+
+  # Solo publica lo que pasó el linter y las pruebas. Vercel ya no despliega por su cuenta: `vercel.json`
+  # desactiva su despliegue automático, para que este sea el único camino al sitio publicado.
+  deploy:
+    name: Publicar en Vercel
+    needs: verify
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Versión fija de la herramienta de Vercel: la misma en cada despliegue.
+      VERCEL_CLI: vercel@63.1.0
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      # Sin credenciales no hay forma de publicar: se dice a las claras en lugar de dar el despliegue por hecho.
+      - name: Comprobar las credenciales de Vercel
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::error title=No se publicó::Faltan los secretos VERCEL_TOKEN, VERCEL_ORG_ID o VERCEL_PROJECT_ID. Añádelos en Settings > Secrets and variables > Actions y vuelve a ejecutar este workflow."
+            exit 1
+          fi
+
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Traer la configuración del proyecto de Vercel
+        run: npx --yes "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Compilar para Vercel
+        run: npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
+
+      - name: Publicar
+        run: npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN"

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Enlace local con el proyecto de Vercel (lo crea `vercel link`)
+.vercel
