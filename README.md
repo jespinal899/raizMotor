@@ -1,6 +1,6 @@
 # DomusRaíz
 
-[![CI](https://github.com/jespinal899/raizMotor/actions/workflows/ci.yml/badge.svg)](https://github.com/jespinal899/raizMotor/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/jespinal899/raizMotor/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/jespinal899/raizMotor/actions/workflows/ci-cd.yml)
 
 Plataforma web inmobiliaria para Honduras: reúne casas, apartamentos y terrenos en un solo lugar para publicarlos, encontrarlos y contactar a quien los anuncia, sin comisiones ocultas.
 
@@ -112,12 +112,11 @@ Cada funcionalidad usa, según lo que necesite, las mismas carpetas: `pages`, `c
 
 ## Integración y despliegue continuos
 
-Cada push a `master` sigue dos caminos a la vez:
+Cada push a `master` ejecuta el pipeline de `.github/workflows/ci-cd.yml`: linter, pruebas, compilación y publicación en Vercel, en https://raiz-motor.vercel.app/. Si un paso falla, el sitio publicado no cambia. En un pull request se ejecuta todo menos la publicación.
 
-- **Vercel** compila el sitio y lo publica en https://raiz-motor.vercel.app/.
-- **GitHub Actions** ejecuta el pipeline de `.github/workflows/ci.yml`: linter, pruebas y compilación. También se ejecuta en cada pull request.
+Vercel no despliega por su cuenta: `vercel.json` desactiva su despliegue automático, para que el pipeline sea el único camino al sitio publicado. Para publicar, el pipeline necesita tres secretos del repositorio (Settings > Secrets and variables > Actions): `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`. Si falta alguno, el despliegue falla y lo dice.
 
-Son independientes: Vercel publica aunque el pipeline falle. Por eso, antes de subir un cambio, comprueba en tu equipo los mismos pasos:
+Antes de subir un cambio, comprueba en tu equipo los mismos pasos:
 
 ```bash
 npm run lint
@@ -125,7 +124,7 @@ npm test
 npm run build
 ```
 
-El archivo `vercel.json` hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página.
+El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página.
 
 ## Pendiente
 

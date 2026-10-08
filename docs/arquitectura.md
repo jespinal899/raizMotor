@@ -254,7 +254,7 @@ Repetir una acción deja el mismo resultado que hacerla una vez. Vale para quien
 | La visita a una ficha (recarga, efecto repetido) | Cuenta una sola vista por visita: el total no sube hasta abrir la ficha en otra pestaña o sesión. | `propertyViewService` |
 | El cierre del mapa | La segunda vez no hace nada. | `locationMap` |
 | Una lectura del catálogo | Devuelve lo mismo y no cambia nada; las respuestas de peticiones anteriores se descartan. | `propertyService`, `useAsyncData` |
-| La instalación, la compilación o el despliegue | `npm ci` instala exactamente lo que fija `package-lock.json`, dos compilaciones del mismo código producen los mismos archivos y volver a desplegar el mismo commit publica lo mismo. | `package-lock.json`, `.github/workflows/ci.yml`, Vercel |
+| La instalación, la compilación o el despliegue | `npm ci` instala exactamente lo que fija `package-lock.json`, dos compilaciones del mismo código producen los mismos archivos y relanzar el pipeline publica lo mismo. | `package-lock.json`, `.github/workflows/ci-cd.yml` |
 
 ### La clave de operación
 
@@ -270,31 +270,32 @@ Iniciar sesión no lleva clave: repetirlo deja la misma sesión.
 
 ## Despliegue
 
-Cada cambio en `master` sigue dos caminos a la vez: Vercel compila el sitio y lo publica, y GitHub Actions comprueba el linter, las pruebas y la compilación con el pipeline de `.github/workflows/ci.yml`.
+Cada cambio en `master` pasa por el mismo pipeline, definido en `.github/workflows/ci-cd.yml`. Si un paso falla, el sitio publicado no cambia.
 
 ```mermaid
 %%{init: {"flowchart": {"wrappingWidth": 170}}}%%
 flowchart TB
     accTitle: Despliegue de DomusRaíz
-    accDescr: Un push a master llega al repositorio de GitHub. Vercel compila el sitio y lo publica, y el navegador lo abre desde ahí. Por su lado, GitHub Actions ejecuta el linter, las pruebas y la compilación.
+    accDescr: Un push a master activa GitHub Actions, que ejecuta el linter, las pruebas y la compilación y, si todo pasa, publica el resultado en Vercel, desde donde lo abre el navegador.
 
     dev(["<b>Quien desarrolla</b>"])
     repo["<b>Repositorio</b><br/>GitHub, rama master"]
 
-    subgraph ci ["GitHub Actions · ci.yml"]
+    subgraph ci ["GitHub Actions · ci-cd.yml"]
         direction LR
         lint["<b>Linter</b><br/>oxlint"]
         test["<b>Pruebas</b><br/>vitest"]
         build["<b>Compilación</b><br/>tsc y vite build"]
-        lint --> test --> build
+        publish["<b>Publicación</b><br/>vercel build y vercel deploy"]
+        lint --> test --> build --> publish
     end
 
-    pages["<b>Vercel</b><br/>Compila y publica en raiz-motor.vercel.app"]
+    pages["<b>Vercel</b><br/>raiz-motor.vercel.app"]
     browser(["<b>Navegador</b>"])
 
     dev -- "git push" --> repo
     repo -- "Activa" --> ci
-    repo -- "Activa" --> pages
+    ci -- "Publica" --> pages
     pages -- "HTTPS" --> browser
 
     classDef persona fill:#08304f,stroke:#041d30,color:#fff
@@ -303,12 +304,13 @@ flowchart TB
     classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
     class dev,browser persona
     class pages contenedor
-    class lint,test,build componente
+    class lint,test,build,publish componente
     class repo externo
     style ci fill:none,stroke:#8c959f,stroke-dasharray:4 4
 ```
 
-- **Los dos caminos son independientes.** Vercel publica aunque el pipeline de GitHub falle: el pipeline avisa de un problema, no lo detiene. Por eso los mismos pasos se pasan en local antes de subir.
-- **En un pull request** se ejecutan el linter, las pruebas y la compilación.
+- **Solo publica el pipeline.** `vercel.json` desactiva el despliegue automático de Vercel, que publicaría cada push aunque las pruebas fallaran.
+- **En un pull request** se ejecutan el linter, las pruebas y la compilación, pero no se publica.
+- **Para publicar hacen falta tres secretos** en el repositorio: `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`. Si falta alguno, el despliegue falla y lo dice, en lugar de darlo por hecho.
 - **El sitio se sirve en la raíz del dominio.** Si alguna vez se publicara bajo un prefijo, la compilación lo recibiría con `--base` y el enrutador lo tomaría de `import.meta.env.BASE_URL`.
 - **Los enlaces directos** funcionan porque `vercel.json` entrega la aplicación en cualquier dirección.
