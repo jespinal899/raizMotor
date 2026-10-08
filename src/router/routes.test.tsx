@@ -3,7 +3,7 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { routes } from '@/router'
 import { BRAND } from '@/shared/constants/brand'
-import { ROUTES } from '@/shared/constants/routes'
+import { ROUTES, agentPlanCheckoutPath } from '@/shared/constants/routes'
 
 /** Abre la aplicación, con sus rutas de verdad, en la dirección indicada, y espera a que pinte el pie. */
 const openAt = async (route: string) => {
@@ -54,6 +54,7 @@ describe('routes', () => {
     ['Política de privacidad', ROUTES.privacy],
     ['Publica tu propiedad en simples pasos', ROUTES.pricing],
     [`Potencia tu carrera con ${BRAND.name}`, ROUTES.agentPlans],
+    ['Contratar Agente Pro', agentPlanCheckoutPath('agente-plan-1')],
   ])('abre la página "%s" en su dirección', async (title, route) => {
     // Arrange: aplicación sin abrir
 

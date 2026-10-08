@@ -3,6 +3,7 @@ import { EXCHANGE_RATE } from '@/shared/constants/currency'
 import {
   formatArea,
   formatLempiras,
+  formatLempirasExact,
   formatLongDate,
   formatNumber,
   formatPrice,
@@ -167,6 +168,23 @@ describe('formatLempiras', () => {
 
     // Assert
     expect(withPlainSpaces(formatted)).toBe('L 1,599')
+    expect(formatted).not.toContain(' ')
+  })
+})
+
+describe('formatLempirasExact', () => {
+  it.each([
+    { amount: 688.85, expected: 'L 688.85' },
+    { amount: 599, expected: 'L 599.00' },
+    { amount: 1148.85, expected: 'L 1,148.85' },
+  ])('muestra L $amount con sus dos decimales, como en un cobro', ({ amount, expected }) => {
+    // Arrange: importe en lempiras
+
+    // Act
+    const formatted = formatLempirasExact(amount)
+
+    // Assert
+    expect(withPlainSpaces(formatted)).toBe(expected)
     expect(formatted).not.toContain(' ')
   })
 })

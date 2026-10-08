@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   HONDURAS_DIAL_CODE,
+  formatInternationalPhone,
   formatLocalPhone,
   honduranPhone,
   toInternationalPhone,
@@ -120,4 +121,17 @@ describe('honduranPhone', () => {
       expect(error).toBe('Revisa el número: en Honduras empiezan por 2, 3, 7, 8 o 9.')
     },
   )
+})
+
+describe('formatInternationalPhone', () => {
+  it('muestra un número completo como se lee: el prefijo del país y el número en sus dos grupos', () => {
+    // Arrange
+    const international = '+50499999999'
+
+    // Act
+    const formatted = formatInternationalPhone(international)
+
+    // Assert
+    expect(formatted).toBe('+504 9999-9999')
+  })
 })

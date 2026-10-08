@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ROUTES,
   SECTION_IDS,
+  agentPlanCheckoutPath,
   planContactPath,
   propertyContactPath,
   propertyDetailPath,
@@ -73,6 +74,18 @@ describe('rutas', () => {
 
     // Assert
     expect(agentPlans).toBe(`${pricing}/agente-inmobiliario`)
+  })
+
+  it('agentPlanCheckoutPath encaja con el patrón de la ruta de contratación, que cuelga de los planes para agentes', () => {
+    // Arrange
+    const id = 'agente-plan-1'
+
+    // Act
+    const path = agentPlanCheckoutPath(id)
+
+    // Assert
+    expect(path).toBe('/planes/agente-inmobiliario/contratar/agente-plan-1')
+    expect(path).toBe(ROUTES.agentPlanCheckout.replace(':plan', id))
   })
 
   it('el enlace a "Cómo funciona" apunta a la sección del inicio', () => {

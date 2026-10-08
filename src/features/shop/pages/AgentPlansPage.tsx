@@ -1,6 +1,6 @@
-import { ArrowLeft, BadgeCheck, Check, Headset, PanelsTopLeft } from 'lucide-react'
+import { BadgeCheck, Check, Headset, PanelsTopLeft } from 'lucide-react'
+import BackLink from '@/components/BackLink'
 import PageHeader from '@/components/PageHeader'
-import TextLink from '@/components/TextLink'
 import Container from '@/components/layout/Container'
 import PlanFeatures from '@/features/shop/components/PlanFeatures'
 import PlanHelp from '@/features/shop/components/PlanHelp'
@@ -33,10 +33,7 @@ const AgentPlansPage = () => {
   return (
     <Container className="grid gap-10 py-10">
       <div className="grid gap-4">
-        <TextLink to={ROUTES.pricing} className="justify-self-start">
-          <ArrowLeft aria-hidden="true" />
-          Ver todos los planes
-        </TextLink>
+        <BackLink to={ROUTES.pricing}>Ver todos los planes</BackLink>
         <PageHeader
           title="Potencia tu carrera con"
           highlight={BRAND.name}

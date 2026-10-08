@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
 import { AGENT_PLANS, PLANS } from '@/features/shop/data/plans.data'
-import { ROUTES } from '@/shared/constants/routes'
+import { ROUTES, agentPlanCheckoutPath } from '@/shared/constants/routes'
 
 describe('PLANS', () => {
   it('ofrece publicar como propietario, agente inmobiliario o inmobiliaria, en ese orden', () => {
@@ -103,11 +103,11 @@ describe('AGENT_PLANS', () => {
     expect(misplaced).toEqual([])
   })
 
-  it('contratar un plan abre el contacto indicando cuál: todavía no hay pagos en línea', () => {
+  it('el botón de cada plan abre su página de contratación', () => {
     // Arrange
     const expectedActions = [
-      { label: 'Comenzar con Pro', to: '/contacto?plan=agente-plan-1' },
-      { label: 'Comenzar con Élite', to: '/contacto?plan=agente-plan-2' },
+      { label: 'Comenzar con Pro', to: '/planes/agente-inmobiliario/contratar/agente-plan-1' },
+      { label: 'Comenzar con Élite', to: '/planes/agente-inmobiliario/contratar/agente-plan-2' },
     ]
 
     // Act
@@ -134,7 +134,12 @@ describe('todos los planes', () => {
 
   it('cada botón lleva a una página que existe', () => {
     // Arrange
-    const knownPages: string[] = [ROUTES.publish, ROUTES.agentPlans, ROUTES.contact]
+    const knownPages: string[] = [
+      ROUTES.publish,
+      ROUTES.agentPlans,
+      ROUTES.contact,
+      ...AGENT_PLANS.map((plan) => agentPlanCheckoutPath(plan.id)),
+    ]
 
     // Act
     const destinations = allPlans.map((plan) => plan.action.to.split('?')[0])

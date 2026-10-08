@@ -151,11 +151,11 @@ describe('AgentPlansPage', () => {
     })
   })
 
-  it('contratar un plan lleva al contacto indicando cuál', () => {
+  it('el botón de cada plan lleva a su página de contratación', () => {
     // Arrange
     const expectedActions = [
-      'Comenzar con Pro → /contacto?plan=agente-plan-1',
-      'Comenzar con Élite → /contacto?plan=agente-plan-2',
+      'Comenzar con Pro → /planes/agente-inmobiliario/contratar/agente-plan-1',
+      'Comenzar con Élite → /planes/agente-inmobiliario/contratar/agente-plan-2',
     ]
 
     // Act

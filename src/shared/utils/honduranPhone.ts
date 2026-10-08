@@ -28,6 +28,10 @@ export const formatLocalPhone = (text: string): string => {
 /** El número completo para guardarlo o enviarlo: prefijo del país y dígitos, sin separadores. */
 export const toInternationalPhone = (local: string): string => `${HONDURAS_DIAL_CODE}${toLocalDigits(local)}`
 
+/** Un número completo como se lee: "+504 9999-9999". */
+export const formatInternationalPhone = (international: string): string =>
+  `${HONDURAS_DIAL_CODE} ${formatLocalPhone(international)}`
+
 /**
  * Comprueba la forma del número: su largo y que empiece como los del país. No puede saber si la
  * línea existe ni de quién es; eso solo lo confirma un código enviado a ese número.
