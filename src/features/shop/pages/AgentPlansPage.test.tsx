@@ -6,6 +6,7 @@ import { renderWithRouter } from '@/test/renderWithRouter'
 
 const ROUTE = '/planes/agente-inmobiliario'
 const PLAN_NAMES = ['Agente Pro', 'Agente Élite']
+const REASONS_TITLE = `¿Por qué contratar en ${BRAND.name}?`
 
 // El símbolo y la cifra van separados por un espacio de no separación.
 const withPlainSpaces = (text: string) => text.replace(/\s+/g, ' ').trim()
@@ -13,11 +14,16 @@ const withPlainSpaces = (text: string) => text.replace(/\s+/g, ' ').trim()
 const planCard = (name: string) =>
   screen.getByRole('heading', { level: 2, name }).closest('[data-slot="card"]') as HTMLElement
 const textOfCard = (name: string) => withPlainSpaces(planCard(name).textContent ?? '')
+const reasonsPanel = () => screen.getByRole('complementary', { name: REASONS_TITLE })
+const itemsOf = (list: HTMLElement) =>
+  within(list)
+    .getAllByRole('listitem')
+    .map((item) => withPlainSpaces(item.textContent ?? ''))
 
 describe('AgentPlansPage', () => {
   it('presenta los planes para agentes inmobiliarios y pone su título en la pestaña', () => {
     // Arrange
-    const heading = 'Potencia tu carrera con DomusRaíz'
+    const heading = `Potencia tu carrera con ${BRAND.name}`
     const pageTitle = 'Planes para agentes inmobiliarios'
 
     // Act
@@ -26,7 +32,7 @@ describe('AgentPlansPage', () => {
     // Assert
     const title = screen.getByRole('heading', { level: 1, name: heading })
     expect(title.closest('header')).toHaveClass('text-center')
-    expect(within(title).getByText('DomusRaíz')).toHaveClass('text-primary')
+    expect(within(title).getByText(BRAND.name)).toHaveClass('text-primary')
     expect(document.title).toBe(`${pageTitle} | ${BRAND.name}`)
   })
 
@@ -70,7 +76,7 @@ describe('AgentPlansPage', () => {
     expect(within(planCard('Agente Élite')).getByText('2 usuarios').tagName).toBe('STRONG')
   })
 
-  it('presenta a la izquierda los beneficios de contratar con DomusRaíz', () => {
+  it('presenta los motivos para contratar y lo que se obtiene con un plan, cada uno en su lista', () => {
     // Arrange
     const expectedReasons = [
       'Soporte y atención al cliente 24/7.',
@@ -82,28 +88,30 @@ describe('AgentPlansPage', () => {
       'Reportes y métricas de tus propiedades.',
       'Gestión centralizada de tus publicaciones.',
       'Mayor exposición para tus propiedades.',
-      'Presencia profesional dentro de DomusRaíz.',
+      `Presencia profesional dentro de ${BRAND.name}.`,
     ]
 
     // Act
     renderWithRouter(<AgentPlansPage />, { route: ROUTE })
 
     // Assert
-    const reasons = screen.getByRole('complementary', { name: '¿Por qué contratar en DomusRaíz?' })
-    const reasonItems = within(reasons)
-      .getAllByRole('listitem')
-      .slice(0, expectedReasons.length)
-      .map((item) => withPlainSpaces(item.textContent ?? ''))
-    const benefits = within(reasons).getByRole('heading', { level: 3, name: 'Con tu plan obtienes:' })
-    const benefitItems = within(reasons)
-      .getAllByRole('listitem')
-      .slice(expectedReasons.length)
-      .map((item) => withPlainSpaces(item.textContent ?? ''))
-
-    expect(reasonItems).toEqual(expectedReasons)
-    expect(benefits).toBeInTheDocument()
-    expect(benefitItems).toEqual(expectedBenefits)
+    const reasons = reasonsPanel()
+    const [reasonList, benefitList] = within(reasons).getAllByRole('list')
+    expect(itemsOf(reasonList)).toEqual(expectedReasons)
+    expect(within(reasons).getByRole('heading', { level: 3, name: 'Con tu plan obtienes:' })).toBeInTheDocument()
+    expect(itemsOf(benefitList)).toEqual(expectedBenefits)
     expect(within(reasons).queryByText(/renovación automática/i)).not.toBeInTheDocument()
+  })
+
+  it('el título del panel resalta solo el nombre de la marca: los dos signos de interrogación van como el texto', () => {
+    // Arrange: página de planes para agentes
+
+    // Act
+    renderWithRouter(<AgentPlansPage />, { route: ROUTE })
+
+    // Assert
+    const title = within(reasonsPanel()).getByRole('heading', { level: 2, name: REASONS_TITLE })
+    expect(within(title).getByText(BRAND.name)).toHaveClass('text-primary')
   })
 
   it('cada plan dice su precio mensual en lempiras, sin el impuesto y sin equivalente en otra moneda', () => {

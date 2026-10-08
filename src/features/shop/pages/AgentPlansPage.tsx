@@ -8,6 +8,7 @@ import PlanList from '@/features/shop/components/PlanList'
 import PlanMonthlyPrice from '@/features/shop/components/PlanMonthlyPrice'
 import { AGENT_PLANS } from '@/features/shop/data/plans.data'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { BRAND } from '@/shared/constants/brand'
 import { ROUTES } from '@/shared/constants/routes'
 
 const TITLE = 'Planes para agentes inmobiliarios'
@@ -23,7 +24,7 @@ const PLAN_BENEFITS = [
   'Reportes y métricas de tus propiedades.',
   'Gestión centralizada de tus publicaciones.',
   'Mayor exposición para tus propiedades.',
-  'Presencia profesional dentro de DomusRaíz.',
+  `Presencia profesional dentro de ${BRAND.name}.`,
 ]
 
 const AgentPlansPage = () => {
@@ -38,7 +39,7 @@ const AgentPlansPage = () => {
         </TextLink>
         <PageHeader
           title="Potencia tu carrera con"
-          highlight="DomusRaíz"
+          highlight={BRAND.name}
           description="Elige el plan que se adapta a tus metas y al tamaño de tu cartera."
           centered
         />
@@ -50,7 +51,7 @@ const AgentPlansPage = () => {
           className="h-fit rounded-2xl border border-primary/15 bg-transparent p-6 shadow-sm sm:p-8"
         >
           <h2 id="agent-plan-benefits-title" className="font-heading text-2xl font-semibold tracking-tight">
-            ¿Por qué contratar en <span className="text-primary">DomusRaíz?</span>
+            ¿Por qué contratar en <span className="text-primary">{BRAND.name}</span>?
           </h2>
           <ul className="mt-6 grid gap-4 text-sm leading-relaxed">
             {REASONS_TO_CHOOSE.map(({ icon: Icon, text }) => (
