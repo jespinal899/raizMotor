@@ -96,4 +96,25 @@ describe('CheckboxField', () => {
     expect(screen.getByRole('checkbox', { name: LABEL })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'términos y condiciones' })).toHaveAttribute('href', '/terminos')
   })
+
+  it('con un texto largo, puede repartirlo en varias líneas sin apretarlas y con la casilla junto a la primera', () => {
+    // Arrange
+    const longLabel = 'Declaro conocer y aceptar los Términos y Condiciones de uso'
+
+    // Act
+    render(<CheckboxField label={longLabel} checked={false} onChange={vi.fn()} multiline />)
+
+    // Assert
+    expect(screen.getByText(longLabel)).toHaveClass('items-start', 'leading-snug')
+  })
+
+  it('si no se pide, el texto va en una línea con la casilla centrada', () => {
+    // Arrange: casilla con un texto corto
+
+    // Act
+    render(<CheckboxField label={LABEL} checked={false} onChange={vi.fn()} />)
+
+    // Assert
+    expect(screen.getByText(LABEL)).not.toHaveClass('leading-snug')
+  })
 })

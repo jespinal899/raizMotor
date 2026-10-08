@@ -1,5 +1,6 @@
 import CheckboxField from '@/components/CheckboxField'
 import TextLink from '@/components/TextLink'
+import { cn } from '@/lib/utils'
 import { ROUTES } from '@/shared/constants/routes'
 
 interface TermsCheckboxFieldProps {
@@ -7,21 +8,43 @@ interface TermsCheckboxFieldProps {
   error?: string
   /** Para bloquearla mientras el envío está en curso. */
   readOnly?: boolean
+  /** Lo que se declara antes del enlace. */
+  lead?: string
+  /** El texto del enlace: lo que se acepta. */
+  linkLabel?: string
+  /** Para una redacción larga que ocupa varias líneas. */
+  multiline?: boolean
   /** Recibe si queda marcada, no el evento. */
   onChange: (checked: boolean) => void
 }
 
 /** Casilla para aceptar los términos y condiciones, con el enlace para leerlos. */
-const TermsCheckboxField = ({ checked, error, readOnly, onChange }: TermsCheckboxFieldProps) => {
+const TermsCheckboxField = ({
+  checked,
+  error,
+  readOnly,
+  lead = 'Acepto los',
+  linkLabel = 'términos y condiciones',
+  multiline,
+  onChange,
+}: TermsCheckboxFieldProps) => {
   return (
     <CheckboxField
       // Se abren en otra pestaña: salir de la página haría perder lo que ya se escribió en el formulario.
       label={
         <span>
-          Acepto los{' '}
-          {/* `leading-none`, como la etiqueta: con el interlineado de un botón la casilla crecería. */}
-          <TextLink to={ROUTES.terms} target="_blank" rel="noopener noreferrer" className="leading-none font-normal">
-            términos y condiciones
+          {lead}{' '}
+          {/*
+            En una línea, `leading-none` como la etiqueta: con el interlineado de un botón la casilla crecería.
+            En varias, el enlace sigue el interlineado del texto y puede partirse con él.
+          */}
+          <TextLink
+            to={ROUTES.terms}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn('font-normal', multiline ? 'inline leading-[inherit] whitespace-normal' : 'leading-none')}
+          >
+            {linkLabel}
           </TextLink>
         </span>
       }
@@ -30,6 +53,7 @@ const TermsCheckboxField = ({ checked, error, readOnly, onChange }: TermsCheckbo
       checked={checked}
       onChange={onChange}
       readOnly={readOnly}
+      multiline={multiline}
     />
   )
 }

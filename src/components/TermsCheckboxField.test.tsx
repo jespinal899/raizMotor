@@ -55,4 +55,17 @@ describe('TermsCheckboxField', () => {
     expect(box()).toHaveAttribute('aria-invalid', 'true')
     expect(box()).toHaveAccessibleDescription(error)
   })
+
+  it('admite otra redacción, con el enlace en lo que se acepta', () => {
+    // Arrange
+    const lead = 'Declaro conocer y aceptar los'
+    const linkLabel = 'Términos y Condiciones de uso'
+
+    // Act
+    renderWithRouter(<TermsCheckboxField checked={false} onChange={vi.fn()} lead={lead} linkLabel={linkLabel} />)
+
+    // Assert
+    expect(screen.getByRole('checkbox', { name: `${lead} ${linkLabel}` })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: linkLabel })).toHaveAttribute('href', '/terminos')
+  })
 })
