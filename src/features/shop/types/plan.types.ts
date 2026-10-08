@@ -24,10 +24,16 @@ export interface Plan extends ListedPlan {
 
 export type AgentPlanId = 'agente-plan-1' | 'agente-plan-2'
 
+export interface AgentPlanFeature {
+  text: string
+  emphasized?: string
+}
+
 /** Un plan de pago para agentes inmobiliarios. */
 export interface AgentPlan extends ListedPlan {
   id: AgentPlanId
-  features: string[]
+  description: string
+  features: AgentPlanFeature[]
   /** En lempiras, sin el impuesto sobre ventas. */
   monthlyPrice: number
 }

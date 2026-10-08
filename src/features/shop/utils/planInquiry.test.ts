@@ -27,8 +27,9 @@ describe('findPlanInquiry', () => {
     // Assert
     expect(inquiry).toEqual({
       id: 'agente-plan-1',
-      name: 'Agente inmobiliario · Plan 1',
-      detail: 'Publica hasta 25 propiedades · 1 usuario por agente inmobiliario',
+      name: 'Agente inmobiliario · Agente Pro',
+      detail:
+        'Hasta 25 propiedades activas · 1 usuario por agente inmobiliario · Panel de administración de cartera · Reportes básicos de visitas',
     })
   })
 

@@ -33,21 +33,32 @@ export const PLANS: Plan[] = [
 ]
 
 /** Todavía no hay pagos en línea: contratar abre el contacto indicando de qué plan se trata. */
-const contract = (id: AgentPlanId) => ({ label: 'Contratar', to: planContactPath(id) })
+const contract = (id: AgentPlanId, label: string) => ({ label, to: planContactPath(id) })
 
 export const AGENT_PLANS: AgentPlan[] = [
   {
     id: 'agente-plan-1',
-    name: 'Plan 1',
-    features: ['Publica hasta 25 propiedades', '1 usuario por agente inmobiliario'],
+    name: 'Agente Pro',
+    description: 'Ideal para agentes independientes que están construyendo su cartera.',
+    features: [
+      { text: 'Hasta 25 propiedades activas', emphasized: 'Hasta 25 propiedades' },
+      { text: '1 usuario por agente inmobiliario', emphasized: '1 usuario' },
+      { text: 'Panel de administración de cartera' },
+      { text: 'Reportes básicos de visitas' },
+    ],
     monthlyPrice: 599,
-    action: contract('agente-plan-1'),
+    action: contract('agente-plan-1', 'Comenzar con Pro'),
   },
   {
     id: 'agente-plan-2',
-    name: 'Plan 2',
-    features: ['Publica hasta 100 propiedades', '2 usuarios por agente inmobiliario'],
+    name: 'Agente Élite',
+    description: 'Para agentes de alto rendimiento que manejan un gran volumen de propiedades.',
+    features: [
+      { text: 'Hasta 100 propiedades activas', emphasized: 'Hasta 100 propiedades' },
+      { text: '2 usuarios por agente inmobiliario', emphasized: '2 usuarios' },
+      { text: 'Panel avanzado y reportes detallados' },
+    ],
     monthlyPrice: 999,
-    action: contract('agente-plan-2'),
+    action: contract('agente-plan-2', 'Comenzar con Élite'),
   },
 ]

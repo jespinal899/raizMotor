@@ -64,19 +64,35 @@ describe('AGENT_PLANS', () => {
     // Arrange
     const expectedPlans = [
       {
-        name: 'Plan 1',
-        features: ['Publica hasta 25 propiedades', '1 usuario por agente inmobiliario'],
+        name: 'Agente Pro',
+        description: 'Ideal para agentes independientes que están construyendo su cartera.',
+        features: [
+          { text: 'Hasta 25 propiedades activas', emphasized: 'Hasta 25 propiedades' },
+          { text: '1 usuario por agente inmobiliario', emphasized: '1 usuario' },
+          { text: 'Panel de administración de cartera' },
+          { text: 'Reportes básicos de visitas' },
+        ],
         monthlyPrice: 599,
       },
       {
-        name: 'Plan 2',
-        features: ['Publica hasta 100 propiedades', '2 usuarios por agente inmobiliario'],
+        name: 'Agente Élite',
+        description: 'Para agentes de alto rendimiento que manejan un gran volumen de propiedades.',
+        features: [
+          { text: 'Hasta 100 propiedades activas', emphasized: 'Hasta 100 propiedades' },
+          { text: '2 usuarios por agente inmobiliario', emphasized: '2 usuarios' },
+          { text: 'Panel avanzado y reportes detallados' },
+        ],
         monthlyPrice: 999,
       },
     ]
 
     // Act
-    const plans = AGENT_PLANS.map(({ name, features, monthlyPrice }) => ({ name, features, monthlyPrice }))
+    const plans = AGENT_PLANS.map(({ name, description, features, monthlyPrice }) => ({
+      name,
+      description,
+      features,
+      monthlyPrice,
+    }))
 
     // Assert
     expect(plans).toEqual(expectedPlans)
@@ -85,8 +101,8 @@ describe('AGENT_PLANS', () => {
   it('contratar un plan abre el contacto indicando cuál: todavía no hay pagos en línea', () => {
     // Arrange
     const expectedActions = [
-      { label: 'Contratar', to: '/contacto?plan=agente-plan-1' },
-      { label: 'Contratar', to: '/contacto?plan=agente-plan-2' },
+      { label: 'Comenzar con Pro', to: '/contacto?plan=agente-plan-1' },
+      { label: 'Comenzar con Élite', to: '/contacto?plan=agente-plan-2' },
     ]
 
     // Act

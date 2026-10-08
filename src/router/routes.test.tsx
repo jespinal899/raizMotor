@@ -53,7 +53,7 @@ describe('routes', () => {
     ['Términos y condiciones', ROUTES.terms],
     ['Política de privacidad', ROUTES.privacy],
     ['Publica tu propiedad en simples pasos', ROUTES.pricing],
-    ['Planes para agentes inmobiliarios', ROUTES.agentPlans],
+    ['Potencia tu carrera con DomusRaíz', ROUTES.agentPlans],
   ])('abre la página "%s" en su dirección', async (title, route) => {
     // Arrange: aplicación sin abrir
 

@@ -1,5 +1,4 @@
-import { CONVERSION_NOTE } from '@/shared/constants/currency'
-import { formatLempiras, formatLempirasInDollars } from '@/shared/utils/format'
+import { formatLempiras } from '@/shared/utils/format'
 
 const detailStyle = 'text-sm text-muted-foreground'
 
@@ -11,8 +10,7 @@ interface PlanMonthlyPriceProps {
 }
 
 /**
- * El precio mensual de un plan en sus dos monedas: en lempiras, que es como se cobra, y debajo su
- * equivalente aproximado en dólares.
+ * El precio mensual del plan en lempiras, que es como se cobra.
  */
 const PlanMonthlyPrice = ({ lempiras }: PlanMonthlyPriceProps) => {
   return (
@@ -22,10 +20,8 @@ const PlanMonthlyPrice = ({ lempiras }: PlanMonthlyPriceProps) => {
         <span className="font-heading text-4xl font-semibold tracking-tight text-primary">
           {formatLempiras(lempiras)}
         </span>
+        <span className={detailStyle}>/mes</span>
         <span className={detailStyle}> {TAX_NOTE}</span>
-      </p>
-      <p title={CONVERSION_NOTE} className={detailStyle}>
-        ≈ {formatLempirasInDollars(lempiras)}
       </p>
     </div>
   )

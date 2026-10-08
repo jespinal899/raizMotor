@@ -9,11 +9,11 @@ export interface PlanInquiry {
 
 const INQUIRIES: PlanInquiry[] = [
   ...PLANS.map(({ id, name, description }) => ({ id, name, detail: description })),
-  // "Plan 1" a secas no dice de quién es: fuera de su página se le antepone a quién va dirigido.
+  // Fuera de su página, el nombre del plan se acompaña con el público al que va dirigido.
   ...AGENT_PLANS.map(({ id, name, features }) => ({
     id,
     name: `${AGENT_AUDIENCE} · ${name}`,
-    detail: features.join(' · '),
+    detail: features.map(({ text }) => text).join(' · '),
   })),
 ]
 

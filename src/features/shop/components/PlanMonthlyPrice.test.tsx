@@ -1,8 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import PlanMonthlyPrice from '@/features/shop/components/PlanMonthlyPrice'
-import { CONVERSION_NOTE } from '@/shared/constants/currency'
-import { formatLempirasInDollars } from '@/shared/utils/format'
 
 // El símbolo y la cifra van separados por un espacio de no separación.
 const withPlainSpaces = (text: string) => text.replace(/\s+/g, ' ').trim()
@@ -17,10 +15,10 @@ describe('PlanMonthlyPrice', () => {
     render(<PlanMonthlyPrice lempiras={lempiras} />)
 
     // Assert
-    expect(textOf(screen.getByText(/^L\s/).parentElement as HTMLElement)).toBe('L 599 + ISV mensual')
+    expect(textOf(screen.getByText(/^L\s/).parentElement as HTMLElement)).toBe('L 599/mes + ISV mensual')
   })
 
-  it('debajo da su equivalente aproximado en dólares', () => {
+  it('no agrega un precio equivalente en otra moneda', () => {
     // Arrange
     const lempiras = 999
 
@@ -28,17 +26,6 @@ describe('PlanMonthlyPrice', () => {
     render(<PlanMonthlyPrice lempiras={lempiras} />)
 
     // Assert
-    expect(textOf(screen.getByText(/^≈/))).toBe(withPlainSpaces(`≈ ${formatLempirasInDollars(lempiras)}`))
-  })
-
-  it('el equivalente en dólares dice con qué tipo de cambio se calculó', () => {
-    // Arrange
-    const lempiras = 999
-
-    // Act
-    render(<PlanMonthlyPrice lempiras={lempiras} />)
-
-    // Assert
-    expect(screen.getByText(/^≈/)).toHaveAttribute('title', CONVERSION_NOTE)
+    expect(screen.queryByText(/^≈/)).not.toBeInTheDocument()
   })
 })

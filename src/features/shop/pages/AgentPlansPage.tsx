@@ -22,14 +22,20 @@ const AgentPlansPage = () => {
           <ArrowLeft aria-hidden="true" />
           Ver todos los planes
         </TextLink>
-        <PageHeader title={TITLE} description="Elige el plan según la cantidad de propiedades que quieres publicar." />
+        <PageHeader
+          title="Potencia tu carrera con"
+          highlight="DomusRaíz"
+          description="Elige el plan que se adapta a tus metas y al tamaño de tu cartera."
+          centered
+        />
       </div>
 
       <PlanList plans={AGENT_PLANS} className="max-w-3xl md:grid-cols-2">
         {(plan) => (
           <>
-            <PlanFeatures features={plan.features} />
+            <p className="text-sm leading-relaxed text-muted-foreground">{plan.description}</p>
             <PlanMonthlyPrice lempiras={plan.monthlyPrice} />
+            <PlanFeatures features={plan.features} />
           </>
         )}
       </PlanList>

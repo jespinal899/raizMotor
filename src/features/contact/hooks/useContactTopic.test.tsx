@@ -67,7 +67,7 @@ describe('useContactTopic', () => {
     expect(result.current.topic).toMatchObject({ id: 'plan:agente', title: 'Agente inmobiliario' })
   })
 
-  it('reconoce también un plan para agentes, el que se elige al pulsar "Contratar"', () => {
+  it('reconoce también un plan para agentes, el que se elige al pulsar su botón', () => {
     // Arrange
     const route = '/contacto?plan=agente-plan-2'
 
@@ -77,8 +77,8 @@ describe('useContactTopic', () => {
     // Assert
     expect(result.current.topic).toMatchObject({
       id: 'plan:agente-plan-2',
-      title: 'Agente inmobiliario · Plan 2',
-      defaultDescription: 'Me interesa el plan Agente inmobiliario · Plan 2. ¿Me pueden dar más información?',
+      title: 'Agente inmobiliario · Agente Élite',
+      defaultDescription: 'Me interesa el plan Agente inmobiliario · Agente Élite. ¿Me pueden dar más información?',
     })
   })
 
