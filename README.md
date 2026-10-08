@@ -25,7 +25,8 @@ Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con
 | Recuperar contraseña | Solo avisa de que aún no está disponible |
 | Términos y condiciones, y política de privacidad | Texto preliminar; pendiente de revisión legal |
 | Planes: Propietario, Agente inmobiliario e Inmobiliarias | El botón «Publicar» lleva aquí. Propietario abre el formulario (1 publicación gratis), Agente inmobiliario abre sus planes mensuales e Inmobiliarias abre el contacto |
-| Planes para agentes inmobiliarios (Agente Pro y Agente Élite): precio mensual en lempiras y motivos para contratar | Se muestran; el botón de cada plan abre el contacto con el plan indicado, porque aún no hay pagos ni cuentas |
+| Planes para agentes inmobiliarios (Agente Pro y Agente Élite): precio mensual en lempiras y motivos para contratar | Se muestran; el botón de cada plan abre su página de contratación |
+| Contratar un plan de agente en tres pasos: datos de la persona, resumen con el ISV desglosado y forma de pago (tarjeta o transferencia), y confirmación | Abre WhatsApp con la solicitud ya escrita; el pago se coordina a mano, porque aún no hay pagos en línea ni cuentas. La pantalla de pago con tarjeta es una demostración de diseño que no cobra nada y solo existe al desarrollar (`npm run dev`), no en el sitio publicado |
 | Panel de administración | Sin implementar |
 
 ## Tecnologías
@@ -131,4 +132,5 @@ El sitio se sirve bajo `/raizMotor/`, por eso la compilación recibe esa base. E
 - Definir el plan para inmobiliarias.
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, el soporte 24/7 y el alcance de los anuncios, que hoy solo se ven en el navegador de quien publica.
 - Contar la publicación gratuita por cuenta: hoy se cuenta por navegador, así que borrar los datos del sitio o usar otro navegador la devuelve.
-- Panel de administración y pagos.
+- Pagos en línea: cobrar con tarjeta dentro del sitio, activar el plan al confirmarse el pago, renovarlo cada mes y emitir la factura. Hoy la solicitud sale por WhatsApp y el plan se activa a mano.
+- Panel de administración.

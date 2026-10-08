@@ -184,7 +184,7 @@ Una flecha entre dos funcionalidades significa que la primera usa piezas de la s
 | Búsqueda | `src/features/search` | `/propiedades`, `/propiedades/:tipo` | Usa `propertyService` |
 | Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar` | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
 | Contacto | `src/features/contact` | `/contacto` | `contactService` |
-| Planes | `src/features/shop` | `/planes`, `/planes/agente-inmobiliario` | Ninguno |
+| Planes | `src/features/shop` | `/planes`, `/planes/agente-inmobiliario`, `/planes/agente-inmobiliario/contratar/:plan` | `planRequestService` |
 | Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena` | `authService` |
 | Administración | `src/features/admin` | Ninguna todavía | Ninguno |
 
@@ -249,6 +249,7 @@ Repetir una acción deja el mismo resultado que hacerla una vez. Vale para quien
 | La búsqueda de una misma dirección | No se vuelve a consultar Nominatim. Un fallo no se recuerda, para poder reintentar. | `geocodingService` |
 | Una búsqueda de dirección antes de que termine otra | Cuenta la última pedida, aunque la anterior responda después. | `useAddressSearch` |
 | La misma foto en un anuncio | Se rechaza como duplicada. | `imageFiles` |
+| La solicitud de un plan por WhatsApp | Vuelve a abrir el chat con el mismo mensaje. El sitio no envía nada: la solicitud sale solo cuando la persona envía el mensaje, y la página se lo recuerda. | `planRequestService`, `useCheckoutForm` |
 | La publicación gratuita | Reintentar el mismo envío devuelve el anuncio que ya se guardó. Un anuncio distinto se rechaza: el plan Propietario incluye una sola publicación. | `publicationService`, `publicationLimit` |
 | La visita a una ficha (recarga, efecto repetido) | Cuenta una sola vista por visita: el total no sube hasta abrir la ficha en otra pestaña o sesión. | `propertyViewService` |
 | El cierre del mapa | La segunda vez no hace nada. | `locationMap` |
