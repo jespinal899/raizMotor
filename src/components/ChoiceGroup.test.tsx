@@ -84,4 +84,33 @@ describe('ChoiceGroup', () => {
     expect(group).toHaveClass(oneColumn)
     expect(group.className).not.toContain('auto-fit')
   })
+
+  it('una opción puede explicar qué pasa al elegirla, sin que la explicación cambie su nombre', () => {
+    // Arrange
+    const options = [
+      { value: 'venta' as const, label: 'Venta', description: 'El precio es el total de la propiedad.' },
+      { value: 'alquiler' as const, label: 'Alquiler' },
+    ]
+
+    // Act
+    render(<ChoiceGroup label="Operación" options={options} value="" onChange={vi.fn()} />)
+
+    // Assert
+    expect(option('Venta')).toHaveAccessibleDescription('El precio es el total de la propiedad.')
+    expect(option('Alquiler')).not.toHaveAccessibleDescription()
+  })
+
+  it('pulsar la explicación también elige la opción', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    const options = [{ value: 'venta' as const, label: 'Venta', description: 'El precio es el total de la propiedad.' }]
+    render(<ChoiceGroup label="Operación" options={options} value="" onChange={onChange} />)
+
+    // Act
+    await user.click(screen.getByText('El precio es el total de la propiedad.'))
+
+    // Assert
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('venta')
+  })
 })
