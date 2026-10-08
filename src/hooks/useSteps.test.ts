@@ -82,4 +82,38 @@ describe('useSteps', () => {
     expect(result.current.current).toBe(0)
     expect(result.current.direction).toBe('backward')
   })
+
+  it('al empezar todavía no hubo ningún cambio de paso', () => {
+    // Arrange: recorrido recién abierto
+
+    // Act
+    const { result } = setup()
+
+    // Assert
+    expect(result.current.hasMoved).toBe(false)
+  })
+
+  it('recuerda que ya se cambió de paso, aunque después se vuelva al primero', () => {
+    // Arrange
+    const { result } = setup()
+    act(() => result.current.next())
+
+    // Act
+    act(() => result.current.back())
+
+    // Assert
+    expect(result.current.current).toBe(0)
+    expect(result.current.hasMoved).toBe(true)
+  })
+
+  it('pedir el paso en el que ya se está no cuenta como cambio', () => {
+    // Arrange
+    const { result } = setup()
+
+    // Act
+    act(() => result.current.goTo(0))
+
+    // Assert
+    expect(result.current.hasMoved).toBe(false)
+  })
 })

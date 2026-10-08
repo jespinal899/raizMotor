@@ -1,11 +1,11 @@
-import { useState } from 'react'
 import type { ComponentType, FormEvent } from 'react'
-import { ArrowLeft, ArrowRight, Upload } from 'lucide-react'
+import { ArrowRight, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import FormSection from '@/components/FormSection'
+import StepBackButton from '@/components/StepBackButton'
 import StepIndicator from '@/components/StepIndicator'
+import StepScreen from '@/components/StepScreen'
 import SubmitButton from '@/components/SubmitButton'
-import { Button } from '@/components/ui/button'
 import PublicationAlert from '@/features/properties/components/PublicationAlert'
 import PublicationDetailFields from '@/features/properties/components/PublicationDetailFields'
 import PublicationListingFields from '@/features/properties/components/PublicationListingFields'
@@ -18,8 +18,6 @@ import type { PropertyPublication } from '@/features/properties/types/publicatio
 import { PUBLICATION_SCREENS, PUBLICATION_STEPS } from '@/features/properties/utils/publicationSteps'
 import { useInvalidFieldFocus } from '@/hooks/useInvalidFieldFocus'
 import { useSteps } from '@/hooks/useSteps'
-import type { StepDirection } from '@/hooks/useSteps'
-import { cn } from '@/lib/utils'
 
 interface PropertyFormProps {
   onSubmit: (publication: PropertyPublication, operationKey: string) => Promise<void>
@@ -36,20 +34,10 @@ const SCREEN_CONTENT: ComponentType<PublicationScreenProps>[] = [
   PublicationPhotoFields,
 ]
 
-/** La pantalla nueva entra desde el lado hacia el que se avanza. */
-const SLIDE_IN: Record<StepDirection, string> = {
-  forward: 'animate-slide-in-right',
-  backward: 'animate-slide-in-left',
-}
-
-const focusOnMount = (element: HTMLElement | null) => element?.focus()
-
 const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) => {
   const { values, errors, status, change, validate, submit } = usePublicationForm({ onSubmit })
   const screens = useSteps(PUBLICATION_SCREENS.length)
   const { containerRef, focusFirstInvalid } = useInvalidFieldFocus<HTMLFormElement>()
-  // Al cargar la página no se toca el foco; al cambiar de pantalla va a su título, para anunciarla y subir hasta él.
-  const [hasChangedScreen, setHasChangedScreen] = useState(false)
 
   const screen = PUBLICATION_SCREENS[screens.current]
   const ScreenContent = SCREEN_CONTENT[screens.current]
@@ -57,19 +45,14 @@ const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) =
   // La ubicación no se pasa con «Siguiente»: se avanza al confirmarla en el mapa.
   const awaitsLocation = screen.fields.includes('coordinates') && values.coordinates === null
 
-  const moveTo = (target: number) => {
-    setHasChangedScreen(true)
-    screens.goTo(target)
-  }
-
   const goNext = () => {
-    if (validate(screen.fields)) moveTo(screens.current + 1)
+    if (validate(screen.fields)) screens.next()
     else focusFirstInvalid()
   }
 
   const confirmLocation = () => {
     notify('Ubicación guardada con éxito.')
-    moveTo(screens.current + 1)
+    screens.next()
   }
 
   const publish = async () => {
@@ -77,7 +60,7 @@ const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) =
     const firstInvalidScreen = PUBLICATION_SCREENS.findIndex(({ fields }) => !validate(fields))
 
     if (firstInvalidScreen !== -1) {
-      moveTo(firstInvalidScreen)
+      screens.goTo(firstInvalidScreen)
       focusFirstInvalid()
       return
     }
@@ -102,33 +85,23 @@ const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) =
     >
       <StepIndicator label="Pasos para publicar" steps={PUBLICATION_STEPS} current={screen.step} />
 
-      {/*
-        Marco de la pantalla: recorta lo que asoma mientras entra deslizándose, para que no ensanche la página
-        en móviles. El margen negativo deja sitio al anillo de foco de los campos.
-      */}
-      <div className="-mx-1 overflow-x-clip px-1">
-        {/* La clave reinicia el bloque en cada pantalla: así se repite la animación y el título recibe el foco. */}
-        <div key={screens.current} className={cn('grid gap-6', hasChangedScreen && SLIDE_IN[screens.direction])}>
-          <h2
-            ref={hasChangedScreen ? focusOnMount : undefined}
-            tabIndex={-1}
-            className="scroll-mt-24 font-heading text-2xl font-semibold tracking-tight outline-none"
-          >
-            Paso {screen.step + 1} de {PUBLICATION_STEPS.length}: {PUBLICATION_STEPS[screen.step]}
-          </h2>
-
-          <FormSection titleAs="h3" title={screen.title} description={screen.description}>
-            <ScreenContent
-              values={values}
-              errors={errors}
-              change={change}
-              validate={validate}
-              onInvalid={focusFirstInvalid}
-              onLocationConfirmed={confirmLocation}
-            />
-          </FormSection>
-        </div>
-      </div>
+      <StepScreen
+        key={screens.current}
+        heading={`Paso ${screen.step + 1} de ${PUBLICATION_STEPS.length}: ${PUBLICATION_STEPS[screen.step]}`}
+        direction={screens.direction}
+        isEntering={screens.hasMoved}
+      >
+        <FormSection titleAs="h3" title={screen.title} description={screen.description}>
+          <ScreenContent
+            values={values}
+            errors={errors}
+            change={change}
+            validate={validate}
+            onInvalid={focusFirstInvalid}
+            onLocationConfirmed={confirmLocation}
+          />
+        </FormSection>
+      </StepScreen>
 
       <div className="grid gap-4">
         {hasScreenErrors && (
@@ -136,20 +109,7 @@ const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) =
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {screens.isFirst ? (
-            <span />
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={() => moveTo(screens.current - 1)}
-              className="h-11 px-5 text-base"
-            >
-              <ArrowLeft />
-              Atrás
-            </Button>
-          )}
+          {screens.isFirst ? <span /> : <StepBackButton onClick={screens.back} />}
           {!awaitsLocation && (
             <SubmitButton
               isSubmitting={status === 'submitting'}
