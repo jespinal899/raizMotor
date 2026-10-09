@@ -33,25 +33,27 @@ flowchart LR
 
 ## Nivel 1 · Contexto
 
-DomusRaíz es una plataforma web inmobiliaria para Honduras. La usan dos tipos de persona y, hoy, depende de tres servicios externos.
+DomusRaíz es una plataforma web inmobiliaria para Honduras. La usan dos tipos de persona y, hoy, depende de cuatro servicios externos.
 
 ```mermaid
-%%{init: {"flowchart": {"wrappingWidth": 260}}}%%
+%%{init: {"flowchart": {"wrappingWidth": 200}}}%%
 flowchart TB
     accTitle: Contexto de DomusRaíz
-    accDescr: El visitante y el anunciante usan DomusRaíz, que a su vez consulta las teselas de OpenStreetMap, el buscador Nominatim y las fotos de Unsplash.
+    accDescr: El visitante y el anunciante usan DomusRaíz, que a su vez lleva las cuentas en Supabase y consulta las teselas de OpenStreetMap, el buscador Nominatim y las fotos de Unsplash.
 
     visitante(["<b>Visitante</b><br/>[Persona]<br/>Busca casas, apartamentos y terrenos, y contacta a quien los anuncia"])
     anunciante(["<b>Anunciante</b><br/>[Persona]<br/>Propietario, agente o inmobiliaria que publica propiedades"])
 
     domus["<b>DomusRaíz</b><br/>[Sistema]<br/>Plataforma web para buscar, publicar y contactar propiedades"]
 
+    supabase["<b>Supabase</b><br/>[Sistema externo]<br/>Cuentas: registro, confirmación por correo y sesiones"]
     tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]<br/>Imágenes del mapa donde se marca la ubicación"]
     nominatim["<b>Nominatim</b><br/>[Sistema externo]<br/>Buscador de direcciones de OpenStreetMap"]
     unsplash["<b>Unsplash</b><br/>[Sistema externo]<br/>Aloja las fotos del catálogo de ejemplo"]
 
     visitante -- "Busca propiedades y pide información" --> domus
     anunciante -- "Publica sus propiedades" --> domus
+    domus -- "Registra, inicia y cierra sesiones [HTTPS, JSON]" --> supabase
     domus -- "Pide las imágenes del mapa [HTTPS]" --> tiles
     domus -- "Busca la zona de una dirección [HTTPS, JSON]" --> nominatim
     domus -- "Carga las fotos de ejemplo [HTTPS]" --> unsplash
@@ -61,18 +63,19 @@ flowchart TB
     classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
     class visitante,anunciante persona
     class domus sistema
-    class tiles,nominatim,unsplash externo
+    class supabase,tiles,nominatim,unsplash externo
 ```
 
-Al buscador de direcciones solo se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa.
+Al buscador de direcciones solo se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa. A Supabase llegan los datos del registro: nombre, apellido, correo, teléfono y contraseña.
 
 ### Lo que todavía no está conectado
 
-Todavía no hay servidor propio. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil; la página de publicar y la tarjeta del catálogo lo avisan a quien publica, y la ventana de compartir advierte de que el enlace no servirá a otras personas. El inicio de sesión y el envío de contacto siguen pendientes de conectar con servicios externos.
+Solo las cuentas tienen servidor. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil; la página de publicar y la tarjeta del catálogo lo avisan a quien publica, y la ventana de compartir advierte de que el enlace no servirá a otras personas. El envío de contacto sigue pendiente de conectar con un servicio externo.
 
 | Función | Qué falta | Dónde se conecta |
 | --- | --- | --- |
-| Iniciar sesión, registro y acceso con Google | Servicio de cuentas | Última línea de `src/features/auth/services/authService.ts` |
+| Acceso con Google | Dar de alta el sitio en Google y activarlo en Supabase; hoy el botón avisa de que aún no está disponible | `loginWithGoogle`, en `src/features/auth/services/supabaseAuthService.ts` |
+| Recuperar la contraseña | La página solo avisa de que aún no está disponible | `src/features/auth/pages/ForgotPasswordPage.tsx` |
 | Enviar el formulario de contacto | Servicio de correo | Última línea de `src/features/contact/services/contactService.ts` |
 | Cotizar una propiedad | Servidor que reciba la solicitud; hoy se rechaza y la ficha avisa de que no se envió | Última línea de `src/features/properties/services/quoteService.ts` |
 | Reportar una publicación | Servidor que reciba el reporte; hoy se rechaza y la ventana avisa de que no se envió | Última línea de `src/features/properties/services/reportService.ts` |
@@ -81,13 +84,13 @@ Todavía no hay servidor propio. Las publicaciones se guardan en IndexedDB del n
 
 ## Nivel 2 · Contenedores
 
-El sistema tiene dos contenedores: el sitio estático que entrega los archivos y la aplicación que se ejecuta en el navegador. El catálogo de ejemplo viaja dentro de la aplicación; las publicaciones y sus fotos quedan en IndexedDB del navegador.
+El sistema tiene dos contenedores: el sitio estático que entrega los archivos y la aplicación que se ejecuta en el navegador. El catálogo de ejemplo viaja dentro de la aplicación; las publicaciones y sus fotos quedan en IndexedDB del navegador. Las cuentas viven en Supabase: la aplicación solo guarda la sesión, en el dispositivo si la persona pidió que se la recuerde y, si no, en la pestaña.
 
 ```mermaid
 %%{init: {"flowchart": {"wrappingWidth": 280}}}%%
 flowchart TB
     accTitle: Contenedores de DomusRaíz
-    accDescr: La persona abre el sitio estático de Vercel, que entrega la aplicación web al navegador. La aplicación consulta OpenStreetMap, Nominatim y Unsplash.
+    accDescr: La persona abre el sitio estático de Vercel, que entrega la aplicación web al navegador. La aplicación lleva las cuentas en Supabase y consulta OpenStreetMap, Nominatim y Unsplash.
 
     usuario(["<b>Visitante o anunciante</b><br/>[Persona]"])
 
@@ -96,6 +99,7 @@ flowchart TB
         spa["<b>Aplicación web</b><br/>[Contenedor: React 19, TypeScript, Vite]<br/>Aplicación de una sola página que se ejecuta en el navegador: catálogo, búsqueda, publicación, contacto y acceso"]
     end
 
+    supabase["<b>Supabase</b><br/>[Sistema externo]"]
     tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]"]
     nominatim["<b>Nominatim</b><br/>[Sistema externo]"]
     unsplash["<b>Unsplash</b><br/>[Sistema externo]"]
@@ -103,6 +107,7 @@ flowchart TB
     usuario -- "Abre el sitio [HTTPS]" --> pages
     pages -- "Entrega la aplicación al navegador" --> spa
     usuario -- "Navega, busca y rellena formularios" --> spa
+    spa -- "Registra, inicia y cierra sesiones [HTTPS, JSON]" --> supabase
     spa -- "Pide las imágenes del mapa [HTTPS]" --> tiles
     spa -- "Busca la zona de una dirección [HTTPS, JSON]" --> nominatim
     spa -- "Carga las fotos de ejemplo [HTTPS]" --> unsplash
@@ -112,7 +117,7 @@ flowchart TB
     classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
     class usuario persona
     class pages,spa contenedor
-    class tiles,nominatim,unsplash externo
+    class supabase,tiles,nominatim,unsplash externo
     style domus fill:none,stroke:#0f4c81,stroke-dasharray:4 4
 ```
 
@@ -126,7 +131,7 @@ La aplicación se organiza por funcionalidades. Cada carpeta de `src/features` r
 %%{init: {"flowchart": {"wrappingWidth": 190}}}%%
 flowchart TB
     accTitle: Componentes de la aplicación web
-    accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Inicio usa Búsqueda y Propiedades, Búsqueda usa Propiedades, Contacto usa Propiedades y Planes, y Planes usa Propiedades. Propiedades consulta los sistemas externos. Todas usan las piezas compartidas.
+    accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Inicio usa Búsqueda y Propiedades, Búsqueda usa Propiedades, Contacto usa Propiedades y Planes, y Planes usa Propiedades. Acceso lleva las cuentas en Supabase y Propiedades consulta los demás sistemas externos. Todas usan las piezas compartidas.
 
     router["<b>Enrutador</b><br/>[React Router]<br/>Asocia cada dirección con su página"]
     layout["<b>Estructura común</b><br/>[src/components/layout]<br/>Cabecera, menú y pie"]
@@ -134,7 +139,7 @@ flowchart TB
     subgraph features ["Funcionalidades · src/features"]
         home["<b>Inicio</b> · home<br/>Carrusel, destacadas, Quiénes somos y Cómo funciona"]
         contact["<b>Contacto</b> · contact<br/>Consulta sobre una propiedad o un plan"]
-        auth["<b>Acceso</b> · auth<br/>Iniciar sesión, registro y recuperación"]
+        auth["<b>Acceso</b> · auth<br/>Registro, sesión y recuperación"]
         search["<b>Búsqueda</b> · search<br/>Filtros, orden y resultados paginados"]
         shop["<b>Planes</b> · shop<br/>Formas de publicar y planes para agentes"]
         admin["<b>Administración</b> · admin<br/>Sin implementar"]
@@ -153,6 +158,7 @@ flowchart TB
     tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]"]
     nominatim["<b>Nominatim</b><br/>[Sistema externo]"]
     unsplash["<b>Unsplash</b><br/>[Sistema externo]"]
+    supabase["<b>Supabase</b><br/>[Sistema externo]"]
     shared["<b>Piezas compartidas</b><br/>[src/components, src/hooks, src/shared]<br/>Las usan todas las funcionalidades: campos de formulario, interfaz de shadcn/ui, hooks y validadores"]
 
     router -- "Envuelve cada página" --> layout
@@ -160,13 +166,15 @@ flowchart TB
     properties -- "Mapa" --> tiles
     properties -- "Direcciones" --> nominatim
     properties -- "Fotos" --> unsplash
+    auth -- "Cuentas" --> supabase
     nominatim ~~~ shared
+    unsplash ~~~ supabase
 
     classDef componente fill:#cfe3f7,stroke:#1f6fb5,color:#0b2a45
     classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
     classDef pendiente fill:#fff,stroke:#6b6b6b,color:#333,stroke-dasharray:6 4
     class router,layout,home,search,properties,contact,shop,auth,shared componente
-    class tiles,nominatim,unsplash externo
+    class supabase,tiles,nominatim,unsplash externo
     class admin pendiente
     style features fill:none,stroke:#8c959f,stroke-dasharray:4 4
 ```
@@ -177,6 +185,8 @@ Una flecha entre dos funcionalidades significa que la primera usa piezas de la s
 - **Búsqueda** lista el catálogo de Propiedades.
 - **Contacto** lee de Propiedades y de Planes sobre qué propiedad o plan se consulta.
 - **Planes** lee de Propiedades cuántas publicaciones incluye el plan gratuito: la tarjeta del plan promete las mismas que admite el formulario de publicar.
+
+La estructura común también usa Acceso: la cabecera muestra de quién es la sesión abierta y permite cerrarla.
 
 | Funcionalidad | Carpeta | Páginas | Servicios |
 | --- | --- | --- | --- |
@@ -201,7 +211,7 @@ Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno
 | `locationMap` | Encapsula Leaflet: es el único archivo que conoce la biblioteca del mapa. |
 | `publicationService` | Guarda cada anuncio y sus fotos en IndexedDB; devuelve su ID y mantiene la clave de operación para evitar duplicados. |
 | `contactService` | Provisional: rechaza con `ContactUnavailableError`. |
-| `authService` | Provisional: rechaza con `AuthUnavailableError` o `RegistrationUnavailableError`. |
+| `authService` | Registra, inicia y cierra sesiones en Supabase, y avisa de quién tiene la sesión abierta. Si la compilación no trae las variables de Supabase, queda el provisional, que rechaza con `AuthUnavailableError` o `RegistrationUnavailableError`. |
 
 ## Nivel 4 · Código: las capas de una funcionalidad
 
@@ -264,7 +274,7 @@ Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: rep
 - **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
 - **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
 
-La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Por eso el límite de una publicación gratuita distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Mientras no haya cuentas, el límite se cuenta por navegador. Las cuentas y el contacto siguen pendientes de sus servicios externos.
+La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Por eso el límite de una publicación gratuita distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Mientras los anuncios no se guarden por cuenta, el límite se cuenta por navegador. El registro recuerda las claves que ya atendió: si llega otra vez la misma, entrega el resultado anterior sin pedir otra cuenta. El contacto sigue pendiente de su servicio externo.
 
 Iniciar sesión no lleva clave: repetirlo deja la misma sesión.
 

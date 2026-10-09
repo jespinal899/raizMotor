@@ -8,7 +8,7 @@ Plataforma web inmobiliaria para Honduras: reúne casas, apartamentos y terrenos
 
 ## Estado actual
 
-Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con anuncios guardados en IndexedDB del navegador actual; los anuncios locales no se sincronizan con otros dispositivos ni visitantes. Las demás funciones que necesitan un servicio externo muestran un aviso en lugar de simular el resultado.
+Las cuentas funcionan con [Supabase](https://supabase.com/); lo demás todavía no tiene servidor. El catálogo combina propiedades de ejemplo con anuncios guardados en IndexedDB del navegador actual; los anuncios locales no se sincronizan con otros dispositivos ni visitantes. Las demás funciones que necesitan un servicio externo muestran un aviso en lugar de simular el resultado.
 
 | Función | Estado |
 | --- | --- |
@@ -21,7 +21,8 @@ Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
 | Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes. Guarda el anuncio y hasta 10 fotos en IndexedDB de este navegador, y admite una sola publicación gratuita por navegador |
 | Contacto | Interfaz lista; falta el servicio de correo |
-| Iniciar sesión, registro y acceso con Google | Interfaz lista; falta el servicio de cuentas |
+| Registro, inicio y cierre de sesión | Funcionan con Supabase cuando la compilación tiene sus dos variables (ver [Cuentas](#cuentas)); sin ellas, los formularios avisan de que aún no están disponibles. Quien se registra debe confirmar su correo antes de entrar; la barra muestra de quién es la sesión |
+| Acceso con Google | El botón avisa de que aún no está disponible: falta dar de alta el sitio en Google |
 | Recuperar contraseña | Solo avisa de que aún no está disponible |
 | Términos y condiciones, y política de privacidad | Texto preliminar; pendiente de revisión legal |
 | Planes: Propietario, Agente inmobiliario e Inmobiliarias | El botón «Publicar» lleva aquí. Propietario abre el formulario (1 publicación gratis), Agente inmobiliario abre sus planes mensuales e Inmobiliarias abre el contacto |
@@ -34,6 +35,7 @@ Todavía no hay servidor propio. El catálogo combina propiedades de ejemplo con
 
 - **Interfaz:** React 19, TypeScript 6 y React Router 7.
 - **Estilos:** Tailwind CSS 4 y componentes de shadcn/ui (estilo `base-nova`, sobre Base UI).
+- **Cuentas:** Supabase, con registro confirmado por correo.
 - **Mapa:** Leaflet, con teselas y buscador de direcciones de OpenStreetMap.
 - **Herramientas:** Vite 8 para desarrollar y compilar, y Oxlint como linter.
 - **Pruebas:** Vitest 5 con Testing Library.
@@ -50,6 +52,21 @@ npm run dev
 ```
 
 La aplicación queda en http://localhost:5173. `npm ci` instala exactamente las versiones de `package-lock.json` y no lo modifica; usa `npm install` solo para añadir o actualizar una dependencia.
+
+### Cuentas
+
+Las cuentas las lleva un proyecto de Supabase. La compilación lo conoce por dos variables; sin ellas el sitio funciona igual, pero sin cuentas.
+
+| Variable | Valor |
+| --- | --- |
+| `VITE_SUPABASE_URL` | La dirección del proyecto: `https://….supabase.co`. |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Su clave «publishable» (o la antigua «anon»). Es pública por diseño. |
+
+- **En tu equipo:** copia `.env.example` como `.env.local`, que Git ignora, y rellénalo.
+- **En el sitio publicado:** añádelas en Vercel (Settings > Environment Variables, entorno Production). El pipeline las recoge al compilar.
+- **Nunca** pongas la clave «secret» ni la «service_role» en una variable `VITE_`: todo lo que empieza así viaja dentro del sitio, y con esa clave cualquiera se salta los permisos.
+
+En el panel de Supabase, en Authentication > URL Configuration, «Site URL» debe ser la dirección del sitio publicado, y `http://localhost:5173/**` debe figurar entre las «Redirect URLs»: ahí vuelve quien abre el enlace de confirmación que recibe por correo.
 
 ## Comandos
 
@@ -136,7 +153,8 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 
 ## Pendiente
 
-- Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además de cuentas, envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
+- Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además del envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
+- Cuentas: recuperar la contraseña, volver a enviar el enlace de confirmación y avisar cuando ese enlace ya caducó, el acceso con Google, una página «Mi cuenta» y exigir sesión para publicar. Antes de abrir el registro al público hace falta un servicio de correo propio: el que trae Supabase envía muy pocos mensajes por hora.
 - Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
