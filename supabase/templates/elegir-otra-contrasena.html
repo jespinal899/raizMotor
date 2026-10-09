@@ -1,0 +1,21 @@
+<!--
+  Correo que recibe quien pide recuperar su contraseña. Se pega en el panel de Supabase:
+  Authentication > Emails > Templates > «Reset password».
+  Asunto: Elige otra contraseña para DomusRaíz
+-->
+<div style="font-family: Arial, Helvetica, sans-serif; color: #1f2933; max-width: 480px; margin: 0 auto; padding: 24px">
+  <h2 style="color: #0f4c81; margin: 0 0 16px">Elige otra contraseña</h2>
+  <p style="line-height: 1.5">
+    Recibimos una solicitud para cambiar la contraseña de tu cuenta de DomusRaíz. Abre este enlace para elegir otra:
+  </p>
+  <p style="margin: 24px 0">
+    <a
+      href="{{ .ConfirmationURL }}"
+      style="background: #0f4c81; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold"
+      >Elegir otra contraseña</a
+    >
+  </p>
+  <p style="line-height: 1.5; color: #52606d; font-size: 14px">
+    Si no la pediste, ignora este correo: tu contraseña sigue siendo la misma.
+  </p>
+</div>

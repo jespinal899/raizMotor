@@ -75,7 +75,6 @@ Solo las cuentas tienen servidor. Las publicaciones se guardan en IndexedDB del 
 | Función | Qué falta | Dónde se conecta |
 | --- | --- | --- |
 | Acceso con Google | Dar de alta el sitio en Google y activarlo en Supabase; hoy el botón avisa de que aún no está disponible | `loginWithGoogle`, en `src/features/auth/services/supabaseAuthService.ts` |
-| Recuperar la contraseña | La página solo avisa de que aún no está disponible | `src/features/auth/pages/ForgotPasswordPage.tsx` |
 | Enviar el formulario de contacto | Servicio de correo | Última línea de `src/features/contact/services/contactService.ts` |
 | Cotizar una propiedad | Servidor que reciba la solicitud; hoy se rechaza y la ficha avisa de que no se envió | Última línea de `src/features/properties/services/quoteService.ts` |
 | Reportar una publicación | Servidor que reciba el reporte; hoy se rechaza y la ventana avisa de que no se envió | Última línea de `src/features/properties/services/reportService.ts` |
@@ -195,7 +194,7 @@ La estructura común también usa Acceso: la cabecera muestra de quién es la se
 | Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar` | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
 | Contacto | `src/features/contact` | `/contacto` | `contactService` |
 | Planes | `src/features/shop` | `/planes`, `/planes/agente-inmobiliario`, `/planes/agente-inmobiliario/contratar/:plan` | `planRequestService` |
-| Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena` | `authService` |
+| Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena`, `/restablecer-contrasena` | `authService` |
 | Administración | `src/features/admin` | Ninguna todavía | Ninguno |
 
 La página de publicar se carga de forma diferida, para que la biblioteca del mapa (Leaflet) no pese en la portada.
@@ -211,7 +210,7 @@ Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno
 | `locationMap` | Encapsula Leaflet: es el único archivo que conoce la biblioteca del mapa. |
 | `publicationService` | Guarda cada anuncio y sus fotos en IndexedDB; devuelve su ID y mantiene la clave de operación para evitar duplicados. |
 | `contactService` | Provisional: rechaza con `ContactUnavailableError`. |
-| `authService` | Registra, inicia y cierra sesiones en Supabase, y avisa de quién tiene la sesión abierta. Si la compilación no trae las variables de Supabase, queda el provisional, que rechaza con `AuthUnavailableError` o `RegistrationUnavailableError`. |
+| `authService` | Registra, inicia y cierra sesiones en Supabase, avisa de quién tiene la sesión abierta, y pide el enlace con el que se elige otra contraseña. Si la compilación no trae las variables de Supabase, queda el provisional, que rechaza con `AuthUnavailableError` o `RegistrationUnavailableError`. |
 
 ## Nivel 4 · Código: las capas de una funcionalidad
 
@@ -268,15 +267,15 @@ Repetir una acción deja el mismo resultado que hacerla una vez. Vale para quien
 
 ### La clave de operación
 
-Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: repetidas sin control, dejarían dos cuentas, dos anuncios o dos mensajes. Por eso `register`, `publish` y `send` reciben, junto con los datos, una clave que identifica la operación:
+Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: repetidas sin control, dejarían dos cuentas, dos anuncios o dos mensajes. Por eso `register`, `changePassword`, `publish` y `send` reciben, junto con los datos, una clave que identifica la operación:
 
 - **Se mantiene al reintentar.** Si un envío falla, o no se sabe si llegó, el reintento lleva la misma clave.
 - **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
 - **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
 
-La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Por eso el límite de una publicación gratuita distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Mientras los anuncios no se guarden por cuenta, el límite se cuenta por navegador. El registro recuerda las claves que ya atendió: si llega otra vez la misma, entrega el resultado anterior sin pedir otra cuenta. El contacto sigue pendiente de su servicio externo.
+La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Por eso el límite de una publicación gratuita distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Mientras los anuncios no se guarden por cuenta, el límite se cuenta por navegador. El registro y el cambio de contraseña recuerdan las claves que ya atendieron (`src/shared/utils/operationLog.ts`): si llega otra vez la misma, entregan el resultado anterior sin pedirlo de nuevo a Supabase. El contacto sigue pendiente de su servicio externo.
 
-Iniciar sesión no lleva clave: repetirlo deja la misma sesión.
+Iniciar sesión no lleva clave: repetirlo deja la misma sesión. Pedir el enlace para elegir otra contraseña tampoco: repetirlo envía otro enlace.
 
 ## Despliegue
 

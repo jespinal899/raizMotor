@@ -23,7 +23,7 @@ Las cuentas funcionan con [Supabase](https://supabase.com/); lo demás todavía 
 | Contacto | Interfaz lista; falta el servicio de correo |
 | Registro, inicio y cierre de sesión | Funcionan con Supabase cuando la compilación tiene sus dos variables (ver [Cuentas](#cuentas)); sin ellas, los formularios avisan de que aún no están disponibles. Quien se registra debe confirmar su correo antes de entrar; la barra muestra de quién es la sesión |
 | Acceso con Google | El botón avisa de que aún no está disponible: falta dar de alta el sitio en Google |
-| Recuperar contraseña | Solo avisa de que aún no está disponible |
+| Recuperar contraseña | Funciona con Supabase: se pide un enlace por correo y, al abrirlo, se elige otra contraseña. Un enlace caducado o ya usado lleva a una página que lo explica y ofrece pedir otro |
 | Términos y condiciones, y política de privacidad | Texto preliminar; pendiente de revisión legal |
 | Planes: Propietario, Agente inmobiliario e Inmobiliarias | El botón «Publicar» lleva aquí. Propietario abre el formulario (1 publicación gratis), Agente inmobiliario abre sus planes mensuales e Inmobiliarias abre el contacto |
 | Planes para agentes inmobiliarios (Agente Pro y Agente Élite): precio mensual en lempiras y motivos para contratar | Se muestran; el botón de cada plan abre su página de contratación |
@@ -66,7 +66,25 @@ Las cuentas las lleva un proyecto de Supabase. La compilación lo conoce por dos
 - **En el sitio publicado:** añádelas en Vercel (Settings > Environment Variables, entorno Production). El pipeline las recoge al compilar.
 - **Nunca** pongas la clave «secret» ni la «service_role» en una variable `VITE_`: todo lo que empieza así viaja dentro del sitio, y con esa clave cualquiera se salta los permisos.
 
-En el panel de Supabase, en Authentication > URL Configuration, «Site URL» debe ser la dirección del sitio publicado, y `http://localhost:5173/**` debe figurar entre las «Redirect URLs»: ahí vuelve quien abre el enlace de confirmación que recibe por correo.
+En el panel de Supabase, en Authentication > URL Configuration, «Site URL» debe ser la dirección del sitio publicado, y `http://localhost:5173/**` debe figurar entre las «Redirect URLs»: ahí vuelve quien abre un enlace de su correo, sea el de confirmar la cuenta o el de elegir otra contraseña. Los dos devuelven a la portada, y la aplicación lleva desde ahí a la página que corresponde.
+
+#### Correo
+
+El correo que trae Supabase solo escribe a los miembros de su organización, y muy pocas veces por hora: sirve para probar. Para abrir el registro al público hay que conectarle un servicio propio, en Authentication > Emails > SMTP Settings. Con [Resend](https://resend.com/), que exige un dominio verificado:
+
+| Campo | Valor |
+| --- | --- |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | La clave de API de Resend. Va solo en el panel de Supabase: no es una variable del sitio ni se guarda en el repositorio. |
+| Sender email | Una dirección del dominio verificado, por ejemplo `no-reply@…` |
+
+Los textos en español de los dos correos están en `supabase/templates/`; cada archivo dice en qué plantilla del panel se pega y con qué asunto.
+
+#### Pruebas
+
+Las pruebas nunca hablan con el proyecto real, aunque exista `.env.local`: la configuración de Vitest (`vite.config.ts`) deja vacías las dos variables, y lo que necesita cuentas usa un servicio simulado.
 
 ## Comandos
 
@@ -154,7 +172,7 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 ## Pendiente
 
 - Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además del envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
-- Cuentas: recuperar la contraseña, volver a enviar el enlace de confirmación y avisar cuando ese enlace ya caducó, el acceso con Google, una página «Mi cuenta» y exigir sesión para publicar. Antes de abrir el registro al público hace falta un servicio de correo propio: el que trae Supabase envía muy pocos mensajes por hora.
+- Cuentas: volver a enviar el enlace de confirmación, el acceso con Google, una página «Mi cuenta» (con el cambio de contraseña para quien ya entró) y exigir sesión para publicar. Antes de abrir el registro al público hace falta conectar el servicio de correo propio descrito en [Correo](#correo).
 - Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
