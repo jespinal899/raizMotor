@@ -1,4 +1,4 @@
-import { ChevronDown, CircleUserRound, LayoutList, LoaderCircle, LogOut } from 'lucide-react'
+import { ChevronDown, CircleUserRound, LayoutList, LoaderCircle, LogOut, UserRoundPen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -50,6 +50,10 @@ const AccountMenu = ({ user, className }: AccountMenuProps) => {
         <DropdownMenuItem render={<Link to={ROUTES.myProperties} />}>
           <LayoutList />
           Mis anuncios
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link to={ROUTES.account} />}>
+          <UserRoundPen />
+          Mi cuenta
         </DropdownMenuItem>
         {/* No se cierra al pulsarlo: si la sesión no pudo cerrarse, el aviso tiene que verse aquí mismo. */}
         <DropdownMenuItem closeOnClick={false} disabled={isLeaving} onClick={() => void logout()}>

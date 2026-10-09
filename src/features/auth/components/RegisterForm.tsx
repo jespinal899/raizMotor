@@ -4,15 +4,14 @@ import EmailField from '@/components/EmailField'
 import PasswordField from '@/components/PasswordField'
 import PhoneField from '@/components/PhoneField'
 import SubmitButton from '@/components/SubmitButton'
-import TextField from '@/components/TextField'
 import { FieldGroup } from '@/components/ui/field'
 import AccessSeparator from '@/features/auth/components/AccessSeparator'
 import GoogleButton from '@/features/auth/components/GoogleButton'
+import NameFields from '@/features/auth/components/NameFields'
 import RegisterAlert from '@/features/auth/components/RegisterAlert'
 import { useRegisterForm } from '@/features/auth/hooks/useRegisterForm'
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/credentialRules'
-import { MAX_NAME_LENGTH } from '@/features/auth/utils/registerValidation'
 
 interface RegisterFormProps {
   onSubmit: (credentials: RegistrationCredentials, operationKey: string) => Promise<void>
@@ -34,28 +33,7 @@ const RegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormProps) => {
   return (
     <form noValidate aria-label="Formulario de registro" onSubmit={handleSubmit}>
       <FieldGroup>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <TextField
-            label="Nombre"
-            error={errors.firstName}
-            name="firstName"
-            autoComplete="given-name"
-            maxLength={MAX_NAME_LENGTH}
-            value={values.firstName}
-            onChange={(value) => change('firstName', value)}
-            readOnly={isBusy}
-          />
-          <TextField
-            label="Apellido"
-            error={errors.lastName}
-            name="lastName"
-            autoComplete="family-name"
-            maxLength={MAX_NAME_LENGTH}
-            value={values.lastName}
-            onChange={(value) => change('lastName', value)}
-            readOnly={isBusy}
-          />
-        </div>
+        <NameFields values={values} errors={errors} onChange={change} readOnly={isBusy} />
 
         <EmailField
           value={values.email}

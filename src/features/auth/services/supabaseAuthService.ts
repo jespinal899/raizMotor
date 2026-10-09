@@ -35,7 +35,7 @@ export interface AccountsClient {
   }): Promise<{ data: { user: AccountsUser | null; session: AccountsSession | null }; error: AccountsError | null }>
   signOut(options: { scope: 'local' }): Promise<{ error: AccountsError | null }>
   resetPasswordForEmail(email: string, options: { redirectTo: string }): Promise<{ error: AccountsError | null }>
-  updateUser(attributes: { password: string }): Promise<{ error: AccountsError | null }>
+  updateUser(attributes: { password?: string; data?: Record<string, string> }): Promise<{ error: AccountsError | null }>
   onAuthStateChange(listener: (event: string, session: AccountsSession | null) => void): {
     data: { subscription: { unsubscribe(): void } }
   }
@@ -80,6 +80,7 @@ const toSessionUser = ({ email, user_metadata: profile }: AccountsUser): Session
   email: email ?? '',
   firstName: toText(profile.first_name),
   lastName: toText(profile.last_name),
+  phone: toText(profile.phone),
 })
 
 /**
@@ -142,6 +143,13 @@ export const createSupabaseAuthService = ({
 
         if (error) throw toRejection(error, PASSWORD_REJECTIONS)
       }),
+
+    // La base de datos copia estos datos al perfil de la cuenta y a sus anuncios.
+    updateProfile: async ({ firstName, lastName, phone }) => {
+      const { error } = await accounts.updateUser({ data: { first_name: firstName, last_name: lastName, phone } })
+
+      if (error) throw error
+    },
 
     logout: async () => {
       // Solo este dispositivo: quien cierra sesión aquí puede seguir dentro en su teléfono.

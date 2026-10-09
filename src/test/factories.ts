@@ -56,6 +56,7 @@ export const buildSessionUser = (overrides: Partial<SessionUser> = {}): SessionU
   email: 'ana@gmail.com',
   firstName: 'Ana',
   lastName: 'Mejía',
+  phone: '+50499999999',
   ...overrides,
 })
 

@@ -1,4 +1,4 @@
-import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
+import type { AccountProfile, RegistrationCredentials } from '@/features/auth/types/auth.types'
 import { NEW_PASSWORD_RULES } from '@/features/auth/utils/credentialRules'
 import { EMAIL_RULES, PHONE_RULES } from '@/shared/utils/fieldRules'
 import { maxLength, required, validate } from '@/shared/utils/validators'
@@ -7,7 +7,8 @@ import type { FieldErrors } from '@/shared/utils/validators'
 /** Lo comparte el formulario, para que el campo y su regla no puedan decir cosas distintas. */
 export const MAX_NAME_LENGTH = 80
 
-export const validateRegistration = (values: RegistrationCredentials): FieldErrors<RegistrationCredentials> => ({
+/** Lo que se exige a los datos con que una cuenta se presenta: al registrarse y al corregirlos después. */
+export const validateProfile = (values: AccountProfile): FieldErrors<AccountProfile> => ({
   firstName: validate(values.firstName, [
     required('Escribe tu nombre.'),
     maxLength(MAX_NAME_LENGTH, `El nombre no puede pasar de ${MAX_NAME_LENGTH} caracteres.`),
@@ -16,7 +17,11 @@ export const validateRegistration = (values: RegistrationCredentials): FieldErro
     required('Escribe tu apellido.'),
     maxLength(MAX_NAME_LENGTH, `El apellido no puede pasar de ${MAX_NAME_LENGTH} caracteres.`),
   ]),
-  email: validate(values.email, EMAIL_RULES),
   phone: validate(values.phone, PHONE_RULES),
+})
+
+export const validateRegistration = (values: RegistrationCredentials): FieldErrors<RegistrationCredentials> => ({
+  ...validateProfile(values),
+  email: validate(values.email, EMAIL_RULES),
   password: validate(values.password, NEW_PASSWORD_RULES),
 })

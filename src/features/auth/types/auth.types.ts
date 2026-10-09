@@ -15,12 +15,16 @@ export interface RegistrationCredentials {
   password: string
 }
 
-/** Quién tiene la sesión abierta. El nombre y el apellido van vacíos si la cuenta no los guarda. */
-export interface SessionUser {
+/** Los datos con que una cuenta se presenta en el sitio y en sus anuncios. */
+export type AccountProfile = Pick<RegistrationCredentials, 'firstName' | 'lastName' | 'phone'>
+
+/** Quién tiene la sesión abierta. El nombre, el apellido y el teléfono van vacíos si la cuenta no los guarda. */
+export interface SessionUser extends AccountProfile {
   email: string
-  firstName: string
-  lastName: string
 }
+
+/** Estado del formulario de los datos de la cuenta: `saved` cuando ya se guardaron. */
+export type ProfileStatus = 'idle' | 'submitting' | 'saved' | 'failed'
 
 /** Cómo queda quien acaba de registrarse: ya dentro, o a la espera de abrir el enlace enviado a su correo. */
 export type RegistrationOutcome = 'signedIn' | 'confirmationPending'

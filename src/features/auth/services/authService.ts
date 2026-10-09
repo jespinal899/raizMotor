@@ -1,6 +1,7 @@
 import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/auth/services/authErrors'
 import { createSupabaseAuthService } from '@/features/auth/services/supabaseAuthService'
 import type {
+  AccountProfile,
   LoginCredentials,
   RegistrationCredentials,
   RegistrationOutcome,
@@ -32,6 +33,11 @@ export interface AuthService {
    * si llega dos veces con la misma clave, se guarda una sola vez.
    */
   changePassword(password: string, operationKey: string): Promise<void>
+  /**
+   * Guarda el nombre, el apellido y el teléfono de quien tiene la sesión, y se rechaza si no se pudo.
+   * Guardar otra vez los mismos datos deja la cuenta igual.
+   */
+  updateProfile(profile: AccountProfile): Promise<void>
   /** Cierra la sesión en este dispositivo y se rechaza si no se pudo. Repetirlo sin sesión no hace nada. */
   logout(): Promise<void>
   /**
@@ -57,6 +63,7 @@ export const createPendingAuthService = (): AuthService => {
     requestPasswordReset: rejectLoginAsUnavailable,
     isRecoveringPassword: () => false,
     changePassword: rejectLoginAsUnavailable,
+    updateProfile: rejectLoginAsUnavailable,
     logout: async () => {},
     onSessionChange: (listener) => {
       listener(null)

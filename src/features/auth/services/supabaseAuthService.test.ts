@@ -15,7 +15,8 @@ import { TEST_OPERATION_KEY } from '@/test/operationKey'
 
 const RETURN_URL = 'https://sitio.example/'
 const CREDENTIALS: LoginCredentials = { email: 'ana@gmail.com', password: 'secreta123', remember: true }
-const USER = { email: 'ana@gmail.com', user_metadata: { first_name: 'Ana', last_name: 'Mejía' }, identities: [{}] }
+const PROFILE = { first_name: 'Ana', last_name: 'Mejía', phone: '+50499999999' }
+const USER = { email: 'ana@gmail.com', user_metadata: PROFILE, identities: [{}] }
 const SESSION = { user: USER }
 
 type SessionListener = Parameters<AccountsClient['onAuthStateChange']>[0]
@@ -326,6 +327,36 @@ describe('createSupabaseAuthService: recuperar la contraseña', () => {
   })
 })
 
+describe('createSupabaseAuthService: datos de la cuenta', () => {
+  const CORRECTED = { firstName: 'Ana María', lastName: 'Mejía', phone: '+50488880000' }
+
+  it('guarda el nombre, el apellido y el teléfono de quien tiene la sesión', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+
+    // Act
+    await service.updateProfile(CORRECTED)
+
+    // Assert
+    expect(accounts.updateUser).toHaveBeenCalledExactlyOnceWith({
+      data: { first_name: 'Ana María', last_name: 'Mejía', phone: '+50488880000' },
+    })
+  })
+
+  it('si no se pudieron guardar, lo rechaza con ese fallo', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+    const failure = supabaseError('unexpected_failure')
+    accounts.updateUser.mockResolvedValue({ error: failure })
+
+    // Act
+    const saving = service.updateProfile(CORRECTED)
+
+    // Assert
+    await expect(saving).rejects.toBe(failure)
+  })
+})
+
 describe('createSupabaseAuthService: cerrar sesión', () => {
   it('cierra la sesión de este dispositivo, sin cerrar las de otros', async () => {
     // Arrange
@@ -363,7 +394,12 @@ describe('createSupabaseAuthService: quién tiene la sesión', () => {
     emit(SESSION)
 
     // Assert
-    expect(listener).toHaveBeenCalledExactlyOnceWith({ email: 'ana@gmail.com', firstName: 'Ana', lastName: 'Mejía' })
+    expect(listener).toHaveBeenCalledExactlyOnceWith({
+      email: 'ana@gmail.com',
+      firstName: 'Ana',
+      lastName: 'Mejía',
+      phone: '+50499999999',
+    })
   })
 
   it('avisa de que no hay nadie cuando la sesión se cierra', () => {
@@ -389,7 +425,7 @@ describe('createSupabaseAuthService: quién tiene la sesión', () => {
     emit({ user: { ...USER, user_metadata: {} } })
 
     // Assert
-    expect(listener).toHaveBeenCalledExactlyOnceWith({ email: 'ana@gmail.com', firstName: '', lastName: '' })
+    expect(listener).toHaveBeenCalledExactlyOnceWith({ email: 'ana@gmail.com', firstName: '', lastName: '', phone: '' })
   })
 
   it('al dejar de escuchar, se da de baja de los avisos', () => {

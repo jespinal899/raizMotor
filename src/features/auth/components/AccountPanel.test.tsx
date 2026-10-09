@@ -41,17 +41,20 @@ describe('AccountPanel', () => {
     expect(screen.getAllByText('ana@gmail.com')).toHaveLength(1)
   })
 
-  it('lleva a los anuncios de la cuenta, y avisa para que el menú que lo contiene se cierre', async () => {
+  it.each([
+    ['Mis anuncios', '/mis-anuncios'],
+    ['Mi cuenta', '/mi-cuenta'],
+  ])('lleva a «%s», y avisa para que el menú que lo contiene se cierre', async (option, path) => {
     // Arrange
     const user = userEvent.setup()
     const onNavigate = vi.fn()
     renderWithRouter(<AccountPanel user={USER} onNavigate={onNavigate} />)
 
     // Act
-    await user.click(screen.getByRole('link', { name: 'Mis anuncios' }))
+    await user.click(screen.getByRole('link', { name: option }))
 
     // Assert
-    expect(screen.getByRole('link', { name: 'Mis anuncios' })).toHaveAttribute('href', '/mis-anuncios')
+    expect(screen.getByRole('link', { name: option })).toHaveAttribute('href', path)
     expect(onNavigate).toHaveBeenCalledOnce()
   })
 

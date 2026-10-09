@@ -1,4 +1,4 @@
-import { LayoutList, LogOut } from 'lucide-react'
+import { LayoutList, LogOut, UserRoundPen } from 'lucide-react'
 import BusyButton from '@/components/BusyButton'
 import ButtonLink from '@/components/ButtonLink'
 import AccountSummary from '@/features/auth/components/AccountSummary'
@@ -23,6 +23,10 @@ const AccountPanel = ({ user, onNavigate }: AccountPanelProps) => {
       <ButtonLink to={ROUTES.myProperties} onClick={onNavigate} variant="outline" size="lg">
         <LayoutList />
         Mis anuncios
+      </ButtonLink>
+      <ButtonLink to={ROUTES.account} onClick={onNavigate} variant="outline" size="lg">
+        <UserRoundPen />
+        Mi cuenta
       </ButtonLink>
       <BusyButton
         variant="outline"

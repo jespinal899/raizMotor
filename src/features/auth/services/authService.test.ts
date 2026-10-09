@@ -64,6 +64,17 @@ describe('createPendingAuthService', () => {
     await expect(change).rejects.toBeInstanceOf(AuthUnavailableError)
   })
 
+  it('rechaza guardar los datos de una cuenta, en lugar de fingir que los guardó', async () => {
+    // Arrange
+    const service = createPendingAuthService()
+
+    // Act
+    const saving = service.updateProfile({ firstName: 'Ana', lastName: 'Mejía', phone: '+50499999999' })
+
+    // Assert
+    await expect(saving).rejects.toBeInstanceOf(AuthUnavailableError)
+  })
+
   it('dice que nadie tiene la sesión abierta, porque sin cuentas no puede haberla', () => {
     // Arrange
     const service = createPendingAuthService()

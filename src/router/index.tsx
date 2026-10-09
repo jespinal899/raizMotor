@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import MainLayout from '@/components/layout/MainLayout'
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage'
+import AccountPage from '@/features/auth/pages/AccountPage'
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
 import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage'
@@ -66,6 +67,17 @@ export const routes: RouteObject[] = [
             description="Solo quien publicó un anuncio puede corregirlo."
           >
             <LazyEditPropertyPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.account,
+        element: (
+          <ProtectedRoute
+            title="Inicia sesión para ver tu cuenta"
+            description="Aquí corriges tu nombre y el teléfono al que te escriben por tus anuncios."
+          >
+            <AccountPage />
           </ProtectedRoute>
         ),
       },

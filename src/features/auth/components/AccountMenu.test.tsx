@@ -51,7 +51,10 @@ describe('AccountMenu', () => {
     expect(menu).toHaveTextContent('ana@gmail.com')
   })
 
-  it('lleva a los anuncios de la cuenta', async () => {
+  it.each([
+    ['Mis anuncios', '/mis-anuncios'],
+    ['Mi cuenta', '/mi-cuenta'],
+  ])('lleva a «%s»', async (option, path) => {
     // Arrange
     renderWithRouter(<AccountMenu user={USER} />)
 
@@ -59,7 +62,7 @@ describe('AccountMenu', () => {
     await openMenu()
 
     // Assert
-    expect(await screen.findByRole('menuitem', { name: 'Mis anuncios' })).toHaveAttribute('href', '/mis-anuncios')
+    expect(await screen.findByRole('menuitem', { name: option })).toHaveAttribute('href', path)
   })
 
   it('«Cerrar sesión» cierra la sesión', async () => {
