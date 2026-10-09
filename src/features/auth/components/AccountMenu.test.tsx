@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AccountMenu from '@/features/auth/components/AccountMenu'
 import { authService } from '@/features/auth/services/authService'
 import { deferred } from '@/test/deferred'
 import { buildSessionUser } from '@/test/factories'
+import { renderWithRouter } from '@/test/renderWithRouter'
 
 vi.mock('@/features/auth/services/authService', () => ({ authService: { logout: vi.fn() } }))
 
@@ -31,7 +32,7 @@ describe('AccountMenu', () => {
     // Arrange: Ana tiene la sesión abierta
 
     // Act
-    render(<AccountMenu user={USER} />)
+    renderWithRouter(<AccountMenu user={USER} />)
 
     // Assert
     expect(trigger()).toHaveTextContent('Ana')
@@ -39,7 +40,7 @@ describe('AccountMenu', () => {
 
   it('al abrirlo dice de quién es la cuenta, con su nombre completo y su correo', async () => {
     // Arrange
-    render(<AccountMenu user={USER} />)
+    renderWithRouter(<AccountMenu user={USER} />)
 
     // Act
     await openMenu()
@@ -50,10 +51,21 @@ describe('AccountMenu', () => {
     expect(menu).toHaveTextContent('ana@gmail.com')
   })
 
+  it('lleva a los anuncios de la cuenta', async () => {
+    // Arrange
+    renderWithRouter(<AccountMenu user={USER} />)
+
+    // Act
+    await openMenu()
+
+    // Assert
+    expect(await screen.findByRole('menuitem', { name: 'Mis anuncios' })).toHaveAttribute('href', '/mis-anuncios')
+  })
+
   it('«Cerrar sesión» cierra la sesión', async () => {
     // Arrange
     logout.mockResolvedValue(undefined)
-    render(<AccountMenu user={USER} />)
+    renderWithRouter(<AccountMenu user={USER} />)
     const user = await openMenu()
 
     // Act
@@ -67,7 +79,7 @@ describe('AccountMenu', () => {
     // Arrange
     const { promise, finish } = deferred()
     logout.mockReturnValue(promise)
-    render(<AccountMenu user={USER} />)
+    renderWithRouter(<AccountMenu user={USER} />)
     const user = await openMenu()
 
     // Act
@@ -83,7 +95,7 @@ describe('AccountMenu', () => {
   it('si no se pudo cerrar la sesión lo avisa, y la opción sigue ahí para reintentar', async () => {
     // Arrange
     logout.mockRejectedValue(new Error('sin conexión'))
-    render(<AccountMenu user={USER} />)
+    renderWithRouter(<AccountMenu user={USER} />)
     const user = await openMenu()
 
     // Act

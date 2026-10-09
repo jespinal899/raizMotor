@@ -10,6 +10,7 @@ import ContactPage from '@/features/contact/pages/ContactPage'
 import PrivacyPage from '@/features/legal/pages/PrivacyPage'
 import TermsPage from '@/features/legal/pages/TermsPage'
 import LazyPublishPropertyPage from '@/features/properties/pages/LazyPublishPropertyPage'
+import MyPropertiesPage from '@/features/properties/pages/MyPropertiesPage'
 import PropertyDetailPage from '@/features/properties/pages/PropertyDetailPage'
 import SearchPage from '@/features/search/pages/SearchPage'
 import AgentPlanCheckoutPage from '@/features/shop/pages/AgentPlanCheckoutPage'
@@ -42,6 +43,17 @@ export const routes: RouteObject[] = [
             description="Tu anuncio queda a nombre de tu cuenta, con el teléfono que diste al registrarte para que te escriban."
           >
             <LazyPublishPropertyPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.myProperties,
+        element: (
+          <ProtectedRoute
+            title="Inicia sesión para ver tus anuncios"
+            description="Tus anuncios están guardados en tu cuenta."
+          >
+            <MyPropertiesPage />
           </ProtectedRoute>
         ),
       },

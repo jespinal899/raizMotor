@@ -1,4 +1,5 @@
-import { ChevronDown, CircleUserRound, LoaderCircle, LogOut } from 'lucide-react'
+import { ChevronDown, CircleUserRound, LayoutList, LoaderCircle, LogOut } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import { useLogout } from '@/features/auth/hooks/useLogout'
 import type { SessionUser } from '@/features/auth/types/auth.types'
 import { shortName } from '@/features/auth/utils/accountName'
 import { cn } from '@/lib/utils'
+import { ROUTES } from '@/shared/constants/routes'
 
 interface AccountMenuProps {
   user: SessionUser
@@ -45,6 +47,10 @@ const AccountMenu = ({ user, className }: AccountMenuProps) => {
       <DropdownMenuContent align="end" className="w-64">
         <AccountSummary user={user} className="px-1.5 py-1.5" />
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link to={ROUTES.myProperties} />}>
+          <LayoutList />
+          Mis anuncios
+        </DropdownMenuItem>
         {/* No se cierra al pulsarlo: si la sesión no pudo cerrarse, el aviso tiene que verse aquí mismo. */}
         <DropdownMenuItem closeOnClick={false} disabled={isLeaving} onClick={() => void logout()}>
           {isLeaving ? <LoaderCircle className="animate-spin" /> : <LogOut />}

@@ -76,7 +76,7 @@ const MobileNav = ({ className }: MobileNavProps) => {
         </nav>
 
         <SheetFooter className="border-t">
-          {status === 'signedIn' && <AccountPanel user={user} />}
+          {status === 'signedIn' && <AccountPanel user={user} onNavigate={close} />}
           {status === 'signedOut' && (
             <ButtonLink
               to={NAV.login.to}

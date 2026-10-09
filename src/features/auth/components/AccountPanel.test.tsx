@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AccountPanel from '@/features/auth/components/AccountPanel'
 import { authService } from '@/features/auth/services/authService'
 import { buildSessionUser } from '@/test/factories'
+import { renderWithRouter } from '@/test/renderWithRouter'
 
 vi.mock('@/features/auth/services/authService', () => ({ authService: { logout: vi.fn() } }))
 
@@ -22,7 +23,7 @@ describe('AccountPanel', () => {
     // Arrange: Ana tiene la sesión abierta
 
     // Act
-    render(<AccountPanel user={USER} />)
+    renderWithRouter(<AccountPanel user={USER} />)
 
     // Assert
     expect(screen.getByText('Ana Mejía')).toBeInTheDocument()
@@ -34,17 +35,31 @@ describe('AccountPanel', () => {
     const nameless = buildSessionUser({ firstName: '', lastName: '', email: 'ana@gmail.com' })
 
     // Act
-    render(<AccountPanel user={nameless} />)
+    renderWithRouter(<AccountPanel user={nameless} />)
 
     // Assert
     expect(screen.getAllByText('ana@gmail.com')).toHaveLength(1)
+  })
+
+  it('lleva a los anuncios de la cuenta, y avisa para que el menú que lo contiene se cierre', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const onNavigate = vi.fn()
+    renderWithRouter(<AccountPanel user={USER} onNavigate={onNavigate} />)
+
+    // Act
+    await user.click(screen.getByRole('link', { name: 'Mis anuncios' }))
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Mis anuncios' })).toHaveAttribute('href', '/mis-anuncios')
+    expect(onNavigate).toHaveBeenCalledOnce()
   })
 
   it('«Cerrar sesión» cierra la sesión', async () => {
     // Arrange
     const user = userEvent.setup()
     logout.mockResolvedValue(undefined)
-    render(<AccountPanel user={USER} />)
+    renderWithRouter(<AccountPanel user={USER} />)
 
     // Act
     await user.click(logoutButton())
@@ -57,7 +72,7 @@ describe('AccountPanel', () => {
     // Arrange
     const user = userEvent.setup()
     logout.mockRejectedValue(new Error('sin conexión'))
-    render(<AccountPanel user={USER} />)
+    renderWithRouter(<AccountPanel user={USER} />)
 
     // Act
     await user.click(logoutButton())
