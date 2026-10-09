@@ -25,3 +25,7 @@ dist-ssr
 
 # Enlace local con el proyecto de Vercel (lo crea `vercel link`)
 .vercel
+
+# Estado local de la herramienta de Supabase (lo crea `supabase link`): datos de la conexión de cada equipo
+supabase/.temp
+supabase/.branches
