@@ -311,6 +311,6 @@ flowchart TB
 
 - **Solo publica el pipeline.** `vercel.json` desactiva el despliegue automático de Vercel, que publicaría cada push aunque las pruebas fallaran.
 - **En un pull request** se ejecutan el linter, las pruebas y la compilación, pero no se publica.
-- **Para publicar hacen falta tres secretos** en el repositorio: `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`. Si falta alguno, el despliegue falla y lo dice, en lugar de darlo por hecho.
+- **Para publicar hacen falta tres secretos** en el repositorio: `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`. Si falta alguno, el despliegue falla y lo dice, en lugar de darlo por hecho; si alguno no corresponde al proyecto, el pipeline averigua cuál y lo avisa. El README dice de dónde sale cada uno.
 - **El sitio se sirve en la raíz del dominio.** Si alguna vez se publicara bajo un prefijo, la compilación lo recibiría con `--base` y el enrutador lo tomaría de `import.meta.env.BASE_URL`.
 - **Los enlaces directos** funcionan porque `vercel.json` entrega la aplicación en cualquier dirección.

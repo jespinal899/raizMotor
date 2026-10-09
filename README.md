@@ -114,7 +114,15 @@ Cada funcionalidad usa, según lo que necesite, las mismas carpetas: `pages`, `c
 
 Cada push a `master` ejecuta el pipeline de `.github/workflows/ci-cd.yml`: linter, pruebas, compilación y publicación en Vercel, en https://raiz-motor.vercel.app/. Si un paso falla, el sitio publicado no cambia. En un pull request se ejecuta todo menos la publicación.
 
-Vercel no despliega por su cuenta: `vercel.json` desactiva su despliegue automático, para que el pipeline sea el único camino al sitio publicado. Para publicar, el pipeline necesita tres secretos del repositorio (Settings > Secrets and variables > Actions): `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID`. Si falta alguno, el despliegue falla y lo dice.
+Vercel no despliega por su cuenta: `vercel.json` desactiva su despliegue automático, para que el pipeline sea el único camino al sitio publicado. Para publicar, el pipeline necesita tres secretos del repositorio (Settings > Secrets and variables > Actions):
+
+| Secreto | De dónde sale, en vercel.com |
+| --- | --- |
+| `VERCEL_TOKEN` | Account Settings > Tokens, con alcance sobre el equipo del proyecto. |
+| `VERCEL_ORG_ID` | Settings > General del equipo dueño del proyecto: el «Team ID», que empieza por `team_`. |
+| `VERCEL_PROJECT_ID` | Settings > General del proyecto: el «Project ID», que empieza por `prj_`. |
+
+Si falta alguno, el despliegue falla y lo dice. Si alguno no corresponde al proyecto, la herramienta de Vercel solo responde «Project not found»: el pipeline averigua cuál es (`.github/scripts/vercelDiagnosis.mjs`) y lo deja como aviso en la página de la ejecución, sin mostrar ningún identificador.
 
 Antes de subir un cambio, comprueba en tu equipo los mismos pasos:
 
