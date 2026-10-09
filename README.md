@@ -23,7 +23,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | Reportar una publicación desde su ficha | Interfaz lista; falta el servidor que reciba el reporte |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
 | Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes y pide iniciar sesión. Guarda el anuncio en Supabase con hasta 10 fotos, que se reducen antes de subirlas, y queda visible de inmediato. Cada cuenta admite los anuncios de su plan: uno con el gratuito |
-| Mis anuncios | Cada cuenta ve los suyos, y puede corregirlos o eliminarlos; eliminar uno deja libre su lugar en el plan |
+| Mis publicaciones | Cada cuenta ve las suyas en dos pestañas, «Publicadas» y «Despublicadas», y puede corregirlas, despublicarlas, volver a publicarlas o eliminarlas. Un banner dice su plan y, en una barra, cuántas tiene publicadas de las que admite (0/1, 3/25…). Solo las publicadas ocupan el plan: despublicar una deja libre su lugar |
 | Editar un anuncio | El mismo formulario de publicar, abierto con sus datos: se cambia lo que haga falta, también las fotos. Solo lo edita quien lo publicó, y no puede cambiar su estado ni su anunciante |
 | Mi cuenta | Cada cuenta corrige su nombre y su teléfono; sus anuncios pasan a mostrarlos. El correo y la contraseña no se cambian desde ahí |
 | Contacto | Interfaz lista; falta el servicio de correo |

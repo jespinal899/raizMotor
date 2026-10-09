@@ -192,7 +192,7 @@ La estructura común también usa Acceso: la cabecera muestra de quién es la se
 | --- | --- | --- | --- |
 | Inicio | `src/features/home` | `/` (la compone `src/pages/HomePage.tsx`) | Ninguno propio |
 | Búsqueda | `src/features/search` | `/propiedades`, `/propiedades/:tipo` | Usa `propertyService` |
-| Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar`, `/mis-anuncios`, `/mis-anuncios/:id/editar` | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
+| Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar`, `/mis-publicaciones/:id/editar` y `/mis-publicaciones` (la compone `src/pages/MyPropertiesPage.tsx`, con el plan de Planes) | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
 | Contacto | `src/features/contact` | `/contacto` | `contactService` |
 | Planes | `src/features/shop` | `/planes`, `/planes/agente-inmobiliario`, `/planes/agente-inmobiliario/contratar/:plan` | `planRequestService` |
 | Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena`, `/restablecer-contrasena`, `/mi-cuenta` | `authService` |
