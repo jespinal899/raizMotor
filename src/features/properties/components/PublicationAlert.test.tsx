@@ -39,6 +39,19 @@ describe('PublicationAlert', () => {
     expect(alert).toHaveTextContent('Revisa que el navegador permita guardar datos de este sitio y vuelve a intentarlo.')
   })
 
+  it('con los anuncios compartidos, un fallo habla de publicar y de la conexión, no del navegador', () => {
+    // Arrange
+    const status = 'failed'
+
+    // Act
+    render(<PublicationAlert status={status} shared />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('No pudimos publicar tu propiedad')
+    expect(alert).toHaveTextContent('Revisa tu conexión y vuelve a intentarlo. Tu anuncio no se publicó.')
+  })
+
   it('si ya se usó la publicación gratuita, lo dice y aclara que este anuncio no se guardó', () => {
     // Arrange
     const status = 'limitReached'

@@ -17,6 +17,7 @@ import AgentPlansPage from '@/features/shop/pages/AgentPlansPage'
 import PricingPage from '@/features/shop/pages/PricingPage'
 import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import ProtectedRoute from '@/router/ProtectedRoute'
 import { landFromAuthLink } from '@/router/authLinkLanding'
 import { toRouterBasename } from '@/router/basename'
 import { ROUTES } from '@/shared/constants/routes'
@@ -33,7 +34,17 @@ export const routes: RouteObject[] = [
       { path: ROUTES.contact, element: <ContactPage /> },
       { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
       { path: ROUTES.resetPassword, element: <ResetPasswordPage /> },
-      { path: ROUTES.publish, element: <LazyPublishPropertyPage /> },
+      {
+        path: ROUTES.publish,
+        element: (
+          <ProtectedRoute
+            title="Inicia sesión para publicar"
+            description="Tu anuncio queda a nombre de tu cuenta, con el teléfono que diste al registrarte para que te escriban."
+          >
+            <LazyPublishPropertyPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: ROUTES.pricing, element: <PricingPage /> },
       { path: ROUTES.agentPlans, element: <AgentPlansPage /> },
       { path: ROUTES.agentPlanCheckout, element: <AgentPlanCheckoutPage /> },

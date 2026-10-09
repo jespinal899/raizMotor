@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  PublicationLimitError,
-  createPublicationService,
-  publicationService,
-} from '@/features/properties/services/publicationService'
+import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
+import { createPublicationService, publicationService } from '@/features/properties/services/publicationService'
 import {
   createIndexedDbPublicationRepository,
   type PublishedPropertyRepository,
@@ -22,11 +19,14 @@ const stored = (id: string, operationKey: string, createdAt = 1): StoredProperty
   publication: PUBLICATION,
 })
 
-/** Repositorio falso con los anuncios que ya hay guardados en el navegador. */
-const repositoryWith = (records: StoredPropertyPublication[] = []): PublishedPropertyRepository => ({
+/** Repositorio falso con los anuncios que ya tiene quien publica y los que su plan le admite. */
+const repositoryWith = (records: StoredPropertyPublication[] = [], limit = 1): PublishedPropertyRepository => ({
   publish: vi.fn(async () => 'casa-publicada'),
   getById: vi.fn(async () => undefined),
-  getAll: vi.fn(async () => records),
+  getAll: vi.fn(async () => []),
+  getOwn: vi.fn(async () => records),
+  getLimit: vi.fn(async () => limit),
+  remove: vi.fn(async () => {}),
 })
 
 describe('createPublicationService', () => {
@@ -54,6 +54,41 @@ describe('createPublicationService', () => {
     // Assert
     await expect(publishing).rejects.toBeInstanceOf(PublicationLimitError)
     expect(repository.publish).not.toHaveBeenCalled()
+  })
+
+  it('con un plan que admite más anuncios, publica mientras no llegue a su límite', async () => {
+    // Arrange
+    const repository = repositoryWith([stored('la-primera', 'clave-1'), stored('la-segunda', 'clave-2')], 3)
+    const service = createPublicationService(repository)
+
+    // Act
+    const id = await service.publish(PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    expect(id).toBe('casa-publicada')
+  })
+
+  it('dice cuántos anuncios admite el plan de quien publica', async () => {
+    // Arrange
+    const service = createPublicationService(repositoryWith([], 25))
+
+    // Act
+    const limit = await service.getLimit()
+
+    // Assert
+    expect(limit).toBe(25)
+  })
+
+  it('elimina un anuncio propio', async () => {
+    // Arrange
+    const repository = repositoryWith([stored('la-primera', 'clave-1')])
+    const service = createPublicationService(repository)
+
+    // Act
+    await service.remove('la-primera')
+
+    // Assert
+    expect(repository.remove).toHaveBeenCalledExactlyOnceWith('la-primera')
   })
 
   it('repetir el mismo envío no cuenta como otra publicación: devuelve el anuncio que ya se guardó', async () => {

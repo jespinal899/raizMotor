@@ -1,4 +1,4 @@
-import { PublicationLimitError } from '@/features/properties/services/publicationService'
+import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
 import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { ADDRESS_FIELDS } from '@/features/properties/utils/publicationSteps'
 import { validatePublication } from '@/features/properties/utils/publicationValidation'

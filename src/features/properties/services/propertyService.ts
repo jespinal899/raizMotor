@@ -1,6 +1,6 @@
 import { PROPERTIES } from '@/features/properties/data/properties.data'
+import { ADS_SHARED, propertyRepository } from '@/features/properties/services/propertyRepository'
 import { createPublishedPropertyService } from '@/features/properties/services/publishedPropertyService'
-import { publishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
 import type { Property, PropertyFilters } from '@/features/properties/types/property.types'
 import type { PageRequest, Paginated } from '@/shared/types/common.types'
 
@@ -10,7 +10,11 @@ export interface PropertyService {
   search(filters: PropertyFilters, pageRequest: PageRequest): Promise<Paginated<Property>>
   /** Devuelve `undefined` cuando no existe ninguna propiedad con ese identificador. */
   getById(id: string): Promise<Property | undefined>
+  /** Los anuncios de quien usa el sitio, del más reciente al más antiguo. Rechaza si no se pudieron leer. */
+  getOwn(): Promise<Property[]>
 }
 
-// Los anuncios locales complementan el catálogo provisional hasta conectar una API.
-export const propertyService: PropertyService = createPublishedPropertyService(PROPERTIES, publishedPropertyRepository)
+// Los anuncios publicados se suman al catálogo de ejemplo, que sale marcado como tal.
+export const propertyService: PropertyService = createPublishedPropertyService(PROPERTIES, propertyRepository, {
+  shared: ADS_SHARED,
+})

@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PublishPropertyPage from '@/features/properties/pages/PublishPropertyPage'
 import { createLeafletLocationMap } from '@/features/properties/services/locationMap'
-import { PublicationLimitError, publicationService } from '@/features/properties/services/publicationService'
+import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
+import { publicationService } from '@/features/properties/services/publicationService'
 import { BRAND } from '@/shared/constants/brand'
 import { buildFakeLocationMap } from '@/test/fakeLocationMap'
 import { FILLED_PUBLICATION, fillLocationScreen, fillPublicationForm } from '@/test/publicationForm'
@@ -14,13 +15,22 @@ vi.mock('@/features/properties/services/locationMap', () => ({ createLeafletLoca
 vi.mock('@/features/properties/services/geocodingService', () => ({
   geocodingService: { locate: vi.fn(async () => undefined) },
 }))
-vi.mock('@/features/properties/services/publicationService', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/properties/services/publicationService')>()),
-  publicationService: { publish: vi.fn(), listPublished: vi.fn() },
+vi.mock('@/features/properties/services/publicationService', () => ({
+  publicationService: { publish: vi.fn(), listPublished: vi.fn(), getLimit: vi.fn() },
+}))
+
+/** Si los anuncios se guardan para todos (con Supabase) o solo en este navegador: cada prueba lo elige. */
+const ads = vi.hoisted(() => ({ shared: false }))
+
+vi.mock('@/features/properties/services/propertyRepository', () => ({
+  get ADS_SHARED() {
+    return ads.shared
+  },
 }))
 
 const publish = vi.mocked(publicationService.publish)
 const listPublished = vi.mocked(publicationService.listPublished)
+const getLimit = vi.mocked(publicationService.getLimit)
 
 const FORM_NAME = 'Formulario para publicar una propiedad'
 const LIMIT_TITLE = 'Ya usaste tu publicación gratuita'
@@ -46,9 +56,12 @@ const publishButton = () => screen.getByRole('button', { name: 'Publicar propied
 // Recorrer los tres pasos lleva muchas interacciones: se da más margen que el de una prueba normal.
 describe('PublishPropertyPage', { timeout: 20_000 }, () => {
   beforeEach(() => {
+    ads.shared = false
     publish.mockReset()
     listPublished.mockReset()
     listPublished.mockResolvedValue([])
+    getLimit.mockReset()
+    getLimit.mockResolvedValue(1)
   })
 
   it('muestra el título, el formulario y pone su título en la pestaña', async () => {
@@ -73,6 +86,20 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
     const note = await screen.findByRole('note')
     expect(note).toHaveTextContent('Tu anuncio se guardará solo en este navegador')
     expect(note).toHaveTextContent('otras personas no podrán verlo')
+  })
+
+  it('con los anuncios compartidos avisa antes de empezar de que será público y de qué se verá', async () => {
+    // Arrange
+    ads.shared = true
+
+    // Act
+    setup()
+
+    // Assert
+    const note = await screen.findByRole('note')
+    expect(note).toHaveTextContent('Tu anuncio será público')
+    expect(note).toHaveTextContent('la dirección y el punto del mapa')
+    expect(note).toHaveTextContent('escribirte por WhatsApp al teléfono de tu cuenta')
   })
 
   it('al confirmar la ubicación muestra un aviso de que se guardó', async () => {
@@ -130,7 +157,10 @@ describe('PublishPropertyPage', { timeout: 20_000 }, () => {
 
 describe('PublishPropertyPage: una sola publicación gratuita', () => {
   beforeEach(() => {
+    ads.shared = false
     listPublished.mockReset()
+    getLimit.mockReset()
+    getLimit.mockResolvedValue(1)
   })
 
   it('mientras comprueba si la publicación gratuita sigue disponible muestra un marcador de carga', () => {
@@ -158,7 +188,7 @@ describe('PublishPropertyPage: una sola publicación gratuita', () => {
     expect(screen.queryByRole('form', { name: FORM_NAME })).not.toBeInTheDocument()
   })
 
-  it('desde ese aviso se puede abrir el anuncio más reciente o volver a los planes', async () => {
+  it('desde ese aviso se puede ir a los anuncios propios, para eliminar alguno, o volver a los planes', async () => {
     // Arrange
     listPublished.mockResolvedValue(['el-mas-reciente', 'uno-anterior'])
 
@@ -166,11 +196,46 @@ describe('PublishPropertyPage: una sola publicación gratuita', () => {
     setup()
 
     // Assert
-    expect(await screen.findByRole('link', { name: 'Ver mi publicación' })).toHaveAttribute(
-      'href',
-      '/propiedad/el-mas-reciente',
-    )
+    expect(await screen.findByRole('link', { name: 'Ver mis anuncios' })).toHaveAttribute('href', '/mis-anuncios')
     expect(screen.getByRole('link', { name: 'Ver los planes' })).toHaveAttribute('href', '/planes')
+  })
+
+  it('con los anuncios compartidos dice que la publicación gratuita ya la tiene su cuenta, no el navegador', async () => {
+    // Arrange
+    ads.shared = true
+    listPublished.mockResolvedValue(['mi-anuncio'])
+
+    // Act
+    setup()
+
+    // Assert
+    expect(await screen.findByText(/tu cuenta ya tiene una/)).toBeInTheDocument()
+  })
+
+  it('con un plan de varios anuncios deja publicar mientras queden', async () => {
+    // Arrange
+    getLimit.mockResolvedValue(3)
+    listPublished.mockResolvedValue(['uno', 'otro'])
+
+    // Act
+    setup()
+
+    // Assert
+    expect(await screen.findByRole('form', { name: FORM_NAME })).toBeInTheDocument()
+  })
+
+  it('con un plan de varios anuncios, al usarlos todos dice cuántos incluye en lugar del formulario', async () => {
+    // Arrange
+    getLimit.mockResolvedValue(2)
+    listPublished.mockResolvedValue(['uno', 'otro'])
+
+    // Act
+    setup()
+
+    // Assert
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ya usaste los anuncios de tu plan' })).toBeInTheDocument()
+    expect(screen.getByText(/Tu plan incluye 2 anuncios a la vez/)).toBeInTheDocument()
+    expect(screen.queryByRole('form', { name: FORM_NAME })).not.toBeInTheDocument()
   })
 
   it('si no se puede leer lo guardado en el navegador muestra el formulario: el fallo se avisa al publicar', async () => {

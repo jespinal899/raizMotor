@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { usePublicationForm } from '@/features/properties/hooks/usePublicationForm'
-import { PublicationLimitError } from '@/features/properties/services/publicationService'
+import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
 import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { toPublication } from '@/features/properties/utils/toPublication'
 import { deferred } from '@/test/deferred'

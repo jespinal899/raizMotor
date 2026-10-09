@@ -16,4 +16,6 @@ export const createInMemoryPropertyService = (properties: readonly Property[]): 
       pageRequest,
     ),
   getById: async (id) => properties.find((property) => property.id === id),
+  // Un catálogo en memoria no es de nadie.
+  getOwn: async () => [],
 })

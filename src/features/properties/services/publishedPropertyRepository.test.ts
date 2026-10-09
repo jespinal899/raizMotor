@@ -4,6 +4,7 @@ import {
   type StoredPropertyPublication,
 } from '@/features/properties/services/publishedPropertyRepository'
 import { buildPublicationValues } from '@/test/factories'
+import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
 import { toPublication } from '@/features/properties/utils/toPublication'
 import { TEST_OPERATION_KEY } from '@/test/operationKey'
 
@@ -83,6 +84,11 @@ class FakeObjectStore {
   get = (id: string) => this.transaction.request(() => this.state.records.get(id))
 
   getAll = () => this.transaction.request(() => [...this.state.records.values()])
+
+  delete = (id: string) =>
+    this.transaction.request(() => {
+      this.state.records.delete(id)
+    })
 }
 
 const buildIndexedDb = () => {
@@ -136,6 +142,44 @@ describe('publishedPropertyRepository', () => {
     expect(stored?.publication.title).toBe(PUBLICATION.title)
     expect(stored?.publication.images[0]).toBeInstanceOf(File)
     expect(all).toHaveLength(1)
+  })
+
+  it('los anuncios de este navegador son todos de quien lo usa', async () => {
+    // Arrange
+    const repository = createIndexedDbPublicationRepository({ getFactory: buildIndexedDb })
+    const id = await repository.publish(PUBLICATION, TEST_OPERATION_KEY)
+
+    // Act
+    const own = await repository.getOwn()
+
+    // Assert
+    expect(own.map((stored) => stored.id)).toEqual([id])
+  })
+
+  it('admite las publicaciones del plan gratuito: sin cuentas no hay otro plan', async () => {
+    // Arrange
+    const repository = createIndexedDbPublicationRepository({ getFactory: buildIndexedDb })
+
+    // Act
+    const limit = await repository.getLimit()
+
+    // Assert
+    expect(limit).toBe(MAX_FREE_PUBLICATIONS)
+  })
+
+  it('elimina un anuncio guardado, y repetirlo no falla', async () => {
+    // Arrange
+    const factory = buildIndexedDb()
+    const repository = createIndexedDbPublicationRepository({ getFactory: () => factory })
+    const id = await repository.publish(PUBLICATION, TEST_OPERATION_KEY)
+    await repository.remove(id)
+
+    // Act
+    await repository.remove(id)
+
+    // Assert
+    expect(await repository.getById(id)).toBeUndefined()
+    expect(await repository.getAll()).toEqual([])
   })
 
   it('rechaza si IndexedDB no está disponible', async () => {

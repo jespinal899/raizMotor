@@ -1,38 +1,40 @@
-import type { PropertyPublication } from '@/features/properties/types/publication.types'
+import { propertyRepository } from '@/features/properties/services/propertyRepository'
+import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
 import type { PublishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
-import { publishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
-import { hasReachedFreeLimit } from '@/features/properties/utils/publicationLimit'
-
-/** La publicación gratuita ya estaba usada: el anuncio no se guardó, y reintentar no cambia el resultado. */
-export class PublicationLimitError extends Error {
-  constructor() {
-    super('El plan gratuito ya no admite más publicaciones.')
-    this.name = 'PublicationLimitError'
-  }
-}
+import type { PropertyPublication } from '@/features/properties/types/publication.types'
+import { hasReachedLimit } from '@/features/properties/utils/publicationLimit'
 
 export interface PublicationService {
   /**
    * Se resuelve con el identificador guardado. Repetir una clave devuelve ese mismo identificador.
-   * Rechaza con `PublicationLimitError` si el anuncio es nuevo y la publicación gratuita ya se usó.
+   * Rechaza con `PublicationLimitError` si el anuncio es nuevo y el plan de quien publica no admite más.
    */
   publish(publication: PropertyPublication, operationKey: string): Promise<string>
-  /** Identificadores de los anuncios publicados desde este navegador, del más reciente al más antiguo. */
+  /** Identificadores de los anuncios de quien publica, del más reciente al más antiguo. */
   listPublished(): Promise<string[]>
+  /** Cuántos anuncios admite a la vez el plan de quien publica. */
+  getLimit(): Promise<number>
+  /** Elimina un anuncio propio. Repetirlo no hace nada. */
+  remove(id: string): Promise<void>
 }
 
 export const createPublicationService = (repository: PublishedPropertyRepository): PublicationService => ({
   publish: async (publication, operationKey) => {
-    const published = await repository.getAll()
+    const [own, limit] = await Promise.all([repository.getOwn(), repository.getLimit()])
     // Reintentar un envío que ya se guardó no es otro anuncio: el repositorio devuelve el mismo.
-    const isRetry = published.some((stored) => stored.operationKey === operationKey)
+    const isRetry = own.some((stored) => stored.operationKey === operationKey)
 
-    if (!isRetry && hasReachedFreeLimit(published.length)) throw new PublicationLimitError()
+    // Se comprueba antes de enviar nada, para no subir las fotos de un anuncio que no se va a guardar.
+    if (!isRetry && hasReachedLimit(own.length, limit)) throw new PublicationLimitError()
 
     return repository.publish(publication, operationKey)
   },
 
-  listPublished: async () => (await repository.getAll()).map((stored) => stored.id),
+  listPublished: async () => (await repository.getOwn()).map((stored) => stored.id),
+
+  getLimit: () => repository.getLimit(),
+
+  remove: (id) => repository.remove(id),
 })
 
-export const publicationService: PublicationService = createPublicationService(publishedPropertyRepository)
+export const publicationService: PublicationService = createPublicationService(propertyRepository)

@@ -7,6 +7,7 @@ import type {
   PublishedPropertyRepository,
   StoredPropertyPublication,
 } from '@/features/properties/services/publishedPropertyRepository'
+import type { Property } from '@/features/properties/types/property.types'
 import { toPublication } from '@/features/properties/utils/toPublication'
 import { buildProperty, buildPublicationValues } from '@/test/factories'
 
@@ -21,17 +22,30 @@ const record = (id: string, createdAt = 1): StoredPropertyPublication => ({
   ),
 })
 
+/** Una propiedad de muestra tal como la entrega el catálogo: marcada como ejemplo. */
+const asExample = (property: Property): Property => ({ ...property, example: true })
+
 const repositoryFor = (records: StoredPropertyPublication[]): PublishedPropertyRepository => ({
   publish: vi.fn(async () => records[0]?.id ?? ''),
   getById: vi.fn(async (id) => records.find((item) => item.id === id)),
   getAll: vi.fn(async () => records),
+  getOwn: vi.fn(async () => records),
+  getLimit: vi.fn(async () => 1),
+  remove: vi.fn(async () => {}),
 })
 
 /** Almacenamiento que no responde: el navegador lo bloquea o no lo tiene. */
 const brokenRepository = (): PublishedPropertyRepository => {
   const fail = () => Promise.reject(new Error('Este navegador no permite guardar publicaciones.'))
 
-  return { publish: vi.fn(fail), getById: vi.fn(fail), getAll: vi.fn(fail) }
+  return {
+    publish: vi.fn(fail),
+    getById: vi.fn(fail),
+    getAll: vi.fn(fail),
+    getOwn: vi.fn(fail),
+    getLimit: vi.fn(fail),
+    remove: vi.fn(fail),
+  }
 }
 
 describe('toPublishedProperty', () => {
@@ -111,6 +125,19 @@ describe('toPublishedProperty', () => {
     // Assert
     expect(property.localOnly).toBe(true)
   })
+
+  it('un anuncio compartido no se marca como local, y dice quién lo publica y a qué teléfono escribirle', () => {
+    // Arrange
+    const advertiser = { name: 'Ana Mejía', kind: 'particular', phone: '+50499999999' } as const
+    const publication = { ...record('casa-publicada'), advertiser }
+
+    // Act
+    const property = toPublishedProperty(publication, { shared: true })
+
+    // Assert
+    expect(property.localOnly).toBe(false)
+    expect(property.advertiser).toEqual(advertiser)
+  })
 })
 
 describe('createPublishedPropertyService', () => {
@@ -135,7 +162,7 @@ describe('createPublishedPropertyService', () => {
     const found = await service.getById('muestra')
 
     // Assert
-    expect(found).toEqual(sample)
+    expect(found).toEqual(asExample(sample))
   })
 
   it('incluye los anuncios locales en búsquedas filtradas y mantiene la paginación', async () => {
@@ -174,8 +201,59 @@ describe('createPublishedPropertyService', () => {
     const result = await service.getFeatured()
 
     // Assert
-    expect(result).toEqual([featured])
+    expect(result).toEqual([asExample(featured)])
     expect(repository.getAll).not.toHaveBeenCalled()
+  })
+})
+
+describe('createPublishedPropertyService: ejemplos y anuncios propios', () => {
+  it('marca como ejemplo las propiedades de muestra, y no los anuncios publicados', async () => {
+    // Arrange
+    const service = createPublishedPropertyService([buildProperty({ id: 'muestra' })], repositoryFor([record('publicada')]))
+
+    // Act
+    const { items } = await service.search({}, { page: 1, pageSize: 10 })
+
+    // Assert
+    expect(items.map(({ id, example }) => [id, example ?? false])).toEqual([
+      ['publicada', false],
+      ['muestra', true],
+    ])
+  })
+
+  it('la ficha y las destacadas también dicen que una propiedad de muestra es un ejemplo', async () => {
+    // Arrange
+    const sample = buildProperty({ id: 'muestra', featured: true })
+    const service = createPublishedPropertyService([sample], repositoryFor([]))
+
+    // Act
+    const [found, featured] = await Promise.all([service.getById('muestra'), service.getFeatured()])
+
+    // Assert
+    expect(found?.example).toBe(true)
+    expect(featured[0].example).toBe(true)
+  })
+
+  it('entrega los anuncios de quien usa el sitio, sin mezclarlos con los de ejemplo', async () => {
+    // Arrange
+    const service = createPublishedPropertyService([buildProperty({ id: 'muestra' })], repositoryFor([record('mía')]))
+
+    // Act
+    const own = await service.getOwn()
+
+    // Assert
+    expect(own.map((property) => property.id)).toEqual(['mía'])
+  })
+
+  it('si no se pueden leer los anuncios propios lo rechaza, en lugar de decir que no hay ninguno', async () => {
+    // Arrange
+    const service = createPublishedPropertyService([], brokenRepository())
+
+    // Act
+    const own = service.getOwn()
+
+    // Assert
+    await expect(own).rejects.toThrow('Este navegador no permite guardar publicaciones.')
   })
 })
 
@@ -189,7 +267,7 @@ describe('createPublishedPropertyService: si el almacenamiento del navegador fal
     const result = await service.search({}, { page: 1, pageSize: 10 })
 
     // Assert
-    expect(result.items).toEqual([sample])
+    expect(result.items).toEqual([asExample(sample)])
   })
 
   it('la ficha de una propiedad de ejemplo sigue abriendo', async () => {
@@ -201,7 +279,7 @@ describe('createPublishedPropertyService: si el almacenamiento del navegador fal
     const found = await service.getById('muestra')
 
     // Assert
-    expect(found).toEqual(sample)
+    expect(found).toEqual(asExample(sample))
   })
 
   it('las destacadas de la portada siguen mostrándose', async () => {
@@ -213,7 +291,7 @@ describe('createPublishedPropertyService: si el almacenamiento del navegador fal
     const result = await service.getFeatured()
 
     // Assert
-    expect(result).toEqual([featured])
+    expect(result).toEqual([asExample(featured)])
   })
 
   it('un identificador que no es del catálogo de ejemplo se da por no encontrado, sin error', async () => {

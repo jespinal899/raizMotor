@@ -99,6 +99,7 @@ export const buildPage = <T>(items: T[], overrides: Partial<Paginated<T>> = {}):
 /** Servicio falso: cada método responde vacío salvo que la prueba lo sustituya. */
 export const buildPropertyService = (overrides: Partial<PropertyService> = {}): PropertyService => ({
   getFeatured: vi.fn(async () => []),
+  getOwn: vi.fn(async () => []),
   search: vi.fn(async () => buildPage<Property>([])),
   getById: vi.fn(async () => undefined),
   ...overrides,

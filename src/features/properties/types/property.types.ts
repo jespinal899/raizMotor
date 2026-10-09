@@ -21,6 +21,8 @@ export type PhotoSource = string | Blob
 export interface Advertiser {
   name: string
   kind: AdvertiserKind
+  /** Completo y sin separadores (+50499999999), cuando quien publica tiene uno al que escribirle. */
+  phone?: string
 }
 
 export interface Property {
@@ -52,6 +54,10 @@ export interface Property {
   featured: boolean
   /** Guardada solo en este navegador: nadie más puede verla todavía. */
   localOnly?: boolean
+  /** De muestra: no corresponde a ninguna propiedad real. */
+  example?: boolean
+  /** Retirada del catálogo por el equipo del sitio: solo la sigue viendo quien la publicó. */
+  hidden?: boolean
 }
 
 /** Orden de los resultados de una búsqueda. Sin él se conserva el del catálogo. */
