@@ -7,10 +7,18 @@ Cada archivo de esta carpeta es un cambio en la base de datos de Supabase: tabla
 | 1 | `20261009000000_perfiles.sql` | El perfil de cada cuenta (`profiles`): nombre, teléfono y cuántos anuncios admite. Se crea solo al registrarse. | Nada |
 | 2 | `20261009000100_anuncios.sql` | Los anuncios (`properties`), quién puede leerlos, publicarlos y eliminarlos, y lo que el servidor fija al guardarlos: de quién son, el límite del plan y los datos del anunciante. | La 1 |
 | 3 | `20261009000200_fotos_de_anuncios.sql` | El depósito de fotos `property-photos` y sus permisos. | Nada |
+| 4 | `20261009000300_cambios_de_cuenta.sql` | Lo que pasa cuando una cuenta corrige su nombre o su teléfono: su perfil los copia y sus anuncios pasan a mostrarlos. | La 1 y la 2 |
+| 5 | `20261009000400_editar_anuncios.sql` | Que cada cuenta pueda editar sus anuncios, y lo que el servidor conserva al guardar un cambio: de quién es, su estado y los datos del anunciante. | La 1 y la 2 |
 
 Cada archivo es una unidad que funciona completa: una tabla va siempre con sus permisos y con los disparadores que la protegen, nunca en archivos distintos. Una tabla sin ellos aceptaría lo que no debe.
 
 ## Cómo aplicar una migración
+
+Hay dos maneras, y dejan lo mismo.
+
+**Con la herramienta de Supabase**, si el proyecto ya está enlazado (`supabase link`): `supabase db push` aplica las que falten, en orden, y recuerda cuáles ya aplicó. No uses `supabase config push`: `supabase/config.toml` trae los valores de fábrica de la herramienta, no los de este proyecto, y los pondría en su lugar.
+
+**A mano, en el panel:**
 
 1. Abre el proyecto en [supabase.com](https://supabase.com/dashboard) y entra en **SQL Editor > New query**.
 2. Pega el contenido completo del archivo y pulsa **Run**.
