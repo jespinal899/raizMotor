@@ -46,14 +46,14 @@ flowchart TB
 
     domus["<b>DomusRaíz</b><br/>[Sistema]<br/>Plataforma web para buscar, publicar y contactar propiedades"]
 
-    supabase["<b>Supabase</b><br/>[Sistema externo]<br/>Cuentas: registro, confirmación por correo y sesiones"]
+    supabase["<b>Supabase</b><br/>[Sistema externo]<br/>Cuentas, anuncios publicados y sus fotos"]
     tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]<br/>Imágenes del mapa donde se marca la ubicación"]
     nominatim["<b>Nominatim</b><br/>[Sistema externo]<br/>Buscador de direcciones de OpenStreetMap"]
     unsplash["<b>Unsplash</b><br/>[Sistema externo]<br/>Aloja las fotos del catálogo de ejemplo"]
 
     visitante -- "Busca propiedades y pide información" --> domus
     anunciante -- "Publica sus propiedades" --> domus
-    domus -- "Registra, inicia y cierra sesiones [HTTPS, JSON]" --> supabase
+    domus -- "Lleva las cuentas y guarda los anuncios [HTTPS, JSON]" --> supabase
     domus -- "Pide las imágenes del mapa [HTTPS]" --> tiles
     domus -- "Busca la zona de una dirección [HTTPS, JSON]" --> nominatim
     domus -- "Carga las fotos de ejemplo [HTTPS]" --> unsplash
@@ -66,11 +66,11 @@ flowchart TB
     class supabase,tiles,nominatim,unsplash externo
 ```
 
-Al buscador de direcciones solo se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa. A Supabase llegan los datos del registro: nombre, apellido, correo, teléfono y contraseña.
+Al buscador de direcciones solo se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa. A Supabase llegan los datos del registro (nombre, apellido, correo, teléfono y contraseña) y los anuncios con sus fotos. Un anuncio publicado es público: cualquiera ve su dirección, su punto en el mapa y el nombre y el teléfono de quien lo publica.
 
 ### Lo que todavía no está conectado
 
-Solo las cuentas tienen servidor. Las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil; la página de publicar y la tarjeta del catálogo lo avisan a quien publica, y la ventana de compartir advierte de que el enlace no servirá a otras personas. El envío de contacto sigue pendiente de conectar con un servicio externo.
+Las cuentas y los anuncios tienen servidor. Si la compilación no trae las variables de Supabase, las publicaciones se guardan en IndexedDB del navegador y solo están disponibles en ese mismo origen y perfil; la página de publicar y la tarjeta del catálogo lo avisan a quien publica, y la ventana de compartir advierte de que el enlace no servirá a otras personas. El envío de contacto sigue pendiente de conectar con un servicio externo.
 
 | Función | Qué falta | Dónde se conecta |
 | --- | --- | --- |
@@ -79,11 +79,11 @@ Solo las cuentas tienen servidor. Las publicaciones se guardan en IndexedDB del 
 | Cotizar una propiedad | Servidor que reciba la solicitud; hoy se rechaza y la ficha avisa de que no se envió | Última línea de `src/features/properties/services/quoteService.ts` |
 | Reportar una publicación | Servidor que reciba el reporte; hoy se rechaza y la ventana avisa de que no se envió | Última línea de `src/features/properties/services/reportService.ts` |
 | Vistas de una ficha | Servidor que sume las de todos los visitantes; hoy se cuentan las de este navegador y la ficha lo dice | Última línea de `src/features/properties/services/propertyViewService.ts` |
-| Catálogo compartido | Los anuncios locales se combinan con las propiedades de ejemplo | Última línea de `src/features/properties/services/propertyService.ts` |
+| Búsqueda en el servidor | Hoy el navegador recibe todos los anuncios publicados y los filtra él: alcanza mientras sean cientos | `listPublished`, en `src/features/properties/services/supabasePropertyGateway.ts` |
 
 ## Nivel 2 · Contenedores
 
-El sistema tiene dos contenedores: el sitio estático que entrega los archivos y la aplicación que se ejecuta en el navegador. El catálogo de ejemplo viaja dentro de la aplicación; las publicaciones y sus fotos quedan en IndexedDB del navegador. Las cuentas viven en Supabase: la aplicación solo guarda la sesión, en el dispositivo si la persona pidió que se la recuerde y, si no, en la pestaña.
+El sistema tiene dos contenedores: el sitio estático que entrega los archivos y la aplicación que se ejecuta en el navegador. El catálogo de ejemplo viaja dentro de la aplicación. Las cuentas, los anuncios publicados y sus fotos viven en Supabase: la aplicación solo guarda la sesión, en el dispositivo si la persona pidió que se la recuerde y, si no, en la pestaña. Las tablas, sus permisos y el depósito de fotos los crean los archivos de `supabase/migrations`.
 
 ```mermaid
 %%{init: {"flowchart": {"wrappingWidth": 280}}}%%
@@ -106,7 +106,7 @@ flowchart TB
     usuario -- "Abre el sitio [HTTPS]" --> pages
     pages -- "Entrega la aplicación al navegador" --> spa
     usuario -- "Navega, busca y rellena formularios" --> spa
-    spa -- "Registra, inicia y cierra sesiones [HTTPS, JSON]" --> supabase
+    spa -- "Lleva las cuentas y guarda los anuncios [HTTPS, JSON]" --> supabase
     spa -- "Pide las imágenes del mapa [HTTPS]" --> tiles
     spa -- "Busca la zona de una dirección [HTTPS, JSON]" --> nominatim
     spa -- "Carga las fotos de ejemplo [HTTPS]" --> unsplash
@@ -127,7 +127,7 @@ Las rutas las resuelve la aplicación en el navegador, no el sitio estático. Po
 La aplicación se organiza por funcionalidades. Cada carpeta de `src/features` reúne sus páginas, componentes, hooks, servicios, tipos y utilidades.
 
 ```mermaid
-%%{init: {"flowchart": {"wrappingWidth": 190}}}%%
+%%{init: {"flowchart": {"wrappingWidth": 170}}}%%
 flowchart TB
     accTitle: Componentes de la aplicación web
     accDescr: El enrutador muestra, dentro de la estructura común, la página de cada funcionalidad. Inicio usa Búsqueda y Propiedades, Búsqueda usa Propiedades, Contacto usa Propiedades y Planes, y Planes usa Propiedades. Acceso lleva las cuentas en Supabase y Propiedades consulta los demás sistemas externos. Todas usan las piezas compartidas.
@@ -166,6 +166,7 @@ flowchart TB
     properties -- "Direcciones" --> nominatim
     properties -- "Fotos" --> unsplash
     auth -- "Cuentas" --> supabase
+    properties -- "Anuncios" ---> supabase
     nominatim ~~~ shared
     unsplash ~~~ supabase
 
@@ -205,10 +206,11 @@ Un servicio es la única puerta de una funcionalidad hacia el exterior. Cada uno
 
 | Servicio | Qué hace hoy |
 | --- | --- |
-| `propertyService` | Combina el catálogo de ejemplo con los anuncios de IndexedDB y aplica filtros y paginación. Si el almacenamiento del navegador falla, sigue sirviendo el catálogo de ejemplo. |
+| `propertyService` | Combina los anuncios publicados con el catálogo de ejemplo, que marca como tal, y aplica filtros y paginación. Entrega también los anuncios de quien usa el sitio. Si el almacén de anuncios no responde, sigue sirviendo el catálogo de ejemplo. |
 | `geocodingService` | Consulta Nominatim, como mucho una vez por segundo, para situar una dirección, y recuerda las respuestas. |
 | `locationMap` | Encapsula Leaflet: es el único archivo que conoce la biblioteca del mapa. |
-| `publicationService` | Guarda cada anuncio y sus fotos en IndexedDB; devuelve su ID y mantiene la clave de operación para evitar duplicados. |
+| `publicationService` | Publica un anuncio con sus fotos, respetando cuántos admite el plan de la cuenta, y elimina los propios. Devuelve el ID y mantiene la clave de operación para evitar duplicados. |
+| `propertyRepository` | Dónde se guardan los anuncios, elegido en una línea: Supabase (`supabasePropertyRepository`, cuyas consultas viven solo en `supabasePropertyGateway`) o, sin sus variables, IndexedDB del navegador. |
 | `contactService` | Provisional: rechaza con `ContactUnavailableError`. |
 | `authService` | Registra, inicia y cierra sesiones en Supabase, avisa de quién tiene la sesión abierta, y pide el enlace con el que se elige otra contraseña. Si la compilación no trae las variables de Supabase, queda el provisional, que rechaza con `AuthUnavailableError` o `RegistrationUnavailableError`. |
 
@@ -226,7 +228,7 @@ flowchart LR
     component["<b>Componentes</b><br/>SearchResults, PropertyCard<br/>Pintan lo que reciben"]
     hook["<b>Hook</b><br/>useProperties<br/>Pide los datos y decide el estado"]
     contract["<b>Contrato</b><br/>interface PropertyService"]
-    impl["<b>Implementación</b><br/>createPublishedPropertyService<br/>IndexedDB y catálogo de ejemplo"]
+    impl["<b>Implementación</b><br/>createPublishedPropertyService<br/>Anuncios publicados y catálogo de ejemplo"]
     utils["<b>Lógica pura</b><br/>utils y types<br/>Filtros y formatos, sin React"]
 
     page --> component
@@ -273,7 +275,7 @@ Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: rep
 - **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
 - **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
 
-La publicación guarda la clave en un índice único de IndexedDB. Si llega otra vez, devuelve el ID guardado sin crear otro anuncio. Por eso el límite de una publicación gratuita distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Mientras los anuncios no se guarden por cuenta, el límite se cuenta por navegador. El registro y el cambio de contraseña recuerdan las claves que ya atendieron (`src/shared/utils/operationLog.ts`): si llega otra vez la misma, entregan el resultado anterior sin pedirlo de nuevo a Supabase. El contacto sigue pendiente de su servicio externo.
+La publicación guarda la clave junto al anuncio, con una restricción de unicidad por cuenta en la base de datos (y un índice único en IndexedDB, sin Supabase). Si llega otra vez, no guarda nada y devuelve el ID que ya había; las fotos se suben a una ruta que sale de la clave, así que un reintento reemplaza las mismas y no deja otras. Por eso el límite de anuncios del plan distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Eliminar dos veces el mismo anuncio no hace nada la segunda vez, y las migraciones de la base pueden ejecutarse de nuevo sin alterar ningún dato. El registro y el cambio de contraseña recuerdan las claves que ya atendieron (`src/shared/utils/operationLog.ts`): si llega otra vez la misma, entregan el resultado anterior sin pedirlo de nuevo a Supabase. El contacto sigue pendiente de su servicio externo.
 
 Iniciar sesión no lleva clave: repetirlo deja la misma sesión. Pedir el enlace para elegir otra contraseña tampoco: repetirlo envía otro enlace.
 

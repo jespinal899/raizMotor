@@ -8,18 +8,22 @@ Plataforma web inmobiliaria para Honduras: reúne casas, apartamentos y terrenos
 
 ## Estado actual
 
-Las cuentas funcionan con [Supabase](https://supabase.com/); lo demás todavía no tiene servidor. El catálogo combina propiedades de ejemplo con anuncios guardados en IndexedDB del navegador actual; los anuncios locales no se sincronizan con otros dispositivos ni visitantes. Las demás funciones que necesitan un servicio externo muestran un aviso en lugar de simular el resultado.
+Las cuentas y los anuncios funcionan con [Supabase](https://supabase.com/). Un anuncio publicado lo ve cualquier visitante, a nombre de la cuenta que lo publicó, y se suma a las propiedades de ejemplo, que salen marcadas como «Ejemplo». Las demás funciones que necesitan un servicio externo muestran un aviso en lugar de simular el resultado.
+
+Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin cuentas y cada anuncio se guarda solo en el navegador de quien lo publica, que lo ve avisado.
 
 | Función | Estado |
 | --- | --- |
 | Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona |
-| Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona con el catálogo de ejemplo y anuncios locales |
+| Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y los de ejemplo. Se filtra en el navegador, que recibe el catálogo entero: sirve mientras sean cientos de anuncios |
 | Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
-| Ficha de una propiedad | Muestra anuncios de ejemplo y los publicados en este navegador; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
+| Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
+| Contactar a quien publica | La ficha de un anuncio publicado dice quién lo publica y abre WhatsApp con el teléfono de su cuenta y el anuncio ya citado. Los de ejemplo llevan al contacto del sitio |
 | Cotizar una propiedad desde su ficha | Interfaz lista; falta el servidor que reciba la solicitud |
 | Reportar una publicación desde su ficha | Interfaz lista; falta el servidor que reciba el reporte |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
-| Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes. Guarda el anuncio y hasta 10 fotos en IndexedDB de este navegador, y admite una sola publicación gratuita por navegador |
+| Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes y pide iniciar sesión. Guarda el anuncio en Supabase con hasta 10 fotos, que se reducen antes de subirlas, y queda visible de inmediato. Cada cuenta admite los anuncios de su plan: uno con el gratuito |
+| Mis anuncios | Cada cuenta ve los suyos y puede eliminarlos; eliminar uno deja libre su lugar en el plan |
 | Contacto | Interfaz lista; falta el servicio de correo |
 | Registro, inicio y cierre de sesión | Funcionan con Supabase cuando la compilación tiene sus dos variables (ver [Cuentas](#cuentas)); sin ellas, los formularios avisan de que aún no están disponibles. Quien se registra debe confirmar su correo antes de entrar; la barra muestra de quién es la sesión |
 | Acceso con Google | El botón avisa de que aún no está disponible: falta dar de alta el sitio en Google |
@@ -81,6 +85,10 @@ El correo que trae Supabase solo escribe a los miembros de su organización, y m
 | Sender email | Una dirección del dominio verificado, por ejemplo `no-reply@…` |
 
 Los textos en español de los dos correos están en `supabase/templates/`; cada archivo dice en qué plantilla del panel se pega y con qué asunto.
+
+#### Base de datos
+
+Las tablas, sus permisos y el depósito de fotos se crean con los archivos de [`supabase/migrations`](supabase/migrations/README.md), que se pegan en el SQL Editor del panel de Supabase. Son idempotentes: repetirlos no cambia nada. Allí se explica también cómo ocultar un anuncio y cómo dar más anuncios a una cuenta que contrató un plan, que hoy se hace a mano.
 
 #### Pruebas
 
@@ -177,8 +185,9 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
-- Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, el soporte 24/7 y el alcance de los anuncios, que hoy solo se ven en el navegador de quien publica.
-- Contar la publicación gratuita por cuenta: hoy se cuenta por navegador, así que borrar los datos del sitio o usar otro navegador la devuelve.
+- Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
+- Anuncios: editar uno ya publicado (hoy se elimina y se publica de nuevo), buscar en el servidor cuando el catálogo crezca (hoy el navegador recibe todos los anuncios, hasta 1000, y filtra él), decidir si la ficha muestra la dirección exacta o solo la zona, y retirar las propiedades de ejemplo cuando haya suficientes anuncios reales.
+- Activar el plan de una cuenta al confirmarse su pago: hoy se le sube el límite de anuncios a mano en el panel de Supabase.
 - Pagos en línea: cobrar con tarjeta dentro del sitio, activar el plan al confirmarse el pago, renovarlo cada mes y emitir la factura. Hoy la solicitud sale por WhatsApp y el plan se activa a mano.
 - Cupones de descuento: definir los códigos y validarlos en un servidor, para que rebajen el total.
 - Panel de administración.
