@@ -4,6 +4,8 @@ import MainLayout from '@/components/layout/MainLayout'
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage'
 import LoginPage from '@/features/auth/pages/LoginPage'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
+import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage'
+import { AUTH_LINK } from '@/features/auth/services/authService'
 import ContactPage from '@/features/contact/pages/ContactPage'
 import PrivacyPage from '@/features/legal/pages/PrivacyPage'
 import TermsPage from '@/features/legal/pages/TermsPage'
@@ -15,6 +17,7 @@ import AgentPlansPage from '@/features/shop/pages/AgentPlansPage'
 import PricingPage from '@/features/shop/pages/PricingPage'
 import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import { landFromAuthLink } from '@/router/authLinkLanding'
 import { toRouterBasename } from '@/router/basename'
 import { ROUTES } from '@/shared/constants/routes'
 
@@ -29,6 +32,7 @@ export const routes: RouteObject[] = [
       { path: ROUTES.propertyDetail, element: <PropertyDetailPage /> },
       { path: ROUTES.contact, element: <ContactPage /> },
       { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
+      { path: ROUTES.resetPassword, element: <ResetPasswordPage /> },
       { path: ROUTES.publish, element: <LazyPublishPropertyPage /> },
       { path: ROUTES.pricing, element: <PricingPage /> },
       { path: ROUTES.agentPlans, element: <AgentPlansPage /> },
@@ -54,3 +58,6 @@ export const router = createBrowserRouter(
   // Hoy el sitio va en la raíz del dominio, pero puede publicarse bajo un prefijo: la compilación lo indica.
   { basename: toRouterBasename(import.meta.env.BASE_URL) },
 )
+
+// Quien vuelve desde un enlace de su correo llega a la portada: aquí se le lleva a la página que lo atiende.
+void landFromAuthLink(router, AUTH_LINK, window.location.hash)

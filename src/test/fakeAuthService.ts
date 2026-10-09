@@ -15,6 +15,9 @@ export const fakeAuthService = (session?: SessionUser | null) => {
     login: vi.fn<AuthService['login']>(async () => {}),
     loginWithGoogle: vi.fn<AuthService['loginWithGoogle']>(async () => {}),
     register: vi.fn<AuthService['register']>(async () => 'confirmationPending'),
+    requestPasswordReset: vi.fn<AuthService['requestPasswordReset']>(async () => {}),
+    isRecoveringPassword: vi.fn<AuthService['isRecoveringPassword']>(() => false),
+    changePassword: vi.fn<AuthService['changePassword']>(async () => {}),
     logout: vi.fn<AuthService['logout']>(async () => {}),
     onSessionChange: vi.fn<AuthService['onSessionChange']>((listener) => {
       listeners.add(listener)

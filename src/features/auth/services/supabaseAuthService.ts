@@ -3,9 +3,12 @@ import {
   EmailTakenError,
   GoogleAccessUnavailableError,
   InvalidCredentialsError,
+  RecoveryLinkExpiredError,
+  SamePasswordError,
 } from '@/features/auth/services/authErrors'
 import type { AuthService } from '@/features/auth/services/authService'
 import type { RegistrationCredentials, RegistrationOutcome, SessionUser } from '@/features/auth/types/auth.types'
+import { createOperationLog } from '@/shared/utils/operationLog'
 
 /** Un fallo de Supabase: su `code` dice el motivo. */
 type AccountsError = Error & { code?: string }
@@ -31,6 +34,8 @@ export interface AccountsClient {
     options: { data: Record<string, string>; emailRedirectTo: string }
   }): Promise<{ data: { user: AccountsUser | null; session: AccountsSession | null }; error: AccountsError | null }>
   signOut(options: { scope: 'local' }): Promise<{ error: AccountsError | null }>
+  resetPasswordForEmail(email: string, options: { redirectTo: string }): Promise<{ error: AccountsError | null }>
+  updateUser(attributes: { password: string }): Promise<{ error: AccountsError | null }>
   onAuthStateChange(listener: (event: string, session: AccountsSession | null) => void): {
     data: { subscription: { unsubscribe(): void } }
   }
@@ -40,8 +45,10 @@ interface SupabaseAuthOptions {
   accounts: AccountsClient
   /** Deja dicho si la sesión que se inicie debe recordarse en este dispositivo. */
   rememberSession: (remember: boolean) => void
-  /** A dónde lleva el enlace de confirmación que la persona recibe en su correo. */
-  confirmationUrl: string
+  /** A dónde vuelve quien abre un enlace de su correo: el de confirmar la cuenta o el de elegir otra contraseña. */
+  returnUrl: string
+  /** Si la página se abrió desde el enlace para elegir otra contraseña. */
+  cameFromRecoveryLink: boolean
 }
 
 type Rejections = Record<string, () => Error>
@@ -55,6 +62,10 @@ const LOGIN_REJECTIONS: Rejections = {
 const REGISTRATION_REJECTIONS: Rejections = {
   user_already_exists: () => new EmailTakenError(),
   email_exists: () => new EmailTakenError(),
+}
+
+const PASSWORD_REJECTIONS: Rejections = {
+  same_password: () => new SamePasswordError(),
 }
 
 const toRejection = (error: AccountsError, known: Rejections): Error => {
@@ -71,20 +82,25 @@ const toSessionUser = ({ email, user_metadata: profile }: AccountsUser): Session
   lastName: toText(profile.last_name),
 })
 
-/** Cuentas con Supabase: sesiones con correo y contraseña, y registro con confirmación por correo. */
+/**
+ * Cuentas con Supabase: sesiones con correo y contraseña, registro con confirmación por correo y un enlace
+ * para elegir otra contraseña.
+ */
 export const createSupabaseAuthService = ({
   accounts,
   rememberSession,
-  confirmationUrl,
+  returnUrl,
+  cameFromRecoveryLink,
 }: SupabaseAuthOptions): AuthService => {
-  /** Registros ya pedidos, por su clave: repetir uno entrega su mismo resultado en lugar de pedirlo otra vez. */
-  const registrations = new Map<string, Promise<RegistrationOutcome>>()
+  // Repetir un registro o un cambio de contraseña con la misma clave no lo pide otra vez a Supabase.
+  const registerOnce = createOperationLog<RegistrationOutcome>()
+  const changePasswordOnce = createOperationLog<void>()
 
   const signUp = async ({ firstName, lastName, email, phone, password }: RegistrationCredentials) => {
     const { data, error } = await accounts.signUp({
       email,
       password,
-      options: { data: { first_name: firstName, last_name: lastName, phone }, emailRedirectTo: confirmationUrl },
+      options: { data: { first_name: firstName, last_name: lastName, phone }, emailRedirectTo: returnUrl },
     })
 
     if (error) throw toRejection(error, REGISTRATION_REJECTIONS)
@@ -108,17 +124,24 @@ export const createSupabaseAuthService = ({
       throw new GoogleAccessUnavailableError()
     },
 
-    register: (credentials, operationKey) => {
-      const requested = registrations.get(operationKey)
-      if (requested) return requested
+    register: (credentials, operationKey) => registerOnce(operationKey, () => signUp(credentials)),
 
-      const registration = signUp(credentials)
-      registrations.set(operationKey, registration)
-      // Un registro que falló no queda hecho: reintentarlo con la misma clave lo pide de nuevo.
-      registration.catch(() => registrations.delete(operationKey))
+    requestPasswordReset: async (email) => {
+      const { error } = await accounts.resetPasswordForEmail(email, { redirectTo: returnUrl })
 
-      return registration
+      if (error) throw error
     },
+
+    isRecoveringPassword: () => cameFromRecoveryLink,
+
+    changePassword: (password, operationKey) =>
+      changePasswordOnce(operationKey, async () => {
+        // Con la sesión abierta, Supabase aceptaría el cambio de cualquiera: aquí se exige haber llegado por el enlace.
+        if (!cameFromRecoveryLink) throw new RecoveryLinkExpiredError()
+        const { error } = await accounts.updateUser({ password })
+
+        if (error) throw toRejection(error, PASSWORD_REJECTIONS)
+      }),
 
     logout: async () => {
       // Solo este dispositivo: quien cierra sesión aquí puede seguir dentro en su teléfono.

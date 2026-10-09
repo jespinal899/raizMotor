@@ -41,6 +41,29 @@ describe('createPendingAuthService', () => {
     await expect(registration).rejects.toBeInstanceOf(RegistrationUnavailableError)
   })
 
+  it('rechaza pedir el enlace para elegir otra contraseña, en lugar de fingir que lo envió', async () => {
+    // Arrange
+    const service = createPendingAuthService()
+
+    // Act
+    const request = service.requestPasswordReset('ana@gmail.com')
+
+    // Assert
+    await expect(request).rejects.toBeInstanceOf(AuthUnavailableError)
+  })
+
+  it('rechaza guardar una contraseña nueva y dice que nadie llegó desde un enlace de recuperación', async () => {
+    // Arrange
+    const service = createPendingAuthService()
+
+    // Act
+    const change = service.changePassword('otra-secreta-456', TEST_OPERATION_KEY)
+
+    // Assert
+    expect(service.isRecoveringPassword()).toBe(false)
+    await expect(change).rejects.toBeInstanceOf(AuthUnavailableError)
+  })
+
   it('dice que nadie tiene la sesión abierta, porque sin cuentas no puede haberla', () => {
     // Arrange
     const service = createPendingAuthService()

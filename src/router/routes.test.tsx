@@ -55,6 +55,8 @@ describe('routes', () => {
     ['Publica tu propiedad en simples pasos', ROUTES.pricing],
     [`Potencia tu carrera con ${BRAND.name}`, ROUTES.agentPlans],
     ['Contratar Agente Pro', agentPlanCheckoutPath('agente-plan-1')],
+    // Sin llegar desde el enlace del correo, la página de elegir contraseña solo puede decir que ya no vale.
+    ['El enlace ya no es válido', ROUTES.resetPassword],
   ])('abre la página "%s" en su dirección', async (title, route) => {
     // Arrange: aplicación sin abrir
 

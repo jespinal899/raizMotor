@@ -45,3 +45,19 @@ export class GoogleAccessUnavailableError extends Error {
     this.name = 'GoogleAccessUnavailableError'
   }
 }
+
+/** La contraseña nueva es la misma que la cuenta ya tenía. */
+export class SamePasswordError extends Error {
+  constructor() {
+    super('La contraseña nueva es igual a la anterior.')
+    this.name = 'SamePasswordError'
+  }
+}
+
+/** Solo quien llega desde el enlace de recuperación puede elegir otra contraseña sin escribir la anterior. */
+export class RecoveryLinkExpiredError extends Error {
+  constructor() {
+    super('El enlace para elegir otra contraseña ya no es válido.')
+    this.name = 'RecoveryLinkExpiredError'
+  }
+}

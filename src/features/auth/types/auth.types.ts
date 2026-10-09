@@ -44,3 +44,14 @@ export type LoginStatus = 'idle' | AccessInProgress | LoginFailure
 export type RegistrationFailure = 'unavailable' | 'taken' | 'googleUnavailable' | 'failed'
 
 export type RegistrationStatus = 'idle' | AccessInProgress | RegistrationFailure
+
+/** Estado del formulario que pide el enlace para elegir otra contraseña: `sent` cuando ya se pidió. */
+export type PasswordResetRequestStatus = 'idle' | 'submitting' | 'sent' | 'failed'
+
+/**
+ * Por qué no se guardó la contraseña nueva: `unchanged` significa que es la misma de antes y `expired`,
+ * que el enlace con el que se llegó ya no vale.
+ */
+export type PasswordChangeFailure = 'unchanged' | 'expired' | 'failed'
+
+export type PasswordChangeStatus = 'idle' | 'submitting' | 'changed' | PasswordChangeFailure

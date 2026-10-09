@@ -13,6 +13,8 @@ export const ROUTES = {
   login: '/iniciar-sesion',
   register: '/registro',
   forgotPassword: '/recuperar-contrasena',
+  /** A donde llega quien abre el enlace de su correo para elegir otra contraseña. */
+  resetPassword: '/restablecer-contrasena',
   publish: '/publicar',
   pricing: '/planes',
   agentPlans: '/planes/agente-inmobiliario',

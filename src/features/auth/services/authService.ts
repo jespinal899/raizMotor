@@ -6,6 +6,7 @@ import type {
   RegistrationOutcome,
   SessionUser,
 } from '@/features/auth/types/auth.types'
+import { readAuthLink } from '@/features/auth/utils/authLink'
 import { sessionVault, supabase } from '@/lib/supabaseClient'
 
 export interface AuthService {
@@ -19,6 +20,18 @@ export interface AuthService {
    * por un reintento o un doble envío, se crea una sola cuenta.
    */
   register(credentials: RegistrationCredentials, operationKey: string): Promise<RegistrationOutcome>
+  /**
+   * Envía al correo un enlace para elegir otra contraseña. Se resuelve igual exista o no una cuenta con ese
+   * correo, para no delatar quién está registrado. Repetirlo envía otro enlace.
+   */
+  requestPasswordReset(email: string): Promise<void>
+  /** Dice si la persona llegó desde ese enlace: solo entonces puede elegir otra contraseña sin escribir la anterior. */
+  isRecoveringPassword(): boolean
+  /**
+   * Guarda la contraseña nueva de quien llegó desde el enlace y se rechaza si no se pudo. Es idempotente:
+   * si llega dos veces con la misma clave, se guarda una sola vez.
+   */
+  changePassword(password: string, operationKey: string): Promise<void>
   /** Cierra la sesión en este dispositivo y se rechaza si no se pudo. Repetirlo sin sesión no hace nada. */
   logout(): Promise<void>
   /**
@@ -41,6 +54,9 @@ export const createPendingAuthService = (): AuthService => {
     login: rejectLoginAsUnavailable,
     loginWithGoogle: rejectLoginAsUnavailable,
     register: rejectRegistrationAsUnavailable,
+    requestPasswordReset: rejectLoginAsUnavailable,
+    isRecoveringPassword: () => false,
+    changePassword: rejectLoginAsUnavailable,
     logout: async () => {},
     onSessionChange: (listener) => {
       listener(null)
@@ -53,12 +69,20 @@ export const createPendingAuthService = (): AuthService => {
 /** Sin el servicio configurado en la compilación, las cuentas no están activas y los formularios lo avisan. */
 export const ACCOUNTS_AVAILABLE = supabase !== null
 
+/**
+ * Con qué se abrió la página, si alguien vuelve desde un enlace de su correo. Se lee al cargar, antes de que
+ * el cliente de Supabase recoja la sesión que trae el enlace y limpie la dirección.
+ */
+export const AUTH_LINK = readAuthLink(window.location.hash)
+
 // Único punto donde se elige cómo se gestionan las cuentas.
 export const authService: AuthService = supabase
   ? createSupabaseAuthService({
       accounts: supabase.auth,
       rememberSession: sessionVault.remember,
-      // El enlace de confirmación devuelve a la portada del sitio, ya con la sesión iniciada.
-      confirmationUrl: new URL(import.meta.env.BASE_URL, window.location.origin).href,
+      // Los enlaces del correo devuelven a la portada, que Supabase siempre admite como destino; desde ahí,
+      // el enrutador lleva a la página de elegir contraseña a quien venga a eso.
+      returnUrl: new URL(import.meta.env.BASE_URL, window.location.origin).href,
+      cameFromRecoveryLink: AUTH_LINK === 'recovery',
     })
   : createPendingAuthService()

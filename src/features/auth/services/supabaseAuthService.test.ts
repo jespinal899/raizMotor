@@ -4,6 +4,8 @@ import {
   EmailTakenError,
   GoogleAccessUnavailableError,
   InvalidCredentialsError,
+  RecoveryLinkExpiredError,
+  SamePasswordError,
 } from '@/features/auth/services/authErrors'
 import { createSupabaseAuthService } from '@/features/auth/services/supabaseAuthService'
 import type { AccountsClient } from '@/features/auth/services/supabaseAuthService'
@@ -11,7 +13,7 @@ import type { LoginCredentials } from '@/features/auth/types/auth.types'
 import { buildRegistration } from '@/test/factories'
 import { TEST_OPERATION_KEY } from '@/test/operationKey'
 
-const CONFIRMATION_URL = 'https://sitio.example/'
+const RETURN_URL = 'https://sitio.example/'
 const CREDENTIALS: LoginCredentials = { email: 'ana@gmail.com', password: 'secreta123', remember: true }
 const USER = { email: 'ana@gmail.com', user_metadata: { first_name: 'Ana', last_name: 'Mejía' }, identities: [{}] }
 const SESSION = { user: USER }
@@ -29,6 +31,8 @@ const fakeAccounts = () => {
     signInWithPassword: vi.fn<AccountsClient['signInWithPassword']>(async () => ({ error: null })),
     signUp: vi.fn<AccountsClient['signUp']>(async () => ({ data: { user: USER, session: null }, error: null })),
     signOut: vi.fn<AccountsClient['signOut']>(async () => ({ error: null })),
+    resetPasswordForEmail: vi.fn<AccountsClient['resetPasswordForEmail']>(async () => ({ error: null })),
+    updateUser: vi.fn<AccountsClient['updateUser']>(async () => ({ error: null })),
     onAuthStateChange: vi.fn<AccountsClient['onAuthStateChange']>((listener) => {
       notify = listener
       return { data: { subscription: { unsubscribe } } }
@@ -38,13 +42,19 @@ const fakeAccounts = () => {
   return { accounts, unsubscribe, emit: (session: Parameters<SessionListener>[1]) => notify('SIGNED_IN', session) }
 }
 
-const setup = () => {
+interface Arrival {
+  /** Si la página se abrió desde el enlace para elegir otra contraseña. */
+  cameFromRecoveryLink?: boolean
+}
+
+const setup = ({ cameFromRecoveryLink = false }: Arrival = {}) => {
   const fake = fakeAccounts()
   const rememberSession = vi.fn()
   const service = createSupabaseAuthService({
     accounts: fake.accounts,
     rememberSession,
-    confirmationUrl: CONFIRMATION_URL,
+    returnUrl: RETURN_URL,
+    cameFromRecoveryLink,
   })
 
   return { ...fake, rememberSession, service }
@@ -134,7 +144,7 @@ describe('createSupabaseAuthService: crear una cuenta', () => {
       password: registration.password,
       options: {
         data: { first_name: registration.firstName, last_name: registration.lastName, phone: registration.phone },
-        emailRedirectTo: CONFIRMATION_URL,
+        emailRedirectTo: RETURN_URL,
       },
     })
   })
@@ -216,6 +226,103 @@ describe('createSupabaseAuthService: crear una cuenta', () => {
     // Assert
     expect(accounts.signUp).toHaveBeenCalledTimes(2)
     expect(outcome).toBe('confirmationPending')
+  })
+})
+
+describe('createSupabaseAuthService: recuperar la contraseña', () => {
+  it('pide que se envíe el enlace al correo y dice a dónde debe volver quien lo abra', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+
+    // Act
+    await service.requestPasswordReset('ana@gmail.com')
+
+    // Assert
+    expect(accounts.resetPasswordForEmail).toHaveBeenCalledExactlyOnceWith('ana@gmail.com', { redirectTo: RETURN_URL })
+  })
+
+  it('si el enlace no se pudo enviar, lo rechaza con ese fallo', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+    const failure = supabaseError('over_email_send_rate_limit')
+    accounts.resetPasswordForEmail.mockResolvedValue({ error: failure })
+
+    // Act
+    const request = service.requestPasswordReset('ana@gmail.com')
+
+    // Assert
+    await expect(request).rejects.toBe(failure)
+  })
+
+  it.each([true, false])('dice si la persona llegó desde el enlace de recuperación (%s)', (cameFromRecoveryLink) => {
+    // Arrange
+    const { service } = setup({ cameFromRecoveryLink })
+
+    // Act
+    const recovering = service.isRecoveringPassword()
+
+    // Assert
+    expect(recovering).toBe(cameFromRecoveryLink)
+  })
+
+  it('guarda la contraseña nueva de quien llegó desde el enlace', async () => {
+    // Arrange
+    const { service, accounts } = setup({ cameFromRecoveryLink: true })
+
+    // Act
+    await service.changePassword('otra-secreta-456', TEST_OPERATION_KEY)
+
+    // Assert
+    expect(accounts.updateUser).toHaveBeenCalledExactlyOnceWith({ password: 'otra-secreta-456' })
+  })
+
+  it('no cambia la contraseña de quien no llegó desde el enlace, aunque tenga la sesión abierta', async () => {
+    // Arrange
+    const { service, accounts } = setup({ cameFromRecoveryLink: false })
+
+    // Act
+    const change = service.changePassword('otra-secreta-456', TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(change).rejects.toBeInstanceOf(RecoveryLinkExpiredError)
+    expect(accounts.updateUser).not.toHaveBeenCalled()
+  })
+
+  it('rechaza con SamePasswordError si la contraseña nueva es la misma de antes', async () => {
+    // Arrange
+    const { service, accounts } = setup({ cameFromRecoveryLink: true })
+    accounts.updateUser.mockResolvedValue({ error: supabaseError('same_password') })
+
+    // Act
+    const change = service.changePassword('secreta123', TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(change).rejects.toBeInstanceOf(SamePasswordError)
+  })
+
+  it('ante cualquier otro fallo al guardarla rechaza con ese mismo fallo', async () => {
+    // Arrange
+    const { service, accounts } = setup({ cameFromRecoveryLink: true })
+    const failure = supabaseError('unexpected_failure')
+    accounts.updateUser.mockResolvedValue({ error: failure })
+
+    // Act
+    const change = service.changePassword('otra-secreta-456', TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(change).rejects.toBe(failure)
+  })
+
+  it('repetir el cambio con la misma clave no lo pide dos veces', async () => {
+    // Arrange
+    const { service, accounts } = setup({ cameFromRecoveryLink: true })
+    await service.changePassword('otra-secreta-456', TEST_OPERATION_KEY)
+
+    // Act
+    await service.changePassword('otra-secreta-456', TEST_OPERATION_KEY)
+
+    // Assert
+    expect(accounts.updateUser).toHaveBeenCalledOnce()
   })
 })
 

@@ -5,7 +5,9 @@ import {
   EmailTakenError,
   GoogleAccessUnavailableError,
   InvalidCredentialsError,
+  RecoveryLinkExpiredError,
   RegistrationUnavailableError,
+  SamePasswordError,
 } from '@/features/auth/services/authErrors'
 
 describe('errores de acceso', () => {
@@ -16,6 +18,8 @@ describe('errores de acceso', () => {
     { ErrorClass: EmailNotConfirmedError, name: 'EmailNotConfirmedError' },
     { ErrorClass: EmailTakenError, name: 'EmailTakenError' },
     { ErrorClass: GoogleAccessUnavailableError, name: 'GoogleAccessUnavailableError' },
+    { ErrorClass: SamePasswordError, name: 'SamePasswordError' },
+    { ErrorClass: RecoveryLinkExpiredError, name: 'RecoveryLinkExpiredError' },
   ])('$name es un Error con nombre propio, para distinguirlo de un fallo de red', ({ ErrorClass, name }) => {
     // Arrange: no necesita datos
 
