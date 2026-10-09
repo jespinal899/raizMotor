@@ -15,7 +15,7 @@ interface AuthCardProps {
   title: string
   description: string
   /** La otra pantalla de acceso, para quien llegó a la que no era: registrarse o iniciar sesión. */
-  alternative: { question: string; action: string; to: string }
+  alternative?: { question: string; action: string; to: string }
   children: ReactNode
 }
 
@@ -36,9 +36,11 @@ const AuthCard = ({ title, description, alternative, children }: AuthCardProps) 
 
             {children}
 
-            <FieldDescription className="text-center">
-              {alternative.question} <Link to={alternative.to}>{alternative.action}</Link>
-            </FieldDescription>
+            {alternative && (
+              <FieldDescription className="text-center">
+                {alternative.question} <Link to={alternative.to}>{alternative.action}</Link>
+              </FieldDescription>
+            )}
           </FieldGroup>
 
           <div className="relative hidden bg-muted md:block">

@@ -41,6 +41,21 @@ describe('AuthCard', () => {
     expect(screen.getByRole('link', { name: action })).toHaveAttribute('href', to)
   })
 
+  it('si no hay otra pantalla que ofrecer, no pone ningún enlace debajo del contenido', () => {
+    // Arrange: una pantalla sin alternativa, como la de elegir otra contraseña
+
+    // Act
+    renderWithRouter(
+      <AuthCard title="Elige otra contraseña" description="Desde ahora entrarás con ella.">
+        <input aria-label="Nueva contraseña" />
+      </AuthCard>,
+    )
+
+    // Assert
+    expect(screen.getByRole('textbox', { name: 'Nueva contraseña' })).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+  })
+
   it('acompaña el contenido con una foto decorativa, que los lectores de pantalla no anuncian', () => {
     // Arrange: tarjeta con su foto lateral
 
