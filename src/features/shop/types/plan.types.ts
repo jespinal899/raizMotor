@@ -32,6 +32,8 @@ export interface AgentPlanFeature {
 /** Un plan de pago para agentes inmobiliarios. */
 export interface AgentPlan extends ListedPlan {
   id: AgentPlanId
+  /** Propiedades que la cuenta puede tener publicadas a la vez. */
+  maxPublications: number
   features: AgentPlanFeature[]
   /** En lempiras, sin el impuesto sobre ventas. */
   monthlyPrice: number

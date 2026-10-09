@@ -1,6 +1,6 @@
 import { Building2, House, UserRound } from 'lucide-react'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
-import type { AgentPlan, AgentPlanId, Plan } from '@/features/shop/types/plan.types'
+import type { AgentPlan, AgentPlanFeature, AgentPlanId, Plan } from '@/features/shop/types/plan.types'
 import { ROUTES, agentPlanCheckoutPath, planContactPath } from '@/shared/constants/routes'
 
 export const PLANS: Plan[] = [
@@ -32,12 +32,22 @@ export const PLANS: Plan[] = [
 /** Todavía no hay pagos en línea: el botón abre la página donde el plan se pide por WhatsApp. */
 const checkout = (id: AgentPlanId, label: string) => ({ label, to: agentPlanCheckoutPath(id) })
 
+const PRO_PUBLICATIONS = 25
+const ELITE_PUBLICATIONS = 100
+
+/** La cantidad se escribe una sola vez: la tarjeta no puede prometer otra que la que el plan da a la cuenta. */
+const activeProperties = (count: number): AgentPlanFeature => ({
+  text: `Hasta ${count} propiedades activas`,
+  emphasized: `Hasta ${count} propiedades`,
+})
+
 export const AGENT_PLANS: AgentPlan[] = [
   {
     id: 'agente-plan-1',
     name: 'Agente Pro',
+    maxPublications: PRO_PUBLICATIONS,
     features: [
-      { text: 'Hasta 25 propiedades activas', emphasized: 'Hasta 25 propiedades' },
+      activeProperties(PRO_PUBLICATIONS),
       { text: '1 usuario por agente inmobiliario', emphasized: '1 usuario' },
     ],
     monthlyPrice: 599,
@@ -46,8 +56,9 @@ export const AGENT_PLANS: AgentPlan[] = [
   {
     id: 'agente-plan-2',
     name: 'Agente Élite',
+    maxPublications: ELITE_PUBLICATIONS,
     features: [
-      { text: 'Hasta 100 propiedades activas', emphasized: 'Hasta 100 propiedades' },
+      activeProperties(ELITE_PUBLICATIONS),
       { text: '2 usuarios por agente inmobiliario', emphasized: '2 usuarios' },
     ],
     monthlyPrice: 999,

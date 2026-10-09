@@ -92,6 +92,18 @@ describe('AGENT_PLANS', () => {
     expect(plans).toEqual(expectedPlans)
   })
 
+  it('cada plan admite publicadas las propiedades que promete su tarjeta', () => {
+    // Arrange
+    const expectedLimits = [25, 100]
+
+    // Act
+    const limits = AGENT_PLANS.map((plan) => plan.maxPublications)
+
+    // Assert
+    expect(limits).toEqual(expectedLimits)
+    expect(AGENT_PLANS.every((plan) => plan.features[0].text === `Hasta ${plan.maxPublications} propiedades activas`)).toBe(true)
+  })
+
   it('cada tramo en negrita forma parte del texto de su punto: si no, la negrita se perdería sin avisar', () => {
     // Arrange
     const features = AGENT_PLANS.flatMap((plan) => plan.features)
