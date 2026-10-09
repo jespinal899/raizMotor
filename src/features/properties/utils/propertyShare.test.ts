@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildShareText, buildWhatsAppShareUrl } from '@/features/properties/utils/propertyShare'
+import {
+  buildAdvertiserChatUrl,
+  buildShareText,
+  buildWhatsAppShareUrl,
+} from '@/features/properties/utils/propertyShare'
+import { BRAND } from '@/shared/constants/brand'
 import { formatPriceInLempiras } from '@/shared/utils/format'
 import { buildProperty } from '@/test/factories'
 
@@ -35,6 +40,20 @@ describe('buildShareText', () => {
 
     // Assert
     expect(text.replace(/\s+/g, ' ')).toContain(`$ 850 (≈ ${inLempiras(850)}) al mes`)
+  })
+})
+
+describe('buildAdvertiserChatUrl', () => {
+  it('abre WhatsApp con el teléfono de quien publica y un mensaje que cita el anuncio y su enlace', () => {
+    // Arrange
+    const adUrl = 'https://sitio.example/propiedad/casa-1'
+
+    // Act
+    const chat = new URL(buildAdvertiserChatUrl('Casa con jardín', adUrl, '+50499999999'))
+
+    // Assert
+    expect(chat.origin + chat.pathname).toBe('https://wa.me/50499999999')
+    expect(chat.searchParams.get('text')).toBe(`Hola, vi tu anuncio «Casa con jardín» en ${BRAND.name} y me interesa.\n${adUrl}`)
   })
 })
 

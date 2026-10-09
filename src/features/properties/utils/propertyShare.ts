@@ -1,4 +1,5 @@
 import type { Property } from '@/features/properties/types/property.types'
+import { BRAND } from '@/shared/constants/brand'
 import { formatPrice, formatPriceInLempiras } from '@/shared/utils/format'
 import { whatsAppUrl } from '@/shared/utils/whatsApp'
 
@@ -20,3 +21,10 @@ export const buildShareText = ({ title, price, operation, district, city }: Shar
  * elige a quién enviarlo.
  */
 export const buildWhatsAppShareUrl = (text: string, url: string): string => whatsAppUrl(`${text}\n${url}`)
+
+/**
+ * Dirección que abre WhatsApp con el teléfono de quien publica y un mensaje que cita su anuncio. Tampoco
+ * envía nada: lo hace quien escribe.
+ */
+export const buildAdvertiserChatUrl = (title: string, url: string, phone: string): string =>
+  whatsAppUrl(`Hola, vi tu anuncio «${title}» en ${BRAND.name} y me interesa.\n${url}`, phone)

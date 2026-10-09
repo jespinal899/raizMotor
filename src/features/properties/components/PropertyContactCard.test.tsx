@@ -99,6 +99,22 @@ describe('PropertyContactCard', () => {
     expect(screen.getByRole('link', { name: 'Contactar al anunciante' })).toHaveTextContent(/^Contactar$/)
   })
 
+  it('si quien publica dejó su teléfono, el botón le escribe por WhatsApp con el anuncio ya citado', () => {
+    // Arrange
+    const advertiser = { name: 'Ana Mejía', kind: 'particular', phone: '+50499999999' } as const
+    const property = buildProperty({ id: 'casa-1', title: 'Casa con jardín', advertiser })
+
+    // Act
+    renderCard(property)
+
+    // Assert
+    const chat = new URL(screen.getByRole('link', { name: 'Escribir al anunciante por WhatsApp' }).getAttribute('href')!)
+    expect(chat.origin + chat.pathname).toBe('https://wa.me/50499999999')
+    expect(chat.searchParams.get('text')).toContain('«Casa con jardín»')
+    expect(chat.searchParams.get('text')).toContain('/propiedad/casa-1')
+    expect(screen.queryByRole('link', { name: 'Contactar al anunciante' })).not.toBeInTheDocument()
+  })
+
   it('aunque no se sepa quién publica, sigue ofreciendo contactar', () => {
     // Arrange
     const property = buildProperty({ id: 'casa-1', advertiser: undefined })
