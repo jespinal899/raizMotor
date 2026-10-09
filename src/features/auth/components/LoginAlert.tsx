@@ -1,4 +1,4 @@
-import { CircleAlert, Info } from 'lucide-react'
+import { CircleAlert, Info, MailWarning } from 'lucide-react'
 import StatusAlert from '@/components/StatusAlert'
 import type { StatusAlertContent } from '@/components/StatusAlert'
 import type { LoginStatus } from '@/features/auth/types/auth.types'
@@ -16,6 +16,16 @@ const ALERTS: Partial<Record<LoginStatus, StatusAlertContent>> = {
     title: 'No pudimos iniciar tu sesión',
     description: 'El correo o la contraseña no son correctos.',
     variant: 'destructive',
+  },
+  unconfirmed: {
+    icon: MailWarning,
+    title: 'Confirma tu correo para entrar',
+    description: 'Abre el enlace que te enviamos al registrarte. Si no lo ves, revisa el correo no deseado.',
+  },
+  googleUnavailable: {
+    icon: Info,
+    title: 'El acceso con Google aún no está disponible',
+    description: 'Por ahora, inicia sesión con tu correo y tu contraseña.',
   },
   failed: {
     icon: CircleAlert,

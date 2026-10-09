@@ -1,7 +1,12 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { useRegisterForm } from '@/features/auth/hooks/useRegisterForm'
-import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/auth/services/authService'
+import {
+  AuthUnavailableError,
+  EmailTakenError,
+  GoogleAccessUnavailableError,
+  RegistrationUnavailableError,
+} from '@/features/auth/services/authErrors'
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 import { deferred } from '@/test/deferred'
 import { buildRegistration } from '@/test/factories'
@@ -104,6 +109,7 @@ describe('useRegisterForm', () => {
 
   it.each([
     { reason: new RegistrationUnavailableError(), status: 'unavailable', when: 'el registro aún no está activo' },
+    { reason: new EmailTakenError(), status: 'taken', when: 'ese correo ya tiene cuenta' },
     { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
   ])('queda como "$status" cuando $when', async ({ reason, status }) => {
     // Arrange
@@ -168,6 +174,7 @@ describe('useRegisterForm: registrarse con Google', () => {
 
   it.each([
     { reason: new AuthUnavailableError(), status: 'unavailable', when: 'el acceso con Google aún no está activo' },
+    { reason: new GoogleAccessUnavailableError(), status: 'googleUnavailable', when: 'las cuentas funcionan pero Google todavía no' },
     { reason: new Error('ventana cerrada'), status: 'failed', when: 'ocurre cualquier otro error' },
   ])('queda como "$status" cuando $when', async ({ reason, status }) => {
     // Arrange

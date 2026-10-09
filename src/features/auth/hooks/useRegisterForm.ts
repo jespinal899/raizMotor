@@ -1,9 +1,15 @@
-import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/auth/services/authService'
+import {
+  AuthUnavailableError,
+  EmailTakenError,
+  GoogleAccessUnavailableError,
+  RegistrationUnavailableError,
+} from '@/features/auth/services/authErrors'
 import type {
   AccessInProgress,
   RegistrationCredentials,
   RegistrationFailure,
 } from '@/features/auth/types/auth.types'
+import { toFailure } from '@/features/auth/utils/accessFailure'
 import { validateRegistration } from '@/features/auth/utils/registerValidation'
 import { useAttemptForm } from '@/hooks/useAttemptForm'
 import { toInternationalPhone } from '@/shared/utils/honduranPhone'
@@ -26,11 +32,16 @@ const EMPTY_REGISTRATION: RegistrationCredentials = {
   password: '',
 }
 
-/** Ni el registro ni el acceso con Google están activos todavía: los dos se explican igual. */
-const isUnavailable = (reason: unknown) =>
-  reason instanceof RegistrationUnavailableError || reason instanceof AuthUnavailableError
-
-const toFailureStatus = (reason: unknown): RegistrationFailure => (isUnavailable(reason) ? 'unavailable' : 'failed')
+const toFailureStatus = toFailure<RegistrationFailure>(
+  [
+    // Sin cuentas no hay registro ni acceso con Google: los dos se explican igual.
+    [RegistrationUnavailableError, 'unavailable'],
+    [AuthUnavailableError, 'unavailable'],
+    [EmailTakenError, 'taken'],
+    [GoogleAccessUnavailableError, 'googleUnavailable'],
+  ],
+  'failed',
+)
 
 /**
  * Los datos de perfil se envían sin espacios sobrantes y el teléfono, completo: en el formulario solo se

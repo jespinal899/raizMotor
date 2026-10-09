@@ -1,5 +1,11 @@
-import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authService'
+import {
+  AuthUnavailableError,
+  EmailNotConfirmedError,
+  GoogleAccessUnavailableError,
+  InvalidCredentialsError,
+} from '@/features/auth/services/authErrors'
 import type { AccessInProgress, LoginCredentials, LoginFailure } from '@/features/auth/types/auth.types'
+import { toFailure } from '@/features/auth/utils/accessFailure'
 import { validateLogin } from '@/features/auth/utils/loginValidation'
 import { useAttemptForm } from '@/hooks/useAttemptForm'
 
@@ -12,12 +18,15 @@ interface LoginFormOptions {
 
 const EMPTY_CREDENTIALS: LoginCredentials = { email: '', password: '', remember: false }
 
-const toFailureStatus = (reason: unknown): LoginFailure => {
-  if (reason instanceof AuthUnavailableError) return 'unavailable'
-  if (reason instanceof InvalidCredentialsError) return 'rejected'
-
-  return 'failed'
-}
+const toFailureStatus = toFailure<LoginFailure>(
+  [
+    [AuthUnavailableError, 'unavailable'],
+    [InvalidCredentialsError, 'rejected'],
+    [EmailNotConfirmedError, 'unconfirmed'],
+    [GoogleAccessUnavailableError, 'googleUnavailable'],
+  ],
+  'failed',
+)
 
 export const useLoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormOptions) => {
   const { values, errors, status, change, validateFields, attempt } = useAttemptForm<

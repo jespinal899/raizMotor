@@ -2,12 +2,12 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import LoginPage from '@/features/auth/pages/LoginPage'
-import { AuthUnavailableError, authService } from '@/features/auth/services/authService'
+import { AuthUnavailableError } from '@/features/auth/services/authErrors'
+import { authService } from '@/features/auth/services/authService'
 import { BRAND } from '@/shared/constants/brand'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
-vi.mock('@/features/auth/services/authService', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/auth/services/authService')>()),
+vi.mock('@/features/auth/services/authService', () => ({
   authService: { login: vi.fn(), loginWithGoogle: vi.fn() },
 }))
 

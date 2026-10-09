@@ -1,7 +1,12 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm'
-import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authService'
+import {
+  AuthUnavailableError,
+  EmailNotConfirmedError,
+  GoogleAccessUnavailableError,
+  InvalidCredentialsError,
+} from '@/features/auth/services/authErrors'
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
 import { deferred } from '@/test/deferred'
 
@@ -95,6 +100,7 @@ describe('useLoginForm', () => {
   it.each([
     { reason: new AuthUnavailableError(), status: 'unavailable', when: 'las cuentas aún no están activas' },
     { reason: new InvalidCredentialsError(), status: 'rejected', when: 'las credenciales no son correctas' },
+    { reason: new EmailNotConfirmedError(), status: 'unconfirmed', when: 'falta confirmar el correo' },
     { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
   ])('queda como "$status" cuando $when', async ({ reason, status }) => {
     // Arrange
@@ -172,6 +178,7 @@ describe('useLoginForm: entrar con Google', () => {
 
   it.each([
     { reason: new AuthUnavailableError(), status: 'unavailable', when: 'el acceso con Google aún no está activo' },
+    { reason: new GoogleAccessUnavailableError(), status: 'googleUnavailable', when: 'las cuentas funcionan pero Google todavía no' },
     { reason: new Error('ventana cerrada'), status: 'failed', when: 'ocurre cualquier otro error' },
   ])('queda como "$status" cuando $when', async ({ reason, status }) => {
     // Arrange

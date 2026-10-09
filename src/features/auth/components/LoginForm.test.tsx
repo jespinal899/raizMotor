@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import LoginForm from '@/features/auth/components/LoginForm'
-import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authService'
+import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authErrors'
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
 import { renderWithRouter } from '@/test/renderWithRouter'
 

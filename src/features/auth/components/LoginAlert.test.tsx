@@ -41,6 +41,33 @@ describe('LoginAlert', () => {
     expect(alert).toHaveTextContent('El correo o la contraseña no son correctos.')
   })
 
+  it('cuando falta confirmar el correo dice qué hacer, sin culpar a la contraseña', () => {
+    // Arrange
+    const status = 'unconfirmed'
+
+    // Act
+    render(<LoginAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('Confirma tu correo para entrar')
+    expect(alert).toHaveTextContent('Abre el enlace que te enviamos al registrarte')
+    expect(alert).not.toHaveTextContent('no son correctos')
+  })
+
+  it('cuando Google aún no está conectado lo dice y recuerda que se puede entrar con el correo', () => {
+    // Arrange
+    const status = 'googleUnavailable'
+
+    // Act
+    render(<LoginAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('El acceso con Google aún no está disponible')
+    expect(alert).toHaveTextContent('Por ahora, inicia sesión con tu correo y tu contraseña.')
+  })
+
   it('ante un fallo del servicio invita a reintentar', () => {
     // Arrange
     const status = 'failed'

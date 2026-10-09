@@ -15,18 +15,32 @@ export interface RegistrationCredentials {
   password: string
 }
 
+/** Quién tiene la sesión abierta. El nombre y el apellido van vacíos si la cuenta no los guarda. */
+export interface SessionUser {
+  email: string
+  firstName: string
+  lastName: string
+}
+
+/** Cómo queda quien acaba de registrarse: ya dentro, o a la espera de abrir el enlace enviado a su correo. */
+export type RegistrationOutcome = 'signedIn' | 'confirmationPending'
+
 /** Vía por la que se está intentando acceder: `submitting` con el formulario, `connecting` con Google. */
 export type AccessInProgress = 'submitting' | 'connecting'
 
 /**
- * Por qué no se pudo iniciar sesión: `unavailable` significa que las cuentas aún no están activas y
- * `rejected`, que el correo o la contraseña no son correctos.
+ * Por qué no se pudo iniciar sesión: `unavailable` significa que las cuentas aún no están activas;
+ * `rejected`, que el correo o la contraseña no son correctos; `unconfirmed`, que falta confirmar el correo,
+ * y `googleUnavailable`, que las cuentas funcionan pero el acceso con Google todavía no.
  */
-export type LoginFailure = 'unavailable' | 'rejected' | 'failed'
+export type LoginFailure = 'unavailable' | 'rejected' | 'unconfirmed' | 'googleUnavailable' | 'failed'
 
 export type LoginStatus = 'idle' | AccessInProgress | LoginFailure
 
-/** Por qué no se pudo crear la cuenta: `unavailable` significa que el registro aún no está activo. */
-export type RegistrationFailure = 'unavailable' | 'failed'
+/**
+ * Por qué no se pudo crear la cuenta: `unavailable` significa que el registro aún no está activo;
+ * `taken`, que ese correo ya tiene cuenta, y `googleUnavailable`, que el registro con Google todavía no funciona.
+ */
+export type RegistrationFailure = 'unavailable' | 'taken' | 'googleUnavailable' | 'failed'
 
 export type RegistrationStatus = 'idle' | AccessInProgress | RegistrationFailure

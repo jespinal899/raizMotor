@@ -27,6 +27,32 @@ describe('RegisterAlert', () => {
     expect(alert).toHaveTextContent(`Estamos preparando las cuentas de ${BRAND.name}. No se creó ninguna cuenta.`)
   })
 
+  it('cuando el correo ya tiene cuenta lo dice y propone iniciar sesión', () => {
+    // Arrange
+    const status = 'taken'
+
+    // Act
+    render(<RegisterAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('Ya existe una cuenta con ese correo')
+    expect(alert).toHaveTextContent('Inicia sesión con él o regístrate con otro correo.')
+  })
+
+  it('cuando Google aún no está conectado lo dice y recuerda que se puede registrar con el correo', () => {
+    // Arrange
+    const status = 'googleUnavailable'
+
+    // Act
+    render(<RegisterAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('El registro con Google aún no está disponible')
+    expect(alert).toHaveTextContent('Por ahora, crea tu cuenta con tu correo.')
+  })
+
   it('ante un fallo del servicio invita a reintentar', () => {
     // Arrange
     const status = 'failed'
