@@ -16,6 +16,7 @@ export const ROUTES = {
   /** A donde llega quien abre el enlace de su correo para elegir otra contraseña. */
   resetPassword: '/restablecer-contrasena',
   publish: '/publicar',
+  myProperties: '/mis-anuncios',
   pricing: '/planes',
   agentPlans: '/planes/agente-inmobiliario',
   agentPlanCheckout: '/planes/agente-inmobiliario/contratar/:plan',
@@ -24,6 +25,15 @@ export const ROUTES = {
   about: `/#${SECTION_IDS.about}`,
   howItWorks: `/#${SECTION_IDS.howItWorks}`,
 } as const
+
+/** Parámetro con el que la pantalla de acceso sabe a qué página volver después de entrar. */
+export const RETURN_PARAM = 'volver'
+
+/** Abre el inicio de sesión para volver, al entrar, a la página desde la que se pidió. */
+export const loginPath = (returnTo: string) => `${ROUTES.login}?${RETURN_PARAM}=${encodeURIComponent(returnTo)}`
+
+/** Solo se vuelve a una página del propio sitio: nunca a una dirección de fuera que alguien ponga en el enlace. */
+export const isInternalPath = (path: string) => /^\/(?![/\\])/.test(path)
 
 /** Parámetros con los que la página de contacto sabe sobre qué se consulta. */
 export const CONTACT_PARAMS = {

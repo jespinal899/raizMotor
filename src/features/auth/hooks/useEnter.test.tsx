@@ -24,12 +24,9 @@ const Probe = ({ access, onFailure }: ProbeProps) => {
   )
 }
 
-const setup = (access: Access) => {
+const setup = (access: Access, route = ACCESS_PATH) => {
   const onFailure = vi.fn()
-  const view = renderWithRouter(<Probe access={access} onFailure={onFailure} />, {
-    route: ACCESS_PATH,
-    path: ACCESS_PATH,
-  })
+  const view = renderWithRouter(<Probe access={access} onFailure={onFailure} />, { route, path: ACCESS_PATH })
 
   return { ...view, onFailure, user: userEvent.setup() }
 }
@@ -45,6 +42,32 @@ describe('useEnter', () => {
     // Assert
     await waitFor(() => expect(currentPath()).toBe('/'))
   })
+
+  it('si se pidió entrar desde otra página del sitio, vuelve a ella en lugar de ir al inicio', async () => {
+    // Arrange
+    const { currentPath, user } = setup(() => Promise.resolve(), `${ACCESS_PATH}?volver=%2Fpublicar`)
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+
+    // Assert
+    await waitFor(() => expect(currentPath()).toBe('/publicar'))
+  })
+
+  it.each(['https://otro-sitio.example', '//otro-sitio.example', 'publicar'])(
+    'no sigue un destino que no es una página del sitio (%s): va al inicio',
+    async (destination) => {
+      // Arrange
+      const route = `${ACCESS_PATH}?volver=${encodeURIComponent(destination)}`
+      const { currentPath, user } = setup(() => Promise.resolve(), route)
+
+      // Act
+      await user.click(screen.getByRole('button', { name: 'Entrar' }))
+
+      // Assert
+      await waitFor(() => expect(currentPath()).toBe('/'))
+    },
+  )
 
   it('cuando la cuenta se crea con la sesión iniciada lleva al inicio', async () => {
     // Arrange
