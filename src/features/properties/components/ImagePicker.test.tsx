@@ -105,6 +105,21 @@ describe('ImagePicker', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('plano.pdf no es una foto JPG, PNG o WebP.')
   })
 
+  it('muestra las fotos que el anuncio ya tenía, por su dirección, y permite quitarlas', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    const saved = ['https://fotos.example/portada.webp', 'https://fotos.example/patio.webp']
+    render(<ImagePicker files={saved} onChange={onChange} />)
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Quitar foto 1' }))
+
+    // Assert
+    expect(screen.getByRole('img', { name: 'Foto 2' })).toHaveAttribute('src', saved[1])
+    expect(onChange).toHaveBeenCalledExactlyOnceWith([saved[1]])
+  })
+
   it('con el máximo de fotos deja de ofrecer agregar más', () => {
     // Arrange
     const files = Array.from({ length: MAX_IMAGES }, (_, index) => buildImageFile({ name: `foto-${index}.jpg` }))

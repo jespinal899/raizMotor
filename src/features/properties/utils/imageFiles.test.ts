@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { MAX_IMAGES, MAX_IMAGE_BYTES, addImages, describeRejection, imageKey } from '@/features/properties/utils/imageFiles'
 import { buildImageFile } from '@/test/factories'
 
+/** El nombre de una foto recién elegida; una que el anuncio ya tenía no lleva nombre. */
+const nameOf = (photo?: File | string) => (photo instanceof File ? photo.name : undefined)
+
 describe('addImages', () => {
   it('acepta fotos JPG, PNG y WebP dentro del tamaño permitido', () => {
     // Arrange
@@ -28,7 +31,7 @@ describe('addImages', () => {
     const { accepted } = addImages([cover], added)
 
     // Assert
-    expect(accepted.map(({ name }) => name)).toEqual(['portada.jpg', 'sala.jpg', 'patio.jpg'])
+    expect(accepted.map(nameOf)).toEqual(['portada.jpg', 'sala.jpg', 'patio.jpg'])
   })
 
   it('rechaza los archivos que no son fotos', () => {
@@ -66,7 +69,7 @@ describe('addImages', () => {
 
     // Assert
     expect(accepted).toHaveLength(MAX_IMAGES)
-    expect(accepted.at(-1)?.name).toBe('ultima.jpg')
+    expect(nameOf(accepted.at(-1))).toBe('ultima.jpg')
     expect(rejected).toEqual([{ name: 'sobrante.jpg', reason: 'limit' }])
   })
 
@@ -79,8 +82,34 @@ describe('addImages', () => {
     const { accepted, rejected } = addImages(current, added)
 
     // Assert
-    expect(accepted.at(-1)?.name).toBe('valida.jpg')
+    expect(nameOf(accepted.at(-1))).toBe('valida.jpg')
     expect(rejected).toEqual([{ name: 'plano.pdf', reason: 'type' }])
+  })
+})
+
+describe('addImages: fotos que el anuncio ya tenía', () => {
+  it('las conserva delante de las nuevas y las cuenta para el máximo', () => {
+    // Arrange
+    const saved = Array.from({ length: MAX_IMAGES - 1 }, (_, index) => `https://fotos.example/${index}.webp`)
+    const added = [buildImageFile({ name: 'cabe.jpg' }), buildImageFile({ name: 'ya-no-cabe.jpg' })]
+
+    // Act
+    const { accepted, rejected } = addImages(saved, added)
+
+    // Assert
+    expect(accepted).toEqual([...saved, added[0]])
+    expect(rejected).toEqual([{ name: 'ya-no-cabe.jpg', reason: 'limit' }])
+  })
+
+  it('una foto guardada se identifica por su dirección', () => {
+    // Arrange
+    const saved = 'https://fotos.example/portada.webp'
+
+    // Act
+    const key = imageKey(saved)
+
+    // Assert
+    expect(key).toBe(saved)
   })
 })
 

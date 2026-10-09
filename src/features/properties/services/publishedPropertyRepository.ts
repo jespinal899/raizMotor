@@ -32,6 +32,11 @@ export interface PublishedPropertyRepository {
   getOwn(): Promise<StoredPropertyPublication[]>
   /** Cuántos anuncios puede tener a la vez quien usa el sitio. */
   getLimit(): Promise<number>
+  /**
+   * Guarda los cambios de un anuncio propio; guardar otra vez los mismos lo deja igual. Rechaza si el
+   * anuncio no existe o no es de quien usa el sitio.
+   */
+  update(id: string, publication: PropertyPublication, operationKey: string): Promise<void>
   /** Elimina un anuncio propio. Repetirlo, o pedirlo de uno ajeno, no hace nada. */
   remove(id: string): Promise<void>
 }
@@ -41,6 +46,9 @@ interface RepositoryOptions {
   createId?: () => string
   now?: () => number
 }
+
+/** Lo que se responde a quien quiere cambiar un anuncio que no puede cambiar. */
+export const NOT_EDITABLE = 'El anuncio no existe o no es de esta cuenta.'
 
 const requestError = (request: IDBRequest) => request.error ?? new Error('No se pudo completar la operación de almacenamiento.')
 
@@ -148,6 +156,30 @@ export const createIndexedDbPublicationRepository = ({
     getAll,
     getOwn: getAll,
     getLimit: async () => MAX_FREE_PUBLICATIONS,
+
+    update: async (id, publication) => {
+      const db = await getDatabase()
+
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_NAME, 'readwrite')
+        const store = transaction.objectStore(STORE_NAME)
+        let failure: unknown
+        const existing = store.get(id)
+
+        existing.onsuccess = () => {
+          const record = existing.result as StoredPropertyPublication | undefined
+          // Se conservan su identificador, su clave y su fecha: solo cambia lo que se anuncia.
+          if (record) store.put({ ...record, publication })
+          else failure = new Error(NOT_EDITABLE)
+        }
+        existing.onerror = () => {
+          failure = requestError(existing)
+        }
+        transaction.oncomplete = () => (failure ? reject(failure) : resolve())
+        transaction.onerror = () => reject(transactionError(transaction))
+        transaction.onabort = () => reject(failure ?? transactionError(transaction))
+      })
+    },
 
     remove: async (id) => {
       const db = await getDatabase()

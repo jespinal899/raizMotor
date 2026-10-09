@@ -1,3 +1,5 @@
+import type { PublicationPhoto } from '@/features/properties/types/publication.types'
+
 export const MAX_IMAGES = 10
 export const MAX_IMAGE_MEGABYTES = 5
 export const MAX_IMAGE_BYTES = MAX_IMAGE_MEGABYTES * 1024 * 1024
@@ -11,14 +13,18 @@ export interface RejectedImage {
 }
 
 export interface ImageSelection {
-  accepted: File[]
+  accepted: PublicationPhoto[]
   rejected: RejectedImage[]
 }
 
-/** Identifica una foto por nombre, peso y fecha: dos archivos con la misma clave son la misma foto. */
-export const imageKey = (file: File): string => `${file.name}|${file.size}|${file.lastModified}`
+/**
+ * Identifica una foto: la que el anuncio ya tenía, por su dirección; un archivo, por nombre, peso y fecha.
+ * Dos archivos con la misma clave son la misma foto.
+ */
+export const imageKey = (photo: PublicationPhoto): string =>
+  typeof photo === 'string' ? photo : `${photo.name}|${photo.size}|${photo.lastModified}`
 
-const findRejection = (file: File, accepted: File[]): ImageRejectionReason | undefined => {
+const findRejection = (file: File, accepted: PublicationPhoto[]): ImageRejectionReason | undefined => {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return 'type'
   if (file.size > MAX_IMAGE_BYTES) return 'size'
   if (accepted.some((other) => imageKey(other) === imageKey(file))) return 'duplicate'
@@ -28,7 +34,7 @@ const findRejection = (file: File, accepted: File[]): ImageRejectionReason | und
 }
 
 /** Añade las fotos elegidas a las que ya había y aparta las que no cumplen los requisitos. */
-export const addImages = (current: File[], candidates: File[]): ImageSelection => {
+export const addImages = (current: PublicationPhoto[], candidates: File[]): ImageSelection => {
   const accepted = [...current]
   const rejected: RejectedImage[] = []
 

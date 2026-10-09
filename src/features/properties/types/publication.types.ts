@@ -26,6 +26,9 @@ export interface LocatedAddress {
 /** Datos que dependen del tipo de propiedad: un terreno, por ejemplo, no tiene cuartos. */
 export type DetailField = 'builtArea' | 'landArea' | 'bedrooms' | 'bathrooms' | 'parking'
 
+/** Una foto del anuncio en el formulario: el archivo recién elegido, o la dirección de una que ya tenía guardada. */
+export type PublicationPhoto = File | string
+
 /** Lo que se escribe en el formulario. Los números siguen siendo texto hasta que se validan. */
 export interface PublicationFormValues {
   department: string
@@ -47,7 +50,7 @@ export interface PublicationFormValues {
   description: string
   operation: PropertyOperation | ''
   price: string
-  images: File[]
+  images: PublicationPhoto[]
 }
 
 /** Publicación validada, lista para enviarse. */
@@ -74,8 +77,8 @@ export interface PropertyPublication {
   operation: PropertyOperation
   /** En USD; mensual cuando la operación es alquiler. */
   price: number
-  /** La primera es la portada. */
-  images: File[]
+  /** La primera es la portada. Al publicar son todas archivos; al editar, las que siguen son direcciones. */
+  images: PublicationPhoto[]
 }
 
 /** `limitReached`: no se guardó porque la publicación gratuita ya estaba usada. */

@@ -85,6 +85,11 @@ class FakeObjectStore {
 
   getAll = () => this.transaction.request(() => [...this.state.records.values()])
 
+  put = (record: StoredPropertyPublication) =>
+    this.transaction.request(() => {
+      this.state.records.set(record.id, record)
+    })
+
   delete = (id: string) =>
     this.transaction.request(() => {
       this.state.records.delete(id)
@@ -165,6 +170,33 @@ describe('publishedPropertyRepository', () => {
 
     // Assert
     expect(limit).toBe(MAX_FREE_PUBLICATIONS)
+  })
+
+  it('guarda los cambios de un anuncio sin cambiar su identificador ni su clave', async () => {
+    // Arrange
+    const factory = buildIndexedDb()
+    const repository = createIndexedDbPublicationRepository({ getFactory: () => factory })
+    const id = await repository.publish(PUBLICATION, TEST_OPERATION_KEY)
+
+    // Act
+    await repository.update(id, { ...PUBLICATION, title: 'Casa amplia, precio rebajado' }, 'clave-de-la-edición')
+
+    // Assert
+    const stored = await repository.getById(id)
+    expect(stored?.publication.title).toBe('Casa amplia, precio rebajado')
+    expect(stored?.operationKey).toBe(TEST_OPERATION_KEY)
+    expect(await repository.getAll()).toHaveLength(1)
+  })
+
+  it('rechaza los cambios de un anuncio que ya no existe', async () => {
+    // Arrange
+    const repository = createIndexedDbPublicationRepository({ getFactory: buildIndexedDb })
+
+    // Act
+    const saving = repository.update('no-existe', PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(saving).rejects.toThrow('El anuncio no existe o no es de esta cuenta.')
   })
 
   it('elimina un anuncio guardado, y repetirlo no falla', async () => {

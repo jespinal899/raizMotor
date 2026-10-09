@@ -1,6 +1,9 @@
 import { propertyRepository } from '@/features/properties/services/propertyRepository'
 import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
-import type { PublishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
+import type {
+  PublishedPropertyRepository,
+  StoredPublication,
+} from '@/features/properties/services/publishedPropertyRepository'
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
 import { hasReachedLimit } from '@/features/properties/utils/publicationLimit'
 
@@ -14,6 +17,10 @@ export interface PublicationService {
   listPublished(): Promise<string[]>
   /** Cuántos anuncios admite a la vez el plan de quien publica. */
   getLimit(): Promise<number>
+  /** Un anuncio propio tal como se publicó, para editarlo. Sin valor si no existe o es de otra persona. */
+  getOwnPublication(id: string): Promise<StoredPublication | undefined>
+  /** Guarda los cambios de un anuncio propio y se rechaza si no se pudo. Guardar otra vez los mismos lo deja igual. */
+  update(id: string, publication: PropertyPublication, operationKey: string): Promise<void>
   /** Elimina un anuncio propio. Repetirlo no hace nada. */
   remove(id: string): Promise<void>
 }
@@ -33,6 +40,10 @@ export const createPublicationService = (repository: PublishedPropertyRepository
   listPublished: async () => (await repository.getOwn()).map((stored) => stored.id),
 
   getLimit: () => repository.getLimit(),
+
+  getOwnPublication: async (id) => (await repository.getOwn()).find((stored) => stored.id === id)?.publication,
+
+  update: (id, publication, operationKey) => repository.update(id, publication, operationKey),
 
   remove: (id) => repository.remove(id),
 })

@@ -26,6 +26,7 @@ const repositoryWith = (records: StoredPropertyPublication[] = [], limit = 1): P
   getAll: vi.fn(async () => []),
   getOwn: vi.fn(async () => records),
   getLimit: vi.fn(async () => limit),
+  update: vi.fn(async () => {}),
   remove: vi.fn(async () => {}),
 })
 
@@ -77,6 +78,40 @@ describe('createPublicationService', () => {
 
     // Assert
     expect(limit).toBe(25)
+  })
+
+  it('guarda los cambios de un anuncio con la clave de la operación', async () => {
+    // Arrange
+    const repository = repositoryWith([stored('la-primera', 'clave-1')])
+    const service = createPublicationService(repository)
+
+    // Act
+    await service.update('la-primera', PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    expect(repository.update).toHaveBeenCalledExactlyOnceWith('la-primera', PUBLICATION, TEST_OPERATION_KEY)
+  })
+
+  it('entrega un anuncio propio tal como se publicó, para poder editarlo', async () => {
+    // Arrange
+    const service = createPublicationService(repositoryWith([stored('la-primera', 'clave-1')]))
+
+    // Act
+    const publication = await service.getOwnPublication('la-primera')
+
+    // Assert
+    expect(publication).toEqual(PUBLICATION)
+  })
+
+  it('de un anuncio que no es de quien lo pide no entrega nada', async () => {
+    // Arrange
+    const service = createPublicationService(repositoryWith([stored('la-primera', 'clave-1')]))
+
+    // Act
+    const publication = await service.getOwnPublication('el-de-otra-cuenta')
+
+    // Assert
+    expect(publication).toBeUndefined()
   })
 
   it('elimina un anuncio propio', async () => {

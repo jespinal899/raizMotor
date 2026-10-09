@@ -31,6 +31,7 @@ const repositoryFor = (records: StoredPropertyPublication[]): PublishedPropertyR
   getAll: vi.fn(async () => records),
   getOwn: vi.fn(async () => records),
   getLimit: vi.fn(async () => 1),
+  update: vi.fn(async () => {}),
   remove: vi.fn(async () => {}),
 })
 
@@ -44,6 +45,7 @@ const brokenRepository = (): PublishedPropertyRepository => {
     getAll: vi.fn(fail),
     getOwn: vi.fn(fail),
     getLimit: vi.fn(fail),
+    update: vi.fn(fail),
     remove: vi.fn(fail),
   }
 }

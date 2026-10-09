@@ -66,6 +66,7 @@ const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
       if (stored.some((saved) => saved.operation_key === added.operation_key)) return
       stored.unshift(row({ ...added, id: NEW_ID, owner_id: userId ?? '' }))
     }),
+    updateById: vi.fn<PropertyGateway['updateById']>(async () => {}),
     deleteById: vi.fn<PropertyGateway['deleteById']>(async (id) => {
       stored.splice(0, stored.length, ...stored.filter((saved) => saved.id !== id))
     }),
@@ -284,6 +285,85 @@ describe('createSupabasePropertyRepository: leer', () => {
 
     // Assert
     expect(limit).toBe(expected)
+  })
+})
+
+describe('createSupabasePropertyRepository: editar', () => {
+  const KEPT = `https://fotos.example/${ANA}/clave-anterior/1.webp`
+
+  it('guarda los cambios sin tocar de quién es el anuncio ni la clave con que se publicó', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+    const changes = { ...PUBLICATION, title: 'Casa amplia, precio rebajado', price: 139000, images: [KEPT] }
+
+    // Act
+    await repository.update(SAVED_ID, changes, TEST_OPERATION_KEY)
+
+    // Assert
+    const [id, saved] = gateway.updateById.mock.calls[0]
+    expect(id).toBe(SAVED_ID)
+    expect(saved).toMatchObject({ title: 'Casa amplia, precio rebajado', price: 139000, latitude: 14.1 })
+    expect(saved).not.toHaveProperty('operation_key')
+    expect(saved).not.toHaveProperty('owner_id')
+  })
+
+  it('conserva las fotos que siguen, sube las nuevas y borra después las que se quitaron', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+    const added = PUBLICATION.images[0]
+    const uploaded = `${ANA}/${TEST_OPERATION_KEY}/1.webp`
+
+    // Act
+    await repository.update(SAVED_ID, { ...PUBLICATION, images: [KEPT, added] }, TEST_OPERATION_KEY)
+
+    // Assert
+    expect(gateway.uploadPhoto).toHaveBeenCalledExactlyOnceWith(uploaded, PREPARED)
+    expect(gateway.updateById).toHaveBeenCalledExactlyOnceWith(
+      SAVED_ID,
+      expect.objectContaining({ photos: [`${ANA}/clave-anterior/1.webp`, uploaded] }),
+    )
+    expect(gateway.removePhotos).toHaveBeenCalledExactlyOnceWith([`${ANA}/clave-anterior/0.webp`])
+    expect(gateway.updateById.mock.invocationCallOrder[0]).toBeLessThan(gateway.removePhotos.mock.invocationCallOrder[0])
+  })
+
+  it.each([
+    { when: 'es de otra cuenta', rows: [row({ owner_id: 'otra-cuenta' })] },
+    { when: 'ya no existe', rows: [] },
+  ])('lo rechaza sin guardar ni subir nada si el anuncio $when', async ({ rows }) => {
+    // Arrange
+    const { repository, gateway } = setup({ rows })
+
+    // Act
+    const saving = repository.update(SAVED_ID, PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(saving).rejects.toThrow('El anuncio no existe o no es de esta cuenta.')
+    expect(gateway.uploadPhoto).not.toHaveBeenCalled()
+    expect(gateway.updateById).not.toHaveBeenCalled()
+  })
+
+  it('sin sesión rechaza con PublicationSignInRequiredError', async () => {
+    // Arrange
+    const { repository } = setup({ rows: [row()], userId: null })
+
+    // Act
+    const saving = repository.update(SAVED_ID, PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(saving).rejects.toBeInstanceOf(PublicationSignInRequiredError)
+  })
+
+  it('una foto que no es del anuncio ni es nueva se rechaza, en lugar de guardar una dirección cualquiera', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+    const foreign = 'https://otro-sitio.example/foto.jpg'
+
+    // Act
+    const saving = repository.update(SAVED_ID, { ...PUBLICATION, images: [foreign] }, TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(saving).rejects.toThrow('Esa foto no pertenece al anuncio.')
+    expect(gateway.updateById).not.toHaveBeenCalled()
   })
 })
 

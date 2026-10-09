@@ -1,10 +1,12 @@
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useObjectUrlRef } from '@/hooks/useObjectUrlRef'
+import PropertyPhoto from '@/features/properties/components/PropertyPhoto'
+import type { PublicationPhoto } from '@/features/properties/types/publication.types'
 
 interface ImageThumbnailProps {
-  file: File
+  /** El archivo recién elegido, o la dirección de una foto que el anuncio ya tenía. */
+  photo: PublicationPhoto
   /** Lugar de la foto en el anuncio, empezando en 1; la primera es la portada. */
   position: number
   onRemove: () => void
@@ -12,12 +14,14 @@ interface ImageThumbnailProps {
 
 const COVER_POSITION = 1
 
-const ImageThumbnail = ({ file, position, onRemove }: ImageThumbnailProps) => {
-  const previewRef = useObjectUrlRef(file)
+/** Un archivo se describe con su nombre, para reconocerlo; una foto ya guardada no tiene uno que decir. */
+const describe = (photo: PublicationPhoto, position: number) =>
+  typeof photo === 'string' ? `Foto ${position}` : `Foto ${position}: ${photo.name}`
 
+const ImageThumbnail = ({ photo, position, onRemove }: ImageThumbnailProps) => {
   return (
     <figure className="relative aspect-4/3 overflow-hidden rounded-lg border bg-muted">
-      <img ref={previewRef} alt={`Foto ${position}: ${file.name}`} className="size-full object-cover" />
+      <PropertyPhoto source={photo} alt={describe(photo, position)} className="size-full object-cover" />
       {position === COVER_POSITION && <Badge className="absolute top-2 left-2">Portada</Badge>}
       <Button
         type="button"

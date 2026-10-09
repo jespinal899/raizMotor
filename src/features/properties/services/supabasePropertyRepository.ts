@@ -2,12 +2,13 @@ import {
   PublicationLimitError,
   PublicationSignInRequiredError,
 } from '@/features/properties/services/publicationErrors'
+import { NOT_EDITABLE } from '@/features/properties/services/publishedPropertyRepository'
 import type {
   PublishedPropertyRepository,
   StoredPropertyPublication,
 } from '@/features/properties/services/publishedPropertyRepository'
 import type { PropertyOperation, PropertyType } from '@/features/properties/types/property.types'
-import type { PropertyPublication } from '@/features/properties/types/publication.types'
+import type { PropertyPublication, PublicationPhoto } from '@/features/properties/types/publication.types'
 import { photoExtension } from '@/features/properties/utils/photoResize'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
 
@@ -48,6 +49,9 @@ export type NewPropertyRow = Omit<
   'id' | 'owner_id' | 'created_at' | 'status' | 'advertiser_name' | 'advertiser_phone'
 >
 
+/** Lo que se puede cambiar de un anuncio ya publicado: todo menos la clave con que se publicó. */
+export type PropertyChanges = Omit<NewPropertyRow, 'operation_key'>
+
 /** Lo que este repositorio necesita de Supabase, sin su manera de escribir las consultas. */
 export interface PropertyGateway {
   /** Identificador de la cuenta con la sesión abierta; `null` si no hay ninguna. */
@@ -61,6 +65,8 @@ export interface PropertyGateway {
   findLimit(ownerId: string): Promise<number | undefined>
   /** Guarda el anuncio si su clave no estaba ya guardada: repetirlo no hace nada. Rechaza con el fallo de la base. */
   insertOnce(row: NewPropertyRow): Promise<void>
+  /** Guarda los cambios de un anuncio. Lo que identifica al anuncio lo conserva la base de datos. */
+  updateById(id: string, changes: PropertyChanges): Promise<void>
   deleteById(id: string): Promise<void>
   /** Deja la foto en esa ruta; si ya había una, la reemplaza. */
   uploadPhoto(path: string, photo: Blob): Promise<void>
@@ -84,13 +90,11 @@ const UNNAMED_ADVERTISER = 'Anunciante'
 const isLimitReached = (reason: unknown) =>
   typeof reason === 'object' && reason !== null && 'code' in reason && reason.code === LIMIT_REACHED
 
-const toRow = (
+const toChanges = (
   { location, images: _images, builtArea, landArea, bedrooms, bathrooms, parking, ...publication }: PropertyPublication,
-  operationKey: string,
   photos: string[],
-): NewPropertyRow => ({
+): PropertyChanges => ({
   ...publication,
-  operation_key: operationKey,
   department: location.department,
   city: location.city,
   neighborhood: location.neighborhood,
@@ -144,9 +148,26 @@ export const createSupabasePropertyRepository = ({
     ...(row.status === 'hidden' && { hidden: true }),
   })
 
-  const uploadPhotos = (ownerId: string, operationKey: string, images: File[]) =>
+  /**
+   * Deja guardadas las fotos del anuncio y entrega sus rutas, en el mismo orden. Las que ya tenía (`kept`,
+   * por su dirección) conservan su ruta; las nuevas se suben.
+   */
+  const storePhotos = (
+    ownerId: string,
+    operationKey: string,
+    images: PublicationPhoto[],
+    kept = new Map<string, string>(),
+  ) =>
     Promise.all(
       images.map(async (image, position) => {
+        if (typeof image === 'string') {
+          const saved = kept.get(image)
+          // Solo vale la dirección de una foto que el anuncio ya tenía: ninguna otra se guarda como suya.
+          if (!saved) throw new Error('Esa foto no pertenece al anuncio.')
+
+          return saved
+        }
+
         const photo = await preparePhoto(image)
         // La ruta sale de la clave de la operación: un reintento reemplaza las mismas fotos, no deja otras.
         const path = `${ownerId}/${operationKey}/${position}.${photoExtension(photo.type)}`
@@ -168,9 +189,9 @@ export const createSupabasePropertyRepository = ({
       const saved = await findSaved()
       if (saved) return saved.id
 
-      const photos = await uploadPhotos(ownerId, operationKey, publication.images)
+      const photos = await storePhotos(ownerId, operationKey, publication.images)
       try {
-        await gateway.insertOnce(toRow(publication, operationKey, photos))
+        await gateway.insertOnce({ ...toChanges(publication, photos), operation_key: operationKey })
       } catch (reason) {
         throw isLimitReached(reason) ? new PublicationLimitError() : reason
       }
@@ -201,6 +222,19 @@ export const createSupabasePropertyRepository = ({
       const limit = ownerId ? await gateway.findLimit(ownerId) : undefined
 
       return limit ?? MAX_FREE_PUBLICATIONS
+    },
+
+    update: async (id, publication, operationKey) => {
+      const [ownerId, row] = await Promise.all([gateway.currentUserId(), gateway.findById(id)])
+      if (!ownerId) throw new PublicationSignInRequiredError()
+      if (!row || row.owner_id !== ownerId) throw new Error(NOT_EDITABLE)
+
+      const kept = new Map(row.photos.map((path) => [gateway.photoUrl(path), path]))
+      // Las nuevas van a una carpeta con la clave de esta edición: reintentarla reemplaza las mismas.
+      const photos = await storePhotos(ownerId, operationKey, publication.images, kept)
+      await gateway.updateById(id, toChanges(publication, photos))
+      // Las que el anuncio ya no usa se borran al final: si fallara, sobrarían archivos, no faltarían fotos.
+      await gateway.removePhotos(row.photos.filter((path) => !photos.includes(path)))
     },
 
     remove: async (id) => {

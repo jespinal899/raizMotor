@@ -46,6 +46,10 @@ export const createSupabasePropertyGateway = (client: SupabaseClient): PropertyG
       unwrap(await properties().upsert(row, { onConflict: 'owner_id,operation_key', ignoreDuplicates: true }))
     },
 
+    updateById: async (id, changes) => {
+      unwrap(await properties().update(changes).eq('id', id))
+    },
+
     deleteById: async (id) => {
       unwrap(await properties().delete().eq('id', id))
     },

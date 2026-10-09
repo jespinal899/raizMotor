@@ -11,12 +11,13 @@ import {
   describeRejection,
   imageKey,
 } from '@/features/properties/utils/imageFiles'
+import type { PublicationPhoto } from '@/features/properties/types/publication.types'
 import type { RejectedImage } from '@/features/properties/utils/imageFiles'
 
 interface ImagePickerProps {
-  /** La primera es la portada del anuncio. */
-  files: File[]
-  onChange: (files: File[]) => void
+  /** La primera es la portada del anuncio. Las que el anuncio ya tenía llegan como direcciones. */
+  files: PublicationPhoto[]
+  onChange: (files: PublicationPhoto[]) => void
   error?: string
 }
 
@@ -33,7 +34,7 @@ const ImagePicker = ({ files, onChange, error }: ImagePickerProps) => {
     if (selection.accepted.length > files.length) onChange(selection.accepted)
   }
 
-  const remove = (file: File) => {
+  const remove = (file: PublicationPhoto) => {
     setRejected([])
     onChange(files.filter((other) => other !== file))
   }
@@ -45,7 +46,7 @@ const ImagePicker = ({ files, onChange, error }: ImagePickerProps) => {
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {files.map((file, index) => (
               <li key={imageKey(file)}>
-                <ImageThumbnail file={file} position={index + 1} onRemove={() => remove(file)} />
+                <ImageThumbnail photo={file} position={index + 1} onRemove={() => remove(file)} />
               </li>
             ))}
             {!isFull && (
