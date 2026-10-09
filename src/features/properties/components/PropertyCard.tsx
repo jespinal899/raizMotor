@@ -14,7 +14,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property }: PropertyCardProps) => {
-  const { id, title, type, operation, district, city, image, localOnly } = property
+  const { id, title, type, operation, district, city, image, localOnly, example, hidden } = property
 
   return (
     <Card className="relative h-full gap-0 py-0 transition-shadow duration-300 focus-within:shadow-lg hover:shadow-lg">
@@ -32,6 +32,17 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
           {localOnly && (
             <Badge variant="outline" className="bg-background">
               Solo tú lo ves
+            </Badge>
+          )}
+          {/* Las propiedades de muestra comparten catálogo con las reales: nadie debe tomar una por oferta. */}
+          {example && (
+            <Badge variant="outline" className="bg-background">
+              Ejemplo
+            </Badge>
+          )}
+          {hidden && (
+            <Badge variant="outline" className="bg-background">
+              Oculto
             </Badge>
           )}
         </div>

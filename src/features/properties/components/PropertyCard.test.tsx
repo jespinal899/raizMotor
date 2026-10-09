@@ -118,6 +118,32 @@ describe('PropertyCard', () => {
     expect(screen.getByText('Solo tú lo ves')).toBeInTheDocument()
   })
 
+  it.each([
+    { flag: { example: true }, badge: 'Ejemplo', when: 'una propiedad de muestra' },
+    { flag: { hidden: true }, badge: 'Oculto', when: 'un anuncio retirado del catálogo' },
+  ])('marca como «$badge» $when', ({ flag, badge }) => {
+    // Arrange
+    const property = buildProperty(flag)
+
+    // Act
+    renderWithRouter(<PropertyCard property={property} />)
+
+    // Assert
+    expect(screen.getByText(badge)).toBeInTheDocument()
+  })
+
+  it('un anuncio real y visible no lleva ninguna de esas marcas', () => {
+    // Arrange
+    const property = buildProperty()
+
+    // Act
+    renderWithRouter(<PropertyCard property={property} />)
+
+    // Assert
+    expect(screen.queryByText('Ejemplo')).not.toBeInTheDocument()
+    expect(screen.queryByText('Oculto')).not.toBeInTheDocument()
+  })
+
   it('no pone ese aviso en las propiedades del catálogo', () => {
     // Arrange
     const property = buildProperty()
