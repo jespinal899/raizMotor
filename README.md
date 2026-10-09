@@ -23,7 +23,9 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | Reportar una publicación desde su ficha | Interfaz lista; falta el servidor que reciba el reporte |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
 | Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes y pide iniciar sesión. Guarda el anuncio en Supabase con hasta 10 fotos, que se reducen antes de subirlas, y queda visible de inmediato. Cada cuenta admite los anuncios de su plan: uno con el gratuito |
-| Mis anuncios | Cada cuenta ve los suyos y puede eliminarlos; eliminar uno deja libre su lugar en el plan |
+| Mis anuncios | Cada cuenta ve los suyos, y puede corregirlos o eliminarlos; eliminar uno deja libre su lugar en el plan |
+| Editar un anuncio | El mismo formulario de publicar, abierto con sus datos: se cambia lo que haga falta, también las fotos. Solo lo edita quien lo publicó, y no puede cambiar su estado ni su anunciante |
+| Mi cuenta | Cada cuenta corrige su nombre y su teléfono; sus anuncios pasan a mostrarlos. El correo y la contraseña no se cambian desde ahí |
 | Contacto | Interfaz lista; falta el servicio de correo |
 | Registro, inicio y cierre de sesión | Funcionan con Supabase cuando la compilación tiene sus dos variables (ver [Cuentas](#cuentas)); sin ellas, los formularios avisan de que aún no están disponibles. Quien se registra debe confirmar su correo antes de entrar; la barra muestra de quién es la sesión |
 | Acceso con Google | El botón avisa de que aún no está disponible: falta dar de alta el sitio en Google |
@@ -180,13 +182,13 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 ## Pendiente
 
 - Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además del envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
-- Cuentas: volver a enviar el enlace de confirmación, el acceso con Google, una página «Mi cuenta» (con el cambio de contraseña para quien ya entró) y exigir sesión para publicar. Antes de abrir el registro al público hace falta conectar el servicio de correo propio descrito en [Correo](#correo).
+- Cuentas: volver a enviar el enlace de confirmación, el acceso con Google, y cambiar el correo o la contraseña desde «Mi cuenta» (hoy la contraseña se cambia con «Olvidé mi contraseña»). Antes de abrir el registro al público hace falta conectar el servicio de correo propio descrito en [Correo](#correo).
 - Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
-- Anuncios: editar uno ya publicado (hoy se elimina y se publica de nuevo), buscar en el servidor cuando el catálogo crezca (hoy el navegador recibe todos los anuncios, hasta 1000, y filtra él), decidir si la ficha muestra la dirección exacta o solo la zona, y retirar las propiedades de ejemplo cuando haya suficientes anuncios reales.
+- Anuncios: buscar en el servidor cuando el catálogo crezca (hoy el navegador recibe todos los anuncios, hasta 1000, y filtra él), decidir si la ficha muestra la dirección exacta o solo la zona, y retirar las propiedades de ejemplo cuando haya suficientes anuncios reales.
 - Activar el plan de una cuenta al confirmarse su pago: hoy se le sube el límite de anuncios a mano en el panel de Supabase.
 - Pagos en línea: cobrar con tarjeta dentro del sitio, activar el plan al confirmarse el pago, renovarlo cada mes y emitir la factura. Hoy la solicitud sale por WhatsApp y el plan se activa a mano.
 - Cupones de descuento: definir los códigos y validarlos en un servidor, para que rebajen el total.

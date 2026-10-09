@@ -192,10 +192,10 @@ La estructura común también usa Acceso: la cabecera muestra de quién es la se
 | --- | --- | --- | --- |
 | Inicio | `src/features/home` | `/` (la compone `src/pages/HomePage.tsx`) | Ninguno propio |
 | Búsqueda | `src/features/search` | `/propiedades`, `/propiedades/:tipo` | Usa `propertyService` |
-| Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar` | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
+| Propiedades | `src/features/properties` | `/propiedad/:id`, `/publicar`, `/mis-anuncios`, `/mis-anuncios/:id/editar` | `propertyService`, `publicationService`, `geocodingService`, `locationMap` |
 | Contacto | `src/features/contact` | `/contacto` | `contactService` |
 | Planes | `src/features/shop` | `/planes`, `/planes/agente-inmobiliario`, `/planes/agente-inmobiliario/contratar/:plan` | `planRequestService` |
-| Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena`, `/restablecer-contrasena` | `authService` |
+| Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena`, `/restablecer-contrasena`, `/mi-cuenta` | `authService` |
 | Administración | `src/features/admin` | Ninguna todavía | Ninguno |
 
 La página de publicar se carga de forma diferida, para que la biblioteca del mapa (Leaflet) no pese en la portada.
@@ -275,7 +275,7 @@ Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: rep
 - **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
 - **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
 
-La publicación guarda la clave junto al anuncio, con una restricción de unicidad por cuenta en la base de datos (y un índice único en IndexedDB, sin Supabase). Si llega otra vez, no guarda nada y devuelve el ID que ya había; las fotos se suben a una ruta que sale de la clave, así que un reintento reemplaza las mismas y no deja otras. Por eso el límite de anuncios del plan distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Eliminar dos veces el mismo anuncio no hace nada la segunda vez, y las migraciones de la base pueden ejecutarse de nuevo sin alterar ningún dato. El registro y el cambio de contraseña recuerdan las claves que ya atendieron (`src/shared/utils/operationLog.ts`): si llega otra vez la misma, entregan el resultado anterior sin pedirlo de nuevo a Supabase. El contacto sigue pendiente de su servicio externo.
+La publicación guarda la clave junto al anuncio, con una restricción de unicidad por cuenta en la base de datos (y un índice único en IndexedDB, sin Supabase). Si llega otra vez, no guarda nada y devuelve el ID que ya había; las fotos se suben a una ruta que sale de la clave, así que un reintento reemplaza las mismas y no deja otras. Por eso el límite de anuncios del plan distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Editar un anuncio es idempotente por sí mismo: guardar otra vez los mismos cambios lo deja igual, y las fotos nuevas van a una ruta que sale de la clave de esa edición. Lo mismo al corregir los datos de la cuenta. Eliminar dos veces el mismo anuncio no hace nada la segunda vez, y las migraciones de la base pueden ejecutarse de nuevo sin alterar ningún dato. El registro y el cambio de contraseña recuerdan las claves que ya atendieron (`src/shared/utils/operationLog.ts`): si llega otra vez la misma, entregan el resultado anterior sin pedirlo de nuevo a Supabase. El contacto sigue pendiente de su servicio externo.
 
 Iniciar sesión no lleva clave: repetirlo deja la misma sesión. Pedir el enlace para elegir otra contraseña tampoco: repetirlo envía otro enlace.
 
