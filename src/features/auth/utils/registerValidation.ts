@@ -1,12 +1,11 @@
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
-import { PASSWORD_REQUIRED } from '@/features/auth/utils/credentialRules'
+import { NEW_PASSWORD_RULES } from '@/features/auth/utils/credentialRules'
 import { EMAIL_RULES, PHONE_RULES } from '@/shared/utils/fieldRules'
-import { maxLength, minCharacters, required, validate } from '@/shared/utils/validators'
+import { maxLength, required, validate } from '@/shared/utils/validators'
 import type { FieldErrors } from '@/shared/utils/validators'
 
-/** Los comparte el formulario, para que el campo y su regla no puedan decir cosas distintas. */
+/** Lo comparte el formulario, para que el campo y su regla no puedan decir cosas distintas. */
 export const MAX_NAME_LENGTH = 80
-export const MIN_PASSWORD_LENGTH = 8
 
 export const validateRegistration = (values: RegistrationCredentials): FieldErrors<RegistrationCredentials> => ({
   firstName: validate(values.firstName, [
@@ -19,9 +18,5 @@ export const validateRegistration = (values: RegistrationCredentials): FieldErro
   ]),
   email: validate(values.email, EMAIL_RULES),
   phone: validate(values.phone, PHONE_RULES),
-  // La contraseña se envía tal como se escribe, así que su largo se cuenta sin recortar los espacios.
-  password: validate(values.password, [
-    PASSWORD_REQUIRED,
-    minCharacters(MIN_PASSWORD_LENGTH, `Usa al menos ${MIN_PASSWORD_LENGTH} caracteres.`),
-  ]),
+  password: validate(values.password, NEW_PASSWORD_RULES),
 })

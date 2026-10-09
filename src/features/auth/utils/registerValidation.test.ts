@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_NAME_LENGTH, MIN_PASSWORD_LENGTH, validateRegistration } from '@/features/auth/utils/registerValidation'
+import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/credentialRules'
+import { MAX_NAME_LENGTH, validateRegistration } from '@/features/auth/utils/registerValidation'
 import { hasErrors } from '@/shared/utils/validators'
 import { buildRegistration } from '@/test/factories'
 

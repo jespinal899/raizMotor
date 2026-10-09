@@ -11,7 +11,8 @@ import GoogleButton from '@/features/auth/components/GoogleButton'
 import RegisterAlert from '@/features/auth/components/RegisterAlert'
 import { useRegisterForm } from '@/features/auth/hooks/useRegisterForm'
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
-import { MAX_NAME_LENGTH, MIN_PASSWORD_LENGTH } from '@/features/auth/utils/registerValidation'
+import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/credentialRules'
+import { MAX_NAME_LENGTH } from '@/features/auth/utils/registerValidation'
 
 interface RegisterFormProps {
   onSubmit: (credentials: RegistrationCredentials, operationKey: string) => Promise<void>
