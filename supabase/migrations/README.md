@@ -9,6 +9,7 @@ Cada archivo de esta carpeta es un cambio en la base de datos de Supabase: tabla
 | 3 | `20261009000200_fotos_de_anuncios.sql` | El depósito de fotos `property-photos` y sus permisos. | Nada |
 | 4 | `20261009000300_cambios_de_cuenta.sql` | Lo que pasa cuando una cuenta corrige su nombre o su teléfono: su perfil los copia y sus anuncios pasan a mostrarlos. | La 1 y la 2 |
 | 5 | `20261009000400_editar_anuncios.sql` | Que cada cuenta pueda editar sus anuncios, y lo que el servidor conserva al guardar un cambio: de quién es, su estado y los datos del anunciante. | La 1 y la 2 |
+| 6 | `20261009000500_despublicar_anuncios.sql` | Que cada cuenta pueda despublicar sus anuncios y volver a publicarlos (estado `unpublished`), y que el límite del plan cuente solo los publicados. | La 1, la 2 y la 5 |
 
 Cada archivo es una unidad que funciona completa: una tabla va siempre con sus permisos y con los disparadores que la protegen, nunca en archivos distintos. Una tabla sin ellos aceptaría lo que no debe.
 
@@ -37,5 +38,5 @@ Las que ya se aplicaron no hay que repetirlas, pero repetir una no rompe ni dupl
 
 ## Tareas que se hacen a mano en el panel
 
-- **Ocultar un anuncio:** en Table Editor > `properties`, cambia su `status` a `hidden`. Deja de verse en el catálogo, y quien lo publicó lo sigue viendo en «Mis anuncios».
-- **Dar más anuncios a una cuenta que contrató un plan:** en Table Editor > `profiles`, sube su `max_publications`.
+- **Ocultar un anuncio:** en Table Editor > `properties`, cambia su `status` a `hidden`. Deja de verse en el catálogo, y quien lo publicó lo sigue viendo en «Mis publicaciones», entre las despublicadas, sin poder volver a publicarlo. Para devolverlo al catálogo, ponle `published`. El estado `unpublished` es el de los que despublica su propio dueño, que sí puede volver a publicarlos.
+- **Dar más anuncios a una cuenta que contrató un plan:** en Table Editor > `profiles`, sube su `max_publications`: 25 para Agente Pro y 100 para Agente Élite. Es cuántos puede tener publicados a la vez, y de ese número saca «Mis publicaciones» el nombre del plan; con otra cantidad lo llama «Plan a medida».
