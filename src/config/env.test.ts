@@ -1,8 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { toBackendConfig } from '@/config/env'
+import { BACKEND_CONFIG, toBackendConfig } from '@/config/env'
 
 const URL = 'https://proyecto.supabase.co'
 const PUBLIC_KEY = 'sb_publishable_clave'
+
+describe('BACKEND_CONFIG', () => {
+  it('en las pruebas no hay servicio, aunque el equipo tenga sus variables en `.env.local`', () => {
+    // Arrange: la configuración de Vitest deja vacías las variables del servicio
+
+    // Act
+    const config = BACKEND_CONFIG
+
+    // Assert
+    expect(config).toBeNull()
+  })
+})
 
 describe('toBackendConfig', () => {
   it('toma la dirección del servicio y su clave pública, sin espacios sobrantes', () => {

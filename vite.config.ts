@@ -12,6 +12,9 @@ export default defineConfig({
     },
   },
   test: {
+    // Las pruebas nunca hablan con el proyecto real de Supabase, aunque el equipo tenga un `.env.local`:
+    // sin estas variables la aplicación queda sin servicio, y lo que lo necesita usa uno simulado.
+    env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_PUBLISHABLE_KEY: '' },
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: false,
