@@ -90,6 +90,8 @@ jobs:
             cat deploy.log
             reason="$(grep -i 'error' deploy.log | tail -n 3 | tr '\n' ' ')"
             echo "::error title=Vercel no publicó::${reason:-Mira el registro de este paso.}"
+            # «Project not found» no dice cuál de los secretos falla: se averigua sin mostrar ninguno.
+            if grep -q 'Project not found' deploy.log; then node .github/scripts/reportVercelDiagnosis.mjs; fi
             exit 1
           fi
           cat deploy.log
