@@ -1,5 +1,5 @@
 import type { ComponentType, FormEvent } from 'react'
-import { ArrowRight, Upload } from 'lucide-react'
+import { ArrowRight, Save, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import FormSection from '@/components/FormSection'
 import StepBackButton from '@/components/StepBackButton'
@@ -14,7 +14,7 @@ import PublicationPhotoFields from '@/features/properties/components/Publication
 import PublicationPricingFields from '@/features/properties/components/PublicationPricingFields'
 import { usePublicationForm } from '@/features/properties/hooks/usePublicationForm'
 import type { PublicationScreenProps } from '@/features/properties/hooks/usePublicationForm'
-import type { PropertyPublication } from '@/features/properties/types/publication.types'
+import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { PUBLICATION_SCREENS, PUBLICATION_STEPS } from '@/features/properties/utils/publicationSteps'
 import { useInvalidFieldFocus } from '@/hooks/useInvalidFieldFocus'
 import { useSteps } from '@/hooks/useSteps'
@@ -23,6 +23,28 @@ interface PropertyFormProps {
   onSubmit: (publication: PropertyPublication, operationKey: string) => Promise<void>
   /** Muestra un aviso breve a la persona; por defecto, uno flotante. */
   notify?: (message: string) => void
+  /** Los datos de un anuncio ya publicado, cuando el formulario se abre para corregirlo. */
+  initialValues?: PublicationFormValues
+  /** El formulario guarda los cambios de un anuncio que ya existe, en lugar de publicar uno nuevo. */
+  editing?: boolean
+}
+
+/** Cómo se nombra el formulario y su último botón según lo que hace. */
+const WORDING = {
+  publish: {
+    form: 'Formulario para publicar una propiedad',
+    steps: 'Pasos para publicar',
+    submit: 'Publicar propiedad',
+    submitting: 'Publicando…',
+    icon: Upload,
+  },
+  edit: {
+    form: 'Formulario para editar una propiedad',
+    steps: 'Pasos para editar',
+    submit: 'Guardar cambios',
+    submitting: 'Guardando…',
+    icon: Save,
+  },
 }
 
 /** Contenido de cada pantalla, en el mismo orden que `PUBLICATION_SCREENS`. */
@@ -34,8 +56,9 @@ const SCREEN_CONTENT: ComponentType<PublicationScreenProps>[] = [
   PublicationPhotoFields,
 ]
 
-const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) => {
-  const { values, errors, status, change, validate, submit } = usePublicationForm({ onSubmit })
+const PropertyForm = ({ onSubmit, notify = toast.success, initialValues, editing = false }: PropertyFormProps) => {
+  const { values, errors, status, change, validate, submit } = usePublicationForm({ onSubmit, initialValues })
+  const wording = WORDING[editing ? 'edit' : 'publish']
   const screens = useSteps(PUBLICATION_SCREENS.length)
   const { containerRef, focusFirstInvalid } = useInvalidFieldFocus<HTMLFormElement>()
 
@@ -79,11 +102,11 @@ const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) =
     <form
       ref={containerRef}
       noValidate
-      aria-label="Formulario para publicar una propiedad"
+      aria-label={wording.form}
       onSubmit={handleSubmit}
       className="grid gap-8"
     >
-      <StepIndicator label="Pasos para publicar" steps={PUBLICATION_STEPS} current={screen.step} />
+      <StepIndicator label={wording.steps} steps={PUBLICATION_STEPS} current={screen.step} />
 
       <StepScreen
         key={screens.current}
@@ -115,16 +138,16 @@ const PropertyForm = ({ onSubmit, notify = toast.success }: PropertyFormProps) =
               isSubmitting={status === 'submitting'}
               // Ya publicada, repetirlo no crearía nada: el botón vuelve a activarse al cambiar algún dato.
               disabled={screens.isLast && status === 'published'}
-              icon={screens.isLast ? Upload : ArrowRight}
-              submittingLabel="Publicando…"
+              icon={screens.isLast ? wording.icon : ArrowRight}
+              submittingLabel={wording.submitting}
               className="px-6"
             >
-              {screens.isLast ? 'Publicar propiedad' : 'Siguiente'}
+              {screens.isLast ? wording.submit : 'Siguiente'}
             </SubmitButton>
           )}
         </div>
 
-        {screens.isLast && <PublicationAlert status={status} />}
+        {screens.isLast && <PublicationAlert status={status} editing={editing} />}
       </div>
     </form>
   )

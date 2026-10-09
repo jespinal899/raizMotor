@@ -9,6 +9,8 @@ import { useFormFields } from '@/hooks/useFormFields'
 interface PublicationFormOptions {
   /** Se resuelve cuando el anuncio queda publicado. La clave identifica la publicación, para no crearla dos veces. */
   onSubmit: (publication: PropertyPublication, operationKey: string) => Promise<void>
+  /** Con qué empieza el formulario: en blanco al publicar, o con los datos del anuncio que se edita. */
+  initialValues?: PublicationFormValues
 }
 
 const EMPTY_PUBLICATION: PublicationFormValues = {
@@ -49,13 +51,13 @@ export interface PublicationScreenProps extends PublicationFieldsProps {
   onLocationConfirmed: () => void
 }
 
-export const usePublicationForm = ({ onSubmit }: PublicationFormOptions) => {
+export const usePublicationForm = ({ onSubmit, initialValues = EMPTY_PUBLICATION }: PublicationFormOptions) => {
   const {
     values,
     errors,
     change: changeField,
     validateFields,
-  } = useFormFields({ initialValues: EMPTY_PUBLICATION, validate: validatePublication })
+  } = useFormFields({ initialValues, validate: validatePublication })
   const { status, attempt, reset } = useAttempt<'submitting', 'failed' | 'limitReached', 'published'>({
     toFailure: toFailureStatus,
     succeeded: 'published',

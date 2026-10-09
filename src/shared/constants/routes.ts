@@ -17,6 +17,8 @@ export const ROUTES = {
   resetPassword: '/restablecer-contrasena',
   publish: '/publicar',
   myProperties: '/mis-anuncios',
+  editProperty: '/mis-anuncios/:id/editar',
+  account: '/mi-cuenta',
   pricing: '/planes',
   agentPlans: '/planes/agente-inmobiliario',
   agentPlanCheckout: '/planes/agente-inmobiliario/contratar/:plan',
@@ -44,6 +46,9 @@ export const CONTACT_PARAMS = {
 export const propertyTypePath = (tipo: string) => `${ROUTES.properties}/${tipo}`
 
 export const propertyDetailPath = (id: string) => `/propiedad/${id}`
+
+/** Abre el formulario para corregir un anuncio propio. */
+export const editPropertyPath = (id: string) => `${ROUTES.myProperties}/${encodeURIComponent(id)}/editar`
 
 /** Abre el contacto indicando por qué propiedad se consulta. */
 export const propertyContactPath = (id: string) =>

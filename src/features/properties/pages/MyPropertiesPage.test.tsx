@@ -56,6 +56,17 @@ describe('MyPropertiesPage', () => {
     await waitFor(() => expect(document.title).toBe(expectedTitle))
   })
 
+  it('cada anuncio lleva a su formulario para corregirlo', async () => {
+    // Arrange: cuenta con dos anuncios
+
+    // Act
+    renderPage()
+
+    // Assert
+    const item = (await screen.findByRole('heading', { name: 'Casa con jardín' })).closest('li')!
+    expect(within(item).getByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/mis-anuncios/casa-1/editar')
+  })
+
   it('mientras los lee muestra un marcador de carga', () => {
     // Arrange
     getOwn.mockReturnValue(new Promise<Property[]>(() => {}))

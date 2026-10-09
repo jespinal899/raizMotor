@@ -9,6 +9,7 @@ import { AUTH_LINK } from '@/features/auth/services/authService'
 import ContactPage from '@/features/contact/pages/ContactPage'
 import PrivacyPage from '@/features/legal/pages/PrivacyPage'
 import TermsPage from '@/features/legal/pages/TermsPage'
+import LazyEditPropertyPage from '@/features/properties/pages/LazyEditPropertyPage'
 import LazyPublishPropertyPage from '@/features/properties/pages/LazyPublishPropertyPage'
 import MyPropertiesPage from '@/features/properties/pages/MyPropertiesPage'
 import PropertyDetailPage from '@/features/properties/pages/PropertyDetailPage'
@@ -54,6 +55,17 @@ export const routes: RouteObject[] = [
             description="Tus anuncios están guardados en tu cuenta."
           >
             <MyPropertiesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.editProperty,
+        element: (
+          <ProtectedRoute
+            title="Inicia sesión para editar tu anuncio"
+            description="Solo quien publicó un anuncio puede corregirlo."
+          >
+            <LazyEditPropertyPage />
           </ProtectedRoute>
         ),
       },

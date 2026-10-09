@@ -25,6 +25,16 @@ const SHARED_ALERTS: Alerts = {
   limitReached: LIMIT_REACHED,
 }
 
+/** Al editar, guardar lleva a la ficha: solo hay que explicar por qué no se pudo. */
+const EDITING_ALERTS: Alerts = {
+  failed: {
+    icon: CircleAlert,
+    title: 'No pudimos guardar los cambios',
+    description: 'Tu anuncio sigue como estaba. Vuelve a intentarlo en unos minutos.',
+    variant: 'destructive',
+  },
+}
+
 /** Los estados sin entrada (en reposo, enviando) no muestran nada. */
 const LOCAL_ALERTS: Alerts = {
   published: {
@@ -46,11 +56,14 @@ interface PublicationAlertProps {
   status: PublicationStatus
   /** Si los anuncios se guardan para todos y no solo en este navegador. */
   shared?: boolean
+  /** Si se están guardando los cambios de un anuncio que ya existe. */
+  editing?: boolean
 }
 
 /** Resultado del intento de publicar. Nunca se confirma un anuncio que no se publicó. */
-const PublicationAlert = ({ status, shared = ADS_SHARED }: PublicationAlertProps) => {
-  const content = (shared ? SHARED_ALERTS : LOCAL_ALERTS)[status]
+const PublicationAlert = ({ status, shared = ADS_SHARED, editing = false }: PublicationAlertProps) => {
+  const alerts = shared ? SHARED_ALERTS : LOCAL_ALERTS
+  const content = (editing ? EDITING_ALERTS : alerts)[status]
 
   return content ? <StatusAlert {...content} /> : null
 }

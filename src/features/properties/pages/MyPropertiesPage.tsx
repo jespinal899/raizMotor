@@ -1,4 +1,4 @@
-import { CircleAlert, House } from 'lucide-react'
+import { CircleAlert, House, Pencil } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
 import EmptyState from '@/components/EmptyState'
 import PageHeader from '@/components/PageHeader'
@@ -9,7 +9,7 @@ import DeletePropertyButton from '@/features/properties/components/DeletePropert
 import PropertyCard from '@/features/properties/components/PropertyCard'
 import { useMyProperties } from '@/features/properties/hooks/useMyProperties'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { ROUTES } from '@/shared/constants/routes'
+import { ROUTES, editPropertyPath } from '@/shared/constants/routes'
 
 /** Los anuncios de quien usa el sitio: cómo se ven en el catálogo y cómo eliminar cada uno. */
 const MyPropertiesPage = () => {
@@ -34,7 +34,7 @@ const MyPropertiesPage = () => {
     <Container className="grid gap-8 py-10">
       <PageHeader
         title="Mis anuncios"
-        description="Así se ven en el catálogo. Eliminar uno deja libre su lugar en tu plan."
+        description="Así se ven en el catálogo. Puedes corregirlos, o eliminar uno para dejar libre su lugar en tu plan."
       />
 
       {properties.length === 0 ? (
@@ -50,7 +50,13 @@ const MyPropertiesPage = () => {
           {properties.map((property) => (
             <li key={property.id} className="grid content-start gap-3">
               <PropertyCard property={property} />
-              <DeletePropertyButton title={property.title} onDelete={() => remove(property.id)} />
+              <div className="grid grid-cols-2 gap-2">
+                <ButtonLink to={editPropertyPath(property.id)} variant="outline">
+                  <Pencil />
+                  Editar
+                </ButtonLink>
+                <DeletePropertyButton title={property.title} onDelete={() => remove(property.id)} />
+              </div>
             </li>
           ))}
         </ul>
