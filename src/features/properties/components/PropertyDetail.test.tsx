@@ -87,6 +87,38 @@ describe('PropertyDetail', () => {
     expect(within(features).getAllByRole('listitem').map(textOf)).toEqual(['Piscina', 'Terraza', 'Cocina equipada'])
   })
 
+  it('la descripción se lee en los párrafos que escribió quien publica, no en uno solo', () => {
+    // Arrange
+    const property = buildProperty({
+      description: 'Casa de dos plantas con patio amplio.\n\nQueda a dos cuadras del parque.\n\n\nPrecio negociable.',
+    })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const description = screen.getByRole('region', { name: 'Descripción' })
+    expect(within(description).getAllByRole('paragraph').map((paragraph) => paragraph.textContent)).toEqual([
+      'Casa de dos plantas con patio amplio.',
+      'Queda a dos cuadras del parque.',
+      'Precio negociable.',
+    ])
+  })
+
+  it('la descripción conserva los saltos de línea de dentro de un párrafo', () => {
+    // Arrange
+    const property = buildProperty({ description: 'Incluye:\n- Cocina equipada\n- Patio techado' })
+
+    // Act
+    renderWithRouter(<PropertyDetail property={property} />)
+
+    // Assert
+    const paragraph = within(screen.getByRole('region', { name: 'Descripción' })).getByRole('paragraph')
+    expect(paragraph.textContent).toBe('Incluye:\n- Cocina equipada\n- Patio techado')
+    // El salto está en el texto; es esta regla la que hace que el navegador lo pinte en lugar de juntarlo.
+    expect(paragraph).toHaveClass('whitespace-pre-line')
+  })
+
   it('bajo el título y la ubicación, antes de las fotos, dice el precio con "Desde"', () => {
     // Arrange
     const property = buildProperty({ title: 'Casa con jardín', price: 420000, operation: 'venta' })

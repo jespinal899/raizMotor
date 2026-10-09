@@ -12,6 +12,7 @@ import PropertyToolbar from '@/features/properties/components/PropertyToolbar'
 import { PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
 import type { Property } from '@/features/properties/types/property.types'
 import { ROUTES, propertyTypePath } from '@/shared/constants/routes'
+import { toParagraphs } from '@/shared/utils/text'
 
 const buildBreadcrumb = ({ title, type }: Property): BreadcrumbItem[] => {
   const { plural, slug } = PROPERTY_TYPES[type]
@@ -54,7 +55,17 @@ const PropertyDetail = ({ property }: PropertyDetailProps) => {
       <PropertyHighlights property={property} />
 
       <PropertyDetailSection id="descripcion" title="Descripción">
-        <p className="leading-relaxed text-pretty text-muted-foreground">{description}</p>
+        {/*
+          El navegador junta los saltos de línea de un texto, así que se pinta como se escribió: un párrafo
+          por cada uno, y `whitespace-pre-line` para los saltos que haya dentro de ellos.
+        */}
+        <div className="grid gap-4 leading-relaxed text-pretty text-muted-foreground">
+          {toParagraphs(description).map((paragraph, position) => (
+            <p key={position} className="whitespace-pre-line">
+              {paragraph}
+            </p>
+          ))}
+        </div>
       </PropertyDetailSection>
     </PropertyDetailLayout>
   )
