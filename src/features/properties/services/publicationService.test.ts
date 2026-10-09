@@ -19,6 +19,12 @@ const stored = (id: string, operationKey: string, createdAt = 1): StoredProperty
   publication: PUBLICATION,
 })
 
+/** Un anuncio que su dueño retiró del catálogo. */
+const unpublished = (id: string, operationKey: string): StoredPropertyPublication => ({
+  ...stored(id, operationKey),
+  withdrawn: 'byOwner',
+})
+
 /** Repositorio falso con los anuncios que ya tiene quien publica y los que su plan le admite. */
 const repositoryWith = (records: StoredPropertyPublication[] = [], limit = 1): PublishedPropertyRepository => ({
   publish: vi.fn(async () => 'casa-publicada'),
@@ -27,6 +33,8 @@ const repositoryWith = (records: StoredPropertyPublication[] = [], limit = 1): P
   getOwn: vi.fn(async () => records),
   getLimit: vi.fn(async () => limit),
   update: vi.fn(async () => {}),
+  unpublish: vi.fn(async () => {}),
+  republish: vi.fn(async () => {}),
   remove: vi.fn(async () => {}),
 })
 
@@ -67,6 +75,67 @@ describe('createPublicationService', () => {
 
     // Assert
     expect(id).toBe('casa-publicada')
+  })
+
+  it('un anuncio despublicado no ocupa lugar en el plan: con él guardado se puede publicar otro', async () => {
+    // Arrange
+    const repository = repositoryWith([unpublished('la-primera', 'otra-clave')])
+    const service = createPublicationService(repository)
+
+    // Act
+    const id = await service.publish(PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    expect(id).toBe('casa-publicada')
+  })
+
+  it('despublica un anuncio propio', async () => {
+    // Arrange
+    const repository = repositoryWith([stored('la-primera', 'clave-1')])
+    const service = createPublicationService(repository)
+
+    // Act
+    await service.unpublish('la-primera')
+
+    // Assert
+    expect(repository.unpublish).toHaveBeenCalledExactlyOnceWith('la-primera')
+  })
+
+  it('vuelve a publicar un anuncio cuando al plan le queda lugar', async () => {
+    // Arrange
+    const repository = repositoryWith([unpublished('la-primera', 'clave-1')])
+    const service = createPublicationService(repository)
+
+    // Act
+    await service.republish('la-primera')
+
+    // Assert
+    expect(repository.republish).toHaveBeenCalledExactlyOnceWith('la-primera')
+  })
+
+  it('con el plan lleno no vuelve a publicar: rechaza con PublicationLimitError sin pedirlo', async () => {
+    // Arrange
+    const repository = repositoryWith([stored('la-publicada', 'clave-2'), unpublished('la-primera', 'clave-1')])
+    const service = createPublicationService(repository)
+
+    // Act
+    const republishing = service.republish('la-primera')
+
+    // Assert
+    await expect(republishing).rejects.toBeInstanceOf(PublicationLimitError)
+    expect(repository.republish).not.toHaveBeenCalled()
+  })
+
+  it('volver a publicar un anuncio que ya está publicado no choca con el límite: lo deja igual', async () => {
+    // Arrange
+    const repository = repositoryWith([stored('la-publicada', 'clave-1')])
+    const service = createPublicationService(repository)
+
+    // Act
+    const republishing = service.republish('la-publicada')
+
+    // Assert
+    await expect(republishing).resolves.toBeUndefined()
   })
 
   it('dice cuántos anuncios admite el plan de quien publica', async () => {
@@ -149,6 +218,19 @@ describe('createPublicationService', () => {
 
     // Assert
     expect(published).toEqual(['reciente', 'antiguo'])
+  })
+
+  it('la lista de publicados no incluye los que están fuera del catálogo', async () => {
+    // Arrange
+    const hiddenBySite: StoredPropertyPublication = { ...stored('oculto', 'clave-3'), withdrawn: 'bySite' }
+    const repository = repositoryWith([stored('publicado', 'clave-1'), unpublished('despublicado', 'clave-2'), hiddenBySite])
+    const service = createPublicationService(repository)
+
+    // Act
+    const published = await service.listPublished()
+
+    // Assert
+    expect(published).toEqual(['publicado'])
   })
 
   it('sin anuncios guardados, la lista está vacía', async () => {

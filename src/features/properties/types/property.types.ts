@@ -25,6 +25,9 @@ export interface Advertiser {
   phone?: string
 }
 
+/** Quién retiró un anuncio del catálogo: quien lo publicó, que puede volver a publicarlo, o el equipo del sitio. */
+export type Withdrawal = 'byOwner' | 'bySite'
+
 export interface Property {
   id: string
   title: string
@@ -56,8 +59,8 @@ export interface Property {
   localOnly?: boolean
   /** De muestra: no corresponde a ninguna propiedad real. */
   example?: boolean
-  /** Retirada del catálogo por el equipo del sitio: solo la sigue viendo quien la publicó. */
-  hidden?: boolean
+  /** Fuera del catálogo, y por decisión de quién: solo la sigue viendo quien la publicó. */
+  withdrawn?: Withdrawal
 }
 
 /** Orden de los resultados de una búsqueda. Sin él se conserva el del catálogo. */

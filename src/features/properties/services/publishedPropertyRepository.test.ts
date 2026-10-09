@@ -199,6 +199,68 @@ describe('publishedPropertyRepository', () => {
     await expect(saving).rejects.toThrow('El anuncio no existe o no es de esta cuenta.')
   })
 
+  it('un anuncio despublicado sale del catálogo, pero quien lo publicó lo conserva', async () => {
+    // Arrange
+    const repository = createIndexedDbPublicationRepository({ getFactory: buildIndexedDb })
+    const id = await repository.publish(PUBLICATION, TEST_OPERATION_KEY)
+
+    // Act
+    await repository.unpublish(id)
+
+    // Assert
+    expect(await repository.getAll()).toEqual([])
+    expect((await repository.getOwn()).map((stored) => [stored.id, stored.withdrawn])).toEqual([[id, 'byOwner']])
+    expect((await repository.getById(id))?.publication.title).toBe(PUBLICATION.title)
+  })
+
+  it('volver a publicarlo lo devuelve al catálogo tal como estaba', async () => {
+    // Arrange
+    const repository = createIndexedDbPublicationRepository({ getFactory: buildIndexedDb })
+    const id = await repository.publish(PUBLICATION, TEST_OPERATION_KEY)
+    await repository.unpublish(id)
+
+    // Act
+    await repository.republish(id)
+
+    // Assert
+    const [stored] = await repository.getAll()
+    expect(stored.id).toBe(id)
+    expect(stored.withdrawn).toBeUndefined()
+    expect(stored.operationKey).toBe(TEST_OPERATION_KEY)
+  })
+
+  it('despublicar dos veces, o volver a publicar dos veces, lo deja igual', async () => {
+    // Arrange
+    const repository = createIndexedDbPublicationRepository({ getFactory: buildIndexedDb })
+    const id = await repository.publish(PUBLICATION, TEST_OPERATION_KEY)
+
+    // Act
+    await repository.unpublish(id)
+    await repository.unpublish(id)
+    const whileUnpublished = (await repository.getOwn())[0].withdrawn
+    await repository.republish(id)
+    await repository.republish(id)
+
+    // Assert
+    expect(whileUnpublished).toBe('byOwner')
+    expect((await repository.getOwn())[0].withdrawn).toBeUndefined()
+    expect(await repository.getOwn()).toHaveLength(1)
+  })
+
+  it('rechaza despublicar o volver a publicar un anuncio que ya no existe', async () => {
+    // Arrange
+    const repository = createIndexedDbPublicationRepository({ getFactory: buildIndexedDb })
+
+    // Act
+    const attempts = await Promise.allSettled([repository.unpublish('no-existe'), repository.republish('no-existe')])
+
+    // Assert
+    expect(attempts.map((attempt) => (attempt as PromiseRejectedResult).reason?.message)).toEqual([
+      'El anuncio no existe o no es de esta cuenta.',
+      'El anuncio no existe o no es de esta cuenta.',
+    ])
+  })
+
   it('elimina un anuncio guardado, y repetirlo no falla', async () => {
     // Arrange
     const factory = buildIndexedDb()

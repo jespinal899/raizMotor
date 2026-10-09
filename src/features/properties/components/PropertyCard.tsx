@@ -6,15 +6,17 @@ import PropertyPhoto from '@/features/properties/components/PropertyPhoto'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
 import PropertyStats from '@/features/properties/components/PropertyStats'
 import { OPERATIONS, PROPERTY_TYPES } from '@/features/properties/data/propertyOptions.data'
-import type { Property } from '@/features/properties/types/property.types'
+import type { Property, Withdrawal } from '@/features/properties/types/property.types'
 import { propertyDetailPath } from '@/shared/constants/routes'
+
+const WITHDRAWN_LABELS: Record<Withdrawal, string> = { byOwner: 'Despublicada', bySite: 'Oculta por el sitio' }
 
 interface PropertyCardProps {
   property: Property
 }
 
 const PropertyCard = ({ property }: PropertyCardProps) => {
-  const { id, title, type, operation, district, city, image, localOnly, example, hidden } = property
+  const { id, title, type, operation, district, city, image, localOnly, example, withdrawn } = property
 
   return (
     <Card className="relative h-full gap-0 py-0 transition-shadow duration-300 focus-within:shadow-lg hover:shadow-lg">
@@ -40,9 +42,10 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
               Ejemplo
             </Badge>
           )}
-          {hidden && (
+          {/* Solo la ve quien la publicó, y debe saber por qué ya no está en el catálogo. */}
+          {withdrawn && (
             <Badge variant="outline" className="bg-background">
-              Oculto
+              {WITHDRAWN_LABELS[withdrawn]}
             </Badge>
           )}
         </div>

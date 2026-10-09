@@ -18,7 +18,7 @@ interface CatalogOptions {
  * crea su dirección temporal y la libera al dejar de mostrarlas.
  */
 export const toPublishedProperty = (
-  { id, publication, advertiser, hidden }: StoredPropertyPublication,
+  { id, publication, advertiser, withdrawn }: StoredPropertyPublication,
   { shared = false }: CatalogOptions = {},
 ): Property => {
   const { location, type, operation, builtArea, landArea, bedrooms, bathrooms, parking, title, description, price } =
@@ -53,7 +53,7 @@ export const toPublishedProperty = (
     advertiser,
     featured: false,
     localOnly: !shared,
-    hidden,
+    withdrawn,
   }
 }
 

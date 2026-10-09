@@ -7,7 +7,7 @@ import type {
   PublishedPropertyRepository,
   StoredPropertyPublication,
 } from '@/features/properties/services/publishedPropertyRepository'
-import type { PropertyOperation, PropertyType } from '@/features/properties/types/property.types'
+import type { PropertyOperation, PropertyType, Withdrawal } from '@/features/properties/types/property.types'
 import type { PropertyPublication, PublicationPhoto } from '@/features/properties/types/publication.types'
 import { photoExtension } from '@/features/properties/utils/photoResize'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
@@ -18,8 +18,8 @@ export interface PropertyRow {
   owner_id: string
   operation_key: string
   created_at: string
-  /** `hidden` cuando el equipo del sitio lo retiró del catálogo. */
-  status: 'published' | 'hidden'
+  /** Fuera del catálogo está `unpublished`, si lo retiró quien lo publicó, o `hidden`, si fue el equipo del sitio. */
+  status: 'published' | 'unpublished' | 'hidden'
   title: string
   description: string
   type: PropertyType
@@ -67,6 +67,11 @@ export interface PropertyGateway {
   insertOnce(row: NewPropertyRow): Promise<void>
   /** Guarda los cambios de un anuncio. Lo que identifica al anuncio lo conserva la base de datos. */
   updateById(id: string, changes: PropertyChanges): Promise<void>
+  /**
+   * Publica o despublica un anuncio, sin tocar nada más. Rechaza con el fallo de la base, que al publicar
+   * puede ser el del límite del plan.
+   */
+  setStatus(id: string, status: 'published' | 'unpublished'): Promise<void>
   deleteById(id: string): Promise<void>
   /** Deja la foto en esa ruta; si ya había una, la reemplaza. */
   uploadPhoto(path: string, photo: Blob): Promise<void>
@@ -86,9 +91,20 @@ const LIMIT_REACHED = 'RZ001'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 /** Con qué nombre se presenta una cuenta que no guardó el suyo. */
 const UNNAMED_ADVERTISER = 'Anunciante'
+/** Lo que se responde a quien quiere publicar o despublicar un anuncio que ocultó el equipo. */
+const WITHDRAWN_BY_SITE = 'El equipo del sitio retiró este anuncio.'
+/** Quién retiró del catálogo un anuncio, según su estado en la base. */
+const WITHDRAWALS: Record<PropertyRow['status'], Withdrawal | undefined> = {
+  published: undefined,
+  unpublished: 'byOwner',
+  hidden: 'bySite',
+}
 
 const isLimitReached = (reason: unknown) =>
   typeof reason === 'object' && reason !== null && 'code' in reason && reason.code === LIMIT_REACHED
+
+/** El fallo con que rechazar: el del límite del plan, con su nombre, o el que llegó. */
+const toFailure = (reason: unknown) => (isLimitReached(reason) ? new PublicationLimitError() : reason)
 
 const toChanges = (
   { location, images: _images, builtArea, landArea, bedrooms, bathrooms, parking, ...publication }: PropertyPublication,
@@ -145,7 +161,7 @@ export const createSupabasePropertyRepository = ({
       kind: 'particular',
       ...(row.advertiser_phone && { phone: row.advertiser_phone }),
     },
-    ...(row.status === 'hidden' && { hidden: true }),
+    ...(WITHDRAWALS[row.status] && { withdrawn: WITHDRAWALS[row.status] }),
   })
 
   /**
@@ -177,6 +193,27 @@ export const createSupabasePropertyRepository = ({
       }),
     )
 
+  /** El anuncio y de quién es la sesión. Rechaza si no hay sesión o el anuncio no es de esa cuenta. */
+  const requireOwn = async (id: string) => {
+    const [ownerId, row] = await Promise.all([gateway.currentUserId(), gateway.findById(id)])
+    if (!ownerId) throw new PublicationSignInRequiredError()
+    if (!row || row.owner_id !== ownerId) throw new Error(NOT_EDITABLE)
+
+    return { ownerId, row }
+  }
+
+  const setStatus = async (id: string, status: 'published' | 'unpublished') => {
+    const { row } = await requireOwn(id)
+    // Lo que ocultó el equipo solo lo devuelve el equipo. La base lo dejaría igual sin avisar: aquí se dice.
+    if (row.status === 'hidden') throw new Error(WITHDRAWN_BY_SITE)
+
+    try {
+      await gateway.setStatus(id, status)
+    } catch (reason) {
+      throw toFailure(reason)
+    }
+  }
+
   return {
     publish: async (publication, operationKey) => {
       const ownerId = await gateway.currentUserId()
@@ -193,7 +230,7 @@ export const createSupabasePropertyRepository = ({
       try {
         await gateway.insertOnce({ ...toChanges(publication, photos), operation_key: operationKey })
       } catch (reason) {
-        throw isLimitReached(reason) ? new PublicationLimitError() : reason
+        throw toFailure(reason)
       }
 
       const created = await findSaved()
@@ -225,10 +262,7 @@ export const createSupabasePropertyRepository = ({
     },
 
     update: async (id, publication, operationKey) => {
-      const [ownerId, row] = await Promise.all([gateway.currentUserId(), gateway.findById(id)])
-      if (!ownerId) throw new PublicationSignInRequiredError()
-      if (!row || row.owner_id !== ownerId) throw new Error(NOT_EDITABLE)
-
+      const { ownerId, row } = await requireOwn(id)
       const kept = new Map(row.photos.map((path) => [gateway.photoUrl(path), path]))
       // Las nuevas van a una carpeta con la clave de esta edición: reintentarla reemplaza las mismas.
       const photos = await storePhotos(ownerId, operationKey, publication.images, kept)
@@ -236,6 +270,10 @@ export const createSupabasePropertyRepository = ({
       // Las que el anuncio ya no usa se borran al final: si fallara, sobrarían archivos, no faltarían fotos.
       await gateway.removePhotos(row.photos.filter((path) => !photos.includes(path)))
     },
+
+    unpublish: (id) => setStatus(id, 'unpublished'),
+
+    republish: (id) => setStatus(id, 'published'),
 
     remove: async (id) => {
       const [ownerId, row] = await Promise.all([gateway.currentUserId(), gateway.findById(id)])

@@ -50,6 +50,10 @@ export const createSupabasePropertyGateway = (client: SupabaseClient): PropertyG
       unwrap(await properties().update(changes).eq('id', id))
     },
 
+    setStatus: async (id, status) => {
+      unwrap(await properties().update({ status }).eq('id', id))
+    },
+
     deleteById: async (id) => {
       unwrap(await properties().delete().eq('id', id))
     },

@@ -1,4 +1,4 @@
-import type { Advertiser, PhotoSource } from '@/features/properties/types/property.types'
+import type { Advertiser, PhotoSource, Withdrawal } from '@/features/properties/types/property.types'
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
 import { createOperationKey } from '@/shared/utils/operationKey'
@@ -18,8 +18,8 @@ export interface StoredPropertyPublication {
   publication: StoredPublication
   /** Quién lo publica, cuando el anuncio es de una cuenta. */
   advertiser?: Advertiser
-  /** Retirado del catálogo por el equipo del sitio: solo lo sigue viendo quien lo publicó. */
-  hidden?: boolean
+  /** Fuera del catálogo, y por decisión de quién: solo lo sigue viendo quien lo publicó. */
+  withdrawn?: Withdrawal
 }
 
 export interface PublishedPropertyRepository {
@@ -28,15 +28,25 @@ export interface PublishedPropertyRepository {
   getById(id: string): Promise<StoredPropertyPublication | undefined>
   /** Los anuncios que puede ver quien usa el sitio, del más reciente al más antiguo. */
   getAll(): Promise<StoredPropertyPublication[]>
-  /** Los que publicó quien usa el sitio, del más reciente al más antiguo. */
+  /** Los de quien usa el sitio, también los que no están en el catálogo, del más reciente al más antiguo. */
   getOwn(): Promise<StoredPropertyPublication[]>
-  /** Cuántos anuncios puede tener a la vez quien usa el sitio. */
+  /** Cuántos anuncios puede tener publicados a la vez quien usa el sitio. */
   getLimit(): Promise<number>
   /**
    * Guarda los cambios de un anuncio propio; guardar otra vez los mismos lo deja igual. Rechaza si el
    * anuncio no existe o no es de quien usa el sitio.
    */
   update(id: string, publication: PropertyPublication, operationKey: string): Promise<void>
+  /**
+   * Retira del catálogo un anuncio propio, que conserva todo lo demás; repetirlo lo deja igual. Rechaza si
+   * el anuncio no existe o no es de quien usa el sitio.
+   */
+  unpublish(id: string): Promise<void>
+  /**
+   * Devuelve al catálogo un anuncio propio que su dueño había retirado; repetirlo lo deja igual. Rechaza
+   * igual que `unpublish`, y con `PublicationLimitError` si quien lo guarda sabe que el plan ya está lleno.
+   */
+  republish(id: string): Promise<void>
   /** Elimina un anuncio propio. Repetirlo, o pedirlo de uno ajeno, no hace nada. */
   remove(id: string): Promise<void>
 }
@@ -100,7 +110,7 @@ export const createIndexedDbPublicationRepository = ({
     return database
   }
 
-  const getAll = async (): Promise<StoredPropertyPublication[]> => {
+  const readAll = async (): Promise<StoredPropertyPublication[]> => {
     const db = await getDatabase()
 
     return new Promise((resolve, reject) => {
@@ -110,6 +120,30 @@ export const createIndexedDbPublicationRepository = ({
         resolve(records.toSorted((left, right) => right.createdAt - left.createdAt))
       }
       request.onerror = () => reject(requestError(request))
+    })
+  }
+
+  /** Cambia un anuncio guardado, que conserva lo que el cambio no toque. Rechaza si ya no existe. */
+  const change = async (id: string, toNext: (record: StoredPropertyPublication) => StoredPropertyPublication) => {
+    const db = await getDatabase()
+
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite')
+      const store = transaction.objectStore(STORE_NAME)
+      let failure: unknown
+      const existing = store.get(id)
+
+      existing.onsuccess = () => {
+        const record = existing.result as StoredPropertyPublication | undefined
+        if (record) store.put(toNext(record))
+        else failure = new Error(NOT_EDITABLE)
+      }
+      existing.onerror = () => {
+        failure = requestError(existing)
+      }
+      transaction.oncomplete = () => (failure ? reject(failure) : resolve())
+      transaction.onerror = () => reject(transactionError(transaction))
+      transaction.onabort = () => reject(failure ?? transactionError(transaction))
     })
   }
 
@@ -153,33 +187,16 @@ export const createIndexedDbPublicationRepository = ({
       })
     },
 
-    getAll,
-    getOwn: getAll,
+    // Lo despublicado sale del catálogo, pero sigue siendo de quien usa este navegador.
+    getAll: async () => (await readAll()).filter((record) => !record.withdrawn),
+    getOwn: readAll,
     getLimit: async () => MAX_FREE_PUBLICATIONS,
 
-    update: async (id, publication) => {
-      const db = await getDatabase()
-
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_NAME, 'readwrite')
-        const store = transaction.objectStore(STORE_NAME)
-        let failure: unknown
-        const existing = store.get(id)
-
-        existing.onsuccess = () => {
-          const record = existing.result as StoredPropertyPublication | undefined
-          // Se conservan su identificador, su clave y su fecha: solo cambia lo que se anuncia.
-          if (record) store.put({ ...record, publication })
-          else failure = new Error(NOT_EDITABLE)
-        }
-        existing.onerror = () => {
-          failure = requestError(existing)
-        }
-        transaction.oncomplete = () => (failure ? reject(failure) : resolve())
-        transaction.onerror = () => reject(transactionError(transaction))
-        transaction.onabort = () => reject(failure ?? transactionError(transaction))
-      })
-    },
+    // Se conservan su identificador, su clave y su fecha: solo cambia lo que se anuncia.
+    update: (id, publication) => change(id, (record) => ({ ...record, publication })),
+    unpublish: (id) => change(id, (record) => ({ ...record, withdrawn: 'byOwner' })),
+    // El límite del plan lo comprueba quien pide publicar, igual que con un anuncio nuevo.
+    republish: (id) => change(id, ({ withdrawn: _withdrawn, ...record }) => record),
 
     remove: async (id) => {
       const db = await getDatabase()

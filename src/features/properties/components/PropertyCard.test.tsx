@@ -120,8 +120,9 @@ describe('PropertyCard', () => {
 
   it.each([
     { flag: { example: true }, badge: 'Ejemplo', when: 'una propiedad de muestra' },
-    { flag: { hidden: true }, badge: 'Oculto', when: 'un anuncio retirado del catálogo' },
-  ])('marca como «$badge» $when', ({ flag, badge }) => {
+    { flag: { withdrawn: 'byOwner' }, badge: 'Despublicada', when: 'un anuncio que retiró quien lo publicó' },
+    { flag: { withdrawn: 'bySite' }, badge: 'Oculta por el sitio', when: 'un anuncio que retiró el equipo del sitio' },
+  ] as const)('marca como «$badge» $when', ({ flag, badge }) => {
     // Arrange
     const property = buildProperty(flag)
 
@@ -141,7 +142,8 @@ describe('PropertyCard', () => {
 
     // Assert
     expect(screen.queryByText('Ejemplo')).not.toBeInTheDocument()
-    expect(screen.queryByText('Oculto')).not.toBeInTheDocument()
+    expect(screen.queryByText('Despublicada')).not.toBeInTheDocument()
+    expect(screen.queryByText('Oculta por el sitio')).not.toBeInTheDocument()
   })
 
   it('no pone ese aviso en las propiedades del catálogo', () => {

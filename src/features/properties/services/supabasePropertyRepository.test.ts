@@ -67,6 +67,9 @@ const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
       stored.unshift(row({ ...added, id: NEW_ID, owner_id: userId ?? '' }))
     }),
     updateById: vi.fn<PropertyGateway['updateById']>(async () => {}),
+    setStatus: vi.fn<PropertyGateway['setStatus']>(async (id, status) => {
+      stored.splice(0, stored.length, ...stored.map((saved) => (saved.id === id ? { ...saved, status } : saved)))
+    }),
     deleteById: vi.fn<PropertyGateway['deleteById']>(async (id) => {
       stored.splice(0, stored.length, ...stored.filter((saved) => saved.id !== id))
     }),
@@ -224,15 +227,19 @@ describe('createSupabasePropertyRepository: leer', () => {
     expect(advertiser).toEqual({ name: 'Anunciante', kind: 'particular' })
   })
 
-  it('dice a quien lo publicó que su anuncio fue retirado del catálogo', async () => {
+  it.each([
+    { when: 'uno publicado no está retirado', status: 'published', withdrawn: undefined },
+    { when: 'uno despublicado lo retiró quien lo publicó', status: 'unpublished', withdrawn: 'byOwner' },
+    { when: 'uno oculto lo retiró el equipo del sitio', status: 'hidden', withdrawn: 'bySite' },
+  ] as const)('dice a quien publicó un anuncio si sigue en el catálogo: $when', async ({ status, withdrawn }) => {
     // Arrange
-    const { repository } = setup({ rows: [row({ status: 'hidden' })] })
+    const { repository } = setup({ rows: [row({ status })] })
 
     // Act
     const [stored] = await repository.getOwn()
 
     // Assert
-    expect(stored.hidden).toBe(true)
+    expect(stored.withdrawn).toBe(withdrawn)
   })
 
   it('encuentra un anuncio por su identificador', async () => {
@@ -364,6 +371,87 @@ describe('createSupabasePropertyRepository: editar', () => {
     // Assert
     await expect(saving).rejects.toThrow('Esa foto no pertenece al anuncio.')
     expect(gateway.updateById).not.toHaveBeenCalled()
+  })
+})
+
+describe('createSupabasePropertyRepository: despublicar y volver a publicar', () => {
+  it('despublica un anuncio propio, sin tocar nada más de él', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+
+    // Act
+    await repository.unpublish(SAVED_ID)
+
+    // Assert
+    expect(gateway.setStatus).toHaveBeenCalledExactlyOnceWith(SAVED_ID, 'unpublished')
+    expect(gateway.updateById).not.toHaveBeenCalled()
+    expect((await repository.getOwn())[0].withdrawn).toBe('byOwner')
+  })
+
+  it('vuelve a publicar un anuncio que su dueño había despublicado', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row({ status: 'unpublished' })] })
+
+    // Act
+    await repository.republish(SAVED_ID)
+
+    // Assert
+    expect(gateway.setStatus).toHaveBeenCalledExactlyOnceWith(SAVED_ID, 'published')
+    expect((await repository.getOwn())[0].withdrawn).toBeUndefined()
+  })
+
+  it('si la base de datos dice que el plan está lleno, volver a publicar rechaza con PublicationLimitError', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row({ status: 'unpublished' })] })
+    gateway.setStatus.mockRejectedValue(Object.assign(new Error('publication_limit_reached'), { code: 'RZ001' }))
+
+    // Act
+    const republishing = repository.republish(SAVED_ID)
+
+    // Assert
+    await expect(republishing).rejects.toBeInstanceOf(PublicationLimitError)
+  })
+
+  it('cualquier otro fallo al cambiar el estado se entrega tal cual', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+    const failure = new Error('sin conexión')
+    gateway.setStatus.mockRejectedValue(failure)
+
+    // Act
+    const unpublishing = repository.unpublish(SAVED_ID)
+
+    // Assert
+    await expect(unpublishing).rejects.toBe(failure)
+  })
+
+  it.each([
+    { when: 'es de otra cuenta', rows: [row({ owner_id: 'otra-cuenta' })], reason: 'El anuncio no existe o no es de esta cuenta.' },
+    { when: 'ya no existe', rows: [], reason: 'El anuncio no existe o no es de esta cuenta.' },
+    { when: 'lo ocultó el equipo del sitio', rows: [row({ status: 'hidden' })], reason: 'El equipo del sitio retiró este anuncio.' },
+  ])('no cambia el estado de un anuncio que $when: lo rechaza', async ({ rows, reason }) => {
+    // Arrange
+    const { repository, gateway } = setup({ rows })
+
+    // Act
+    const attempts = await Promise.allSettled([repository.unpublish(SAVED_ID), repository.republish(SAVED_ID)])
+
+    // Assert
+    expect(attempts.map((attempt) => attempt.status)).toEqual(['rejected', 'rejected'])
+    expect(attempts.map((attempt) => (attempt as PromiseRejectedResult).reason.message)).toEqual([reason, reason])
+    expect(gateway.setStatus).not.toHaveBeenCalled()
+  })
+
+  it('sin sesión rechaza con PublicationSignInRequiredError', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()], userId: null })
+
+    // Act
+    const unpublishing = repository.unpublish(SAVED_ID)
+
+    // Assert
+    await expect(unpublishing).rejects.toBeInstanceOf(PublicationSignInRequiredError)
+    expect(gateway.setStatus).not.toHaveBeenCalled()
   })
 })
 
