@@ -1,6 +1,6 @@
 /**
- * Publicaciones que incluye el plan gratuito (Propietario). Mientras no haya cuentas, se cuentan
- * las que ya hay guardadas en este navegador.
+ * Publicaciones que incluye el plan gratuito (Propietario). Cuentan las que están en el catálogo: una
+ * despublicada deja libre su lugar.
  */
 export const MAX_FREE_PUBLICATIONS = 1
 
@@ -13,10 +13,10 @@ export const hasReachedLimit = (publishedCount: number, limit = MAX_FREE_PUBLICA
  */
 export const describeLimitReached = (limit: number, holder: string) =>
   limit === MAX_FREE_PUBLICATIONS
-    ? { title: FREE_LIMIT_REACHED.title, description: `${FREE_LIMIT_REACHED.reason} y ${holder} ya tiene una.` }
+    ? { title: FREE_LIMIT_REACHED.title, description: `${FREE_LIMIT_REACHED.reason} y ${holder} ya tiene una publicada.` }
     : {
         title: 'Ya usaste los anuncios de tu plan',
-        description: `Tu plan incluye ${limit} anuncios a la vez. Elimina alguno para publicar otro.`,
+        description: `Tu plan incluye ${limit} anuncios publicados a la vez. Despublica o elimina alguno para publicar otro.`,
       }
 
 /** Lo que se le dice a quien ya la usó, tanto al abrir el formulario como al intentar guardar. */

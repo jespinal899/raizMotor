@@ -22,7 +22,7 @@ const AccountPanel = ({ user, onNavigate }: AccountPanelProps) => {
       <AccountSummary user={user} />
       <ButtonLink to={ROUTES.myProperties} onClick={onNavigate} variant="outline" size="lg">
         <LayoutList />
-        Mis anuncios
+        Mis publicaciones
       </ButtonLink>
       <ButtonLink to={ROUTES.account} onClick={onNavigate} variant="outline" size="lg">
         <UserRoundPen />

@@ -16,8 +16,8 @@ export const ROUTES = {
   /** A donde llega quien abre el enlace de su correo para elegir otra contraseña. */
   resetPassword: '/restablecer-contrasena',
   publish: '/publicar',
-  myProperties: '/mis-anuncios',
-  editProperty: '/mis-anuncios/:id/editar',
+  myProperties: '/mis-publicaciones',
+  editProperty: '/mis-publicaciones/:id/editar',
   account: '/mi-cuenta',
   pricing: '/planes',
   agentPlans: '/planes/agente-inmobiliario',

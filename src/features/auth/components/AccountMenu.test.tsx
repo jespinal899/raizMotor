@@ -52,7 +52,7 @@ describe('AccountMenu', () => {
   })
 
   it.each([
-    ['Mis anuncios', '/mis-anuncios'],
+    ['Mis publicaciones', '/mis-publicaciones'],
     ['Mi cuenta', '/mi-cuenta'],
   ])('lleva a «%s»', async (option, path) => {
     // Arrange

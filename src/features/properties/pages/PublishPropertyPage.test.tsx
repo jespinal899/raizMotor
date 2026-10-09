@@ -196,7 +196,7 @@ describe('PublishPropertyPage: una sola publicación gratuita', () => {
     setup()
 
     // Assert
-    expect(await screen.findByRole('link', { name: 'Ver mis anuncios' })).toHaveAttribute('href', '/mis-anuncios')
+    expect(await screen.findByRole('link', { name: 'Ver mis publicaciones' })).toHaveAttribute('href', '/mis-publicaciones')
     expect(screen.getByRole('link', { name: 'Ver los planes' })).toHaveAttribute('href', '/planes')
   })
 
@@ -234,7 +234,9 @@ describe('PublishPropertyPage: una sola publicación gratuita', () => {
 
     // Assert
     expect(await screen.findByRole('heading', { level: 1, name: 'Ya usaste los anuncios de tu plan' })).toBeInTheDocument()
-    expect(screen.getByText(/Tu plan incluye 2 anuncios a la vez/)).toBeInTheDocument()
+    expect(screen.getByText(/Tu plan incluye 2 anuncios publicados a la vez/)).toHaveTextContent(
+      'Despublica o elimina alguno para publicar otro.',
+    )
     expect(screen.queryByRole('form', { name: FORM_NAME })).not.toBeInTheDocument()
   })
 

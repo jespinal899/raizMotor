@@ -15,15 +15,15 @@ import {
 import { useAttempt } from '@/hooks/useAttempt'
 
 interface DeletePropertyButtonProps {
-  /** Título del anuncio, para que quien confirma vea cuál va a eliminar. */
+  /** Título de la publicación, para que quien confirma vea cuál va a eliminar. */
   title: string
-  /** Se resuelve cuando el anuncio quedó eliminado; se rechaza si no se pudo. */
+  /** Se resuelve cuando quedó eliminada; se rechaza si no se pudo. */
   onDelete: () => Promise<void>
 }
 
 /**
- * Botón «Eliminar» de un anuncio propio y la ventana que pide confirmarlo: borrar no se puede deshacer.
- * Cuando el anuncio se elimina, quien lo listaba lo retira y esta ventana desaparece con él.
+ * Botón «Eliminar» de una publicación propia, esté en el catálogo o no, y la ventana que pide confirmarlo:
+ * borrar no se puede deshacer. Cuando se elimina, quien la listaba la retira y esta ventana desaparece con ella.
  */
 const DeletePropertyButton = ({ title, onDelete }: DeletePropertyButtonProps) => {
   const { status, attempt } = useAttempt<'removing', 'failed'>({ toFailure: () => 'failed' })
@@ -36,17 +36,17 @@ const DeletePropertyButton = ({ title, onDelete }: DeletePropertyButtonProps) =>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg">¿Eliminar este anuncio?</DialogTitle>
+          <DialogTitle className="text-lg">¿Eliminar esta publicación?</DialogTitle>
           <DialogDescription>
-            «{title}» dejará de verse en el catálogo y sus fotos se borrarán. No se puede deshacer.
+            «{title}» se borrará con sus fotos y ya no podrás volver a publicarla. No se puede deshacer.
           </DialogDescription>
         </DialogHeader>
 
         {status === 'failed' && (
           <StatusAlert
             icon={CircleAlert}
-            title="No pudimos eliminar el anuncio"
-            description="Sigue publicado. Inténtalo de nuevo en unos minutos."
+            title="No pudimos eliminar la publicación"
+            description="Sigue en tu lista. Inténtalo de nuevo en unos minutos."
             variant="destructive"
           />
         )}
@@ -60,7 +60,7 @@ const DeletePropertyButton = ({ title, onDelete }: DeletePropertyButtonProps) =>
             busyLabel="Eliminando…"
             onClick={() => void attempt('removing', onDelete)}
           >
-            Eliminar anuncio
+            Eliminar publicación
           </BusyButton>
         </DialogFooter>
       </DialogContent>

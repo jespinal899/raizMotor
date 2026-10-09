@@ -42,7 +42,7 @@ describe('AccountPanel', () => {
   })
 
   it.each([
-    ['Mis anuncios', '/mis-anuncios'],
+    ['Mis publicaciones', '/mis-publicaciones'],
     ['Mi cuenta', '/mi-cuenta'],
   ])('lleva a «%s», y avisa para que el menú que lo contiene se cierre', async (option, path) => {
     // Arrange

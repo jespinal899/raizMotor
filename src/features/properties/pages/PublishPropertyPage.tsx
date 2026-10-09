@@ -64,7 +64,7 @@ const PublishPropertyPage = () => {
   if (hasReachedLimit(published.length, limit)) {
     return (
       <PageMessage icon={CircleCheck} {...describeLimitReached(limit, ADS_SHARED ? 'tu cuenta' : 'este navegador')}>
-        <ButtonLink to={ROUTES.myProperties}>Ver mis anuncios</ButtonLink>
+        <ButtonLink to={ROUTES.myProperties}>Ver mis publicaciones</ButtonLink>
         <ButtonLink to={ROUTES.pricing} variant="outline">
           Ver los planes
         </ButtonLink>

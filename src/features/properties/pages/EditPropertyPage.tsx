@@ -37,7 +37,7 @@ const EditPropertyPage = () => {
         title="No puedes editar ese anuncio"
         description="Ya no existe, o no lo publicaste con esta cuenta."
       >
-        <ButtonLink to={ROUTES.myProperties}>Ver mis anuncios</ButtonLink>
+        <ButtonLink to={ROUTES.myProperties}>Ver mis publicaciones</ButtonLink>
       </PageMessage>
     )
   }

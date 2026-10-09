@@ -28,7 +28,7 @@ describe('describeLimitReached', () => {
     // Assert
     expect(message).toEqual({
       title: 'Ya usaste tu publicación gratuita',
-      description: 'El plan Propietario incluye una sola publicación y tu cuenta ya tiene una.',
+      description: 'El plan Propietario incluye una sola publicación y tu cuenta ya tiene una publicada.',
     })
   })
 
@@ -42,7 +42,7 @@ describe('describeLimitReached', () => {
     // Assert
     expect(message).toEqual({
       title: 'Ya usaste los anuncios de tu plan',
-      description: 'Tu plan incluye 25 anuncios a la vez. Elimina alguno para publicar otro.',
+      description: 'Tu plan incluye 25 anuncios publicados a la vez. Despublica o elimina alguno para publicar otro.',
     })
   })
 })

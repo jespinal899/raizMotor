@@ -36,8 +36,8 @@ const renderPage = () => {
   vi.mocked(createLeafletLocationMap).mockImplementation(buildFakeLocationMap().createMap)
 
   return renderWithRouter(<EditPropertyPage />, {
-    route: `/mis-anuncios/${AD_ID}/editar`,
-    path: '/mis-anuncios/:id/editar',
+    route: `/mis-publicaciones/${AD_ID}/editar`,
+    path: '/mis-publicaciones/:id/editar',
   })
 }
 
@@ -104,7 +104,7 @@ describe('EditPropertyPage', { timeout: 20_000 }, () => {
 
     // Assert
     expect(await screen.findByRole('heading', { level: 1, name: 'No puedes editar ese anuncio' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ver mis anuncios' })).toHaveAttribute('href', '/mis-anuncios')
+    expect(screen.getByRole('link', { name: 'Ver mis publicaciones' })).toHaveAttribute('href', '/mis-publicaciones')
     expect(screen.queryByRole('form')).not.toBeInTheDocument()
   })
 
@@ -139,6 +139,6 @@ describe('EditPropertyPage', { timeout: 20_000 }, () => {
 
     // Assert
     expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos guardar los cambios')
-    expect(currentPath()).toBe(`/mis-anuncios/${AD_ID}/editar`)
+    expect(currentPath()).toBe(`/mis-publicaciones/${AD_ID}/editar`)
   })
 })

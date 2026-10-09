@@ -12,13 +12,13 @@ import PrivacyPage from '@/features/legal/pages/PrivacyPage'
 import TermsPage from '@/features/legal/pages/TermsPage'
 import LazyEditPropertyPage from '@/features/properties/pages/LazyEditPropertyPage'
 import LazyPublishPropertyPage from '@/features/properties/pages/LazyPublishPropertyPage'
-import MyPropertiesPage from '@/features/properties/pages/MyPropertiesPage'
 import PropertyDetailPage from '@/features/properties/pages/PropertyDetailPage'
 import SearchPage from '@/features/search/pages/SearchPage'
 import AgentPlanCheckoutPage from '@/features/shop/pages/AgentPlanCheckoutPage'
 import AgentPlansPage from '@/features/shop/pages/AgentPlansPage'
 import PricingPage from '@/features/shop/pages/PricingPage'
 import HomePage from '@/pages/HomePage'
+import MyPropertiesPage from '@/pages/MyPropertiesPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import ProtectedRoute from '@/router/ProtectedRoute'
 import { landFromAuthLink } from '@/router/authLinkLanding'
@@ -52,8 +52,8 @@ export const routes: RouteObject[] = [
         path: ROUTES.myProperties,
         element: (
           <ProtectedRoute
-            title="Inicia sesión para ver tus anuncios"
-            description="Tus anuncios están guardados en tu cuenta."
+            title="Inicia sesión para ver tus publicaciones"
+            description="Tus publicaciones están guardadas en tu cuenta."
           >
             <MyPropertiesPage />
           </ProtectedRoute>

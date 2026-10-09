@@ -49,7 +49,7 @@ const AccountMenu = ({ user, className }: AccountMenuProps) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link to={ROUTES.myProperties} />}>
           <LayoutList />
-          Mis anuncios
+          Mis publicaciones
         </DropdownMenuItem>
         <DropdownMenuItem render={<Link to={ROUTES.account} />}>
           <UserRoundPen />
