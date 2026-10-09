@@ -19,3 +19,7 @@ export const toThumbnailStrip = (total: number): ThumbnailStrip => {
 
 /** La foto siguiente (`1`) o la anterior (`-1`), dando la vuelta al llegar a un extremo. */
 export const stepPhoto = (current: number, step: 1 | -1, total: number): number => (current + step + total) % total
+
+/** Las fotos de al lado, la siguiente y la anterior: sin repetir y sin contar la que se está viendo. */
+export const adjacentPhotos = (current: number, total: number): number[] =>
+  [...new Set([stepPhoto(current, 1, total), stepPhoto(current, -1, total)])].filter((photo) => photo !== current)

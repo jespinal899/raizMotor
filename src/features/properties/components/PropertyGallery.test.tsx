@@ -207,6 +207,35 @@ describe('PropertyGallery', () => {
     expect(photo()).toHaveAttribute('src', IMAGES[1])
   })
 
+  it.each([
+    { when: 'la foto siguiente entra por la derecha', control: 'next', side: 'right' },
+    { when: 'la foto anterior entra por la izquierda', control: 'previous', side: 'left' },
+  ] as const)('en el visor, $when', async ({ control, side }) => {
+    // Arrange
+    const { user, photo, ...controls } = await openViewer()
+
+    // Act
+    await user.click(controls[control]())
+
+    // Assert
+    expect(photo().className).toContain(`slide-in-from-${side}`)
+  })
+
+  it('al volver a abrir el visor, la foto aparece en su sitio, sin entrar desde un lado', async () => {
+    // Arrange
+    const { user, next, close } = await openViewer()
+    await user.click(next())
+    await user.click(close())
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    // Act
+    await user.click(enlargeButton())
+
+    // Assert
+    const reopened = await viewer()
+    expect(inViewer(reopened).photo().className).not.toContain('slide-in-from')
+  })
+
   it('la X cierra el visor', async () => {
     // Arrange
     const { user, close } = await openViewer()

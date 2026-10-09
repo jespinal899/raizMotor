@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_THUMBNAILS, stepPhoto, toThumbnailStrip } from '@/features/properties/utils/gallery'
+import { MAX_THUMBNAILS, adjacentPhotos, stepPhoto, toThumbnailStrip } from '@/features/properties/utils/gallery'
 
 describe('toThumbnailStrip', () => {
   it('si las fotos caben en la tira, se muestran todas y no falta ninguna', () => {
@@ -90,5 +90,24 @@ describe('stepPhoto', () => {
 
     // Assert
     expect(previous).toBe(2)
+  })
+})
+
+describe('adjacentPhotos', () => {
+  it.each([
+    { when: 'en medio, la siguiente y la anterior', current: 2, total: 5, expected: [3, 1] },
+    { when: 'en la primera, la segunda y la última', current: 0, total: 5, expected: [1, 4] },
+    { when: 'en la última, la primera y la penúltima', current: 4, total: 5, expected: [0, 3] },
+    { when: 'con dos fotos, la otra, una sola vez', current: 0, total: 2, expected: [1] },
+    { when: 'con una sola foto, ninguna', current: 0, total: 1, expected: [] },
+  ])('$when', ({ current, total, expected }) => {
+    // Arrange
+    const viewing = current
+
+    // Act
+    const adjacent = adjacentPhotos(viewing, total)
+
+    // Assert
+    expect(adjacent).toEqual(expected)
   })
 })

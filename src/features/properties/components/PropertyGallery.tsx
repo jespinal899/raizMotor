@@ -44,7 +44,7 @@ interface PropertyGalleryProps {
 
 /**
  * Fotos de la propiedad: la foto grande y una tira de miniaturas que la cambian ahí mismo. Pulsar la foto
- * grande la abre en el visor a pantalla completa, que es donde se pasa de una a otra con flechas. Si hay
+ * grande la abre en el visor a pantalla completa, que es donde se pasa de una a otra deslizando o con flechas. Si hay
  * más fotos de las que caben en la tira, la última casilla dice cuántas faltan y abre el visor en la
  * primera de ellas.
  *
