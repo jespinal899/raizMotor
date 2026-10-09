@@ -15,6 +15,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import AccountPanel from '@/features/auth/components/AccountPanel'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { BRAND } from '@/shared/constants/brand'
 
 const linkStyle =
@@ -26,6 +28,7 @@ interface MobileNavProps {
 
 const MobileNav = ({ className }: MobileNavProps) => {
   const [open, setOpen] = useState(false)
+  const { status, user } = useAuth()
   const close = () => setOpen(false)
 
   return (
@@ -73,16 +76,19 @@ const MobileNav = ({ className }: MobileNavProps) => {
         </nav>
 
         <SheetFooter className="border-t">
-          <ButtonLink
-            to={NAV.login.to}
-            markCurrent
-            onClick={close}
-            variant="outline"
-            size="lg"
-            className="group/nav"
-          >
-            <NavLabel>{NAV.login.label}</NavLabel>
-          </ButtonLink>
+          {status === 'signedIn' && <AccountPanel user={user} />}
+          {status === 'signedOut' && (
+            <ButtonLink
+              to={NAV.login.to}
+              markCurrent
+              onClick={close}
+              variant="outline"
+              size="lg"
+              className="group/nav"
+            >
+              <NavLabel>{NAV.login.label}</NavLabel>
+            </ButtonLink>
+          )}
           <ButtonLink to={NAV.publish.to} markCurrent onClick={close} size="lg" className="group/nav">
             <Plus />
             <NavLabel>{NAV.publish.label}</NavLabel>

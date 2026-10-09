@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
+import type { RegistrationCredentials, SessionUser } from '@/features/auth/types/auth.types'
 import type { PropertyService } from '@/features/properties/services/propertyService'
 import type { Property } from '@/features/properties/types/property.types'
 import type { PublicationFormValues } from '@/features/properties/types/publication.types'
@@ -48,6 +48,14 @@ export const buildRegistration = (overrides: Partial<RegistrationCredentials> = 
   email: 'ana@gmail.com',
   phone: '+50499999999',
   password: 'secreta123',
+  ...overrides,
+})
+
+/** Quien tiene la sesión abierta en una prueba. */
+export const buildSessionUser = (overrides: Partial<SessionUser> = {}): SessionUser => ({
+  email: 'ana@gmail.com',
+  firstName: 'Ana',
+  lastName: 'Mejía',
   ...overrides,
 })
 
