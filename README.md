@@ -8,14 +8,14 @@ Plataforma web inmobiliaria para Honduras: reúne casas, apartamentos y terrenos
 
 ## Estado actual
 
-Las cuentas y los anuncios funcionan con [Supabase](https://supabase.com/). Un anuncio publicado lo ve cualquier visitante, a nombre de la cuenta que lo publicó, y se suma a las propiedades de ejemplo, que salen marcadas como «Ejemplo». Las demás funciones que necesitan un servicio externo muestran un aviso en lugar de simular el resultado.
+Las cuentas y los anuncios funcionan con [Supabase](https://supabase.com/). Un anuncio publicado lo ve cualquier visitante, a nombre de la cuenta que lo publicó. Las propiedades de ejemplo, inventadas y marcadas como «Ejemplo», no se mezclan con los anuncios reales salvo que la compilación lo pida con `VITE_SHOW_SAMPLE_LISTINGS=true`. Las demás funciones que necesitan un servicio externo muestran un aviso en lugar de simular el resultado.
 
-Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin cuentas y cada anuncio se guarda solo en el navegador de quien lo publica, que lo ve avisado.
+Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin cuentas, con las propiedades de ejemplo, y cada anuncio se guarda solo en el navegador de quien lo publica, que lo ve avisado. El pipeline no publica una compilación así (ver [Integración y despliegue continuos](#integración-y-despliegue-continuos)).
 
 | Función | Estado |
 | --- | --- |
-| Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona |
-| Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y los de ejemplo. Se filtra en el navegador, que recibe el catálogo entero: sirve mientras sean cientos de anuncios |
+| Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona. Hoy solo las propiedades de ejemplo son destacadas: sin ellas, la sección no se muestra |
+| Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y, si se muestran, los de ejemplo. Se filtra en el navegador, que recibe el catálogo entero: sirve mientras sean cientos de anuncios. Si Supabase no responde, lo dice en lugar de mostrar un catálogo vacío |
 | Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
 | Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Contactar a quien publica | La ficha de un anuncio publicado dice quién lo publica y abre WhatsApp con el teléfono de su cuenta y el anuncio ya citado. Los de ejemplo llevan al contacto del sitio |
@@ -67,6 +67,7 @@ Las cuentas las lleva un proyecto de Supabase. La compilación lo conoce por dos
 | --- | --- |
 | `VITE_SUPABASE_URL` | La dirección del proyecto: `https://….supabase.co`. |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Su clave «publishable» (o la antigua «anon»). Es pública por diseño. |
+| `VITE_SHOW_SAMPLE_LISTINGS` | Opcional. `true` muestra las propiedades de ejemplo junto a los anuncios reales; sin ella, solo se muestran cuando no hay Supabase. |
 
 - **En tu equipo:** copia `.env.example` como `.env.local`, que Git ignora, y rellénalo.
 - **En el sitio publicado:** añádelas en Vercel (Settings > Environment Variables, entorno Production). El pipeline las recoge al compilar.
@@ -87,6 +88,21 @@ El correo que trae Supabase solo escribe a los miembros de su organización, y m
 | Sender email | Una dirección del dominio verificado, por ejemplo `no-reply@…` |
 
 Los textos en español de los dos correos están en `supabase/templates/`; cada archivo dice en qué plantilla del panel se pega y con qué asunto.
+
+#### Seguridad de las cuentas
+
+Estos ajustes viven en el panel de Supabase, no en el repositorio: `supabase/config.toml` trae los valores de fábrica de la herramienta, no los del proyecto. Antes de abrir el registro al público, revisa en Authentication:
+
+| Dónde | Qué |
+| --- | --- |
+| Sign In / Providers > Email | «Confirm email» activado: quien se registra confirma su correo antes de entrar. |
+| Sign In / Providers > Email | «Minimum password length» en 8, lo mismo que pide el formulario. |
+| Attack Protection | «Prevent use of leaked passwords» activado, si el plan del proyecto lo incluye. |
+| Rate Limits | Los límites de correos y de inicios de sesión por hora, ajustados al tráfico esperado. |
+| Emails > SMTP Settings | El servicio de correo propio descrito en [Correo](#correo). |
+| URL Configuration | «Site URL» con la dirección del sitio publicado, y solo las «Redirect URLs» que se usan. |
+
+Falta un CAPTCHA en el registro, el inicio de sesión y la recuperación de contraseña. Activarlo en Attack Protection exige a la vez el widget en esos formularios (Cloudflare Turnstile o hCaptcha): si se activa solo en el panel, nadie podrá entrar ni registrarse.
 
 #### Base de datos
 
@@ -169,6 +185,8 @@ Vercel no despliega por su cuenta: `vercel.json` desactiva su despliegue automá
 
 Si falta alguno, el despliegue falla y lo dice. Si alguno no corresponde al proyecto, la herramienta de Vercel solo responde «Project not found»: el pipeline averigua cuál es (`.github/scripts/vercelDiagnosis.mjs`) y lo deja como aviso en la página de la ejecución, sin mostrar ningún identificador.
 
+Antes de compilar, el pipeline comprueba también las variables de producción que trae de Vercel (`.github/scripts/checkProductionEnv.mjs`): no publica si falta alguna de las dos de Supabase, porque el sitio guardaría los anuncios solo en el navegador de quien publica, ni si la clave es una privilegiada («secret» o «service_role»), porque viajaría dentro del sitio. Cada problema sale como aviso, sin mostrar ningún valor.
+
 Antes de subir un cambio, comprueba en tu equipo los mismos pasos:
 
 ```bash
@@ -177,7 +195,7 @@ npm test
 npm run build
 ```
 
-El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página.
+El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página, y fija las cabeceras de seguridad de cada respuesta. La más delicada es la política de contenido (`Content-Security-Policy`): solo deja cargar scripts del propio sitio, y datos e imágenes de Supabase (`*.supabase.co`), de OpenStreetMap (teselas y buscador de direcciones) y de Unsplash (las fotos de la portada). Si el sitio pasa a usar otro servicio, o Supabase con un dominio propio, hay que añadirlo ahí: si no, el navegador lo bloquea.
 
 ## Pendiente
 
@@ -188,7 +206,9 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
-- Anuncios: buscar en el servidor cuando el catálogo crezca (hoy el navegador recibe todos los anuncios, hasta 1000, y filtra él), decidir si la ficha muestra la dirección exacta o solo la zona, y retirar las propiedades de ejemplo cuando haya suficientes anuncios reales.
+- Anuncios: buscar en el servidor cuando el catálogo crezca (hoy el navegador recibe todos los anuncios, hasta 1000, y filtra él), y decidir si la ficha muestra la dirección exacta o solo la zona.
+- Destacar anuncios reales: hoy solo las propiedades de ejemplo son destacadas.
+- CAPTCHA en el registro, el inicio de sesión y la recuperación de contraseña (ver [Seguridad de las cuentas](#seguridad-de-las-cuentas)).
 - Activar el plan de una cuenta al confirmarse su pago: hoy se le sube el límite de anuncios a mano en el panel de Supabase.
 - Pagos en línea: cobrar con tarjeta dentro del sitio, activar el plan al confirmarse el pago, renovarlo cada mes y emitir la factura. Hoy la solicitud sale por WhatsApp y el plan se activa a mano.
 - Cupones de descuento: definir los códigos y validarlos en un servidor, para que rebajen el total.
