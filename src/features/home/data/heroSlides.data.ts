@@ -8,7 +8,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     badge: '🏡 BIENES RAÍCES',
     title: 'Encuentra tu hogar ideal',
     description:
-      'Casas, departamentos y terrenos verificados en las mejores zonas del país. Publica gratis y contacta directo.',
+      'Casas, departamentos y terrenos en las mejores zonas del país. Publica gratis y contacta directo.',
     image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600',
     primaryAction: { label: 'Explorar propiedades', to: ROUTES.properties },
     secondaryAction: { label: 'Publicar gratis', to: ROUTES.pricing },

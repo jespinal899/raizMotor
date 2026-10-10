@@ -3,12 +3,20 @@ import ButtonLink from '@/components/ButtonLink'
 import Container from '@/components/layout/Container'
 import PropertyCollection from '@/features/properties/components/PropertyCollection'
 import { useFeaturedProperties } from '@/features/properties/hooks/useFeaturedProperties'
+import type { PropertyService } from '@/features/properties/services/propertyService'
 import { ROUTES } from '@/shared/constants/routes'
 
 const FEATURED_COUNT = 6
 
-const FeaturedProperties = () => {
-  const { properties, isLoading, error } = useFeaturedProperties()
+interface FeaturedPropertiesProps {
+  service?: PropertyService
+}
+
+const FeaturedProperties = ({ service }: FeaturedPropertiesProps) => {
+  const { properties, isLoading, error } = useFeaturedProperties(service)
+
+  // Sin destacadas, la sección sobra: un título sobre un hueco parecería un fallo.
+  if (!isLoading && !error && properties.length === 0) return null
 
   return (
     <Container as="section" aria-labelledby="propiedades-destacadas" className="py-14">
@@ -20,7 +28,7 @@ const FeaturedProperties = () => {
           >
             Propiedades destacadas
           </h2>
-          <p className="text-muted-foreground">Una selección de casas, apartamentos y terrenos verificados.</p>
+          <p className="text-muted-foreground">Una selección de casas, apartamentos y terrenos.</p>
         </div>
         <ButtonLink to={ROUTES.properties} variant="outline" size="lg">
           Ver todas
