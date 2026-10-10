@@ -10,7 +10,7 @@ interface PropertyToolbarProps {
 
 /** Acciones de la ficha, junto a la ruta de navegación: compartir, reportar y cuántas vistas lleva. */
 const PropertyToolbar = ({ property }: PropertyToolbarProps) => {
-  const { id, localOnly } = property
+  const { id, localOnly, example } = property
 
   return (
     <div
@@ -20,8 +20,11 @@ const PropertyToolbar = ({ property }: PropertyToolbarProps) => {
     >
       <div className="flex items-center gap-1">
         <SharePropertyDialog property={property} />
-        {/* Un anuncio guardado solo en este navegador es de quien lo está viendo: no tiene a quién reportarlo. */}
-        {!localOnly && (
+        {/*
+          Un anuncio guardado solo en este navegador es de quien lo está viendo, y uno de ejemplo no es de
+          nadie: ninguno tiene a quién reportarlo.
+        */}
+        {!localOnly && !example && (
           <>
             <Separator orientation="vertical" className="h-5 data-vertical:self-center" />
             <ReportPropertyDialog propertyId={id} />

@@ -72,4 +72,16 @@ describe('PropertyToolbar', () => {
     expect(within(toolbar).queryByRole('button', { name: 'Reportar' })).not.toBeInTheDocument()
     expect(within(toolbar).queryByRole('separator')).not.toBeInTheDocument()
   })
+
+  it('en una propiedad de ejemplo no ofrece reportarla: no es un anuncio de nadie', async () => {
+    // Arrange
+    const sample = buildProperty({ id: 'casa-1', example: true })
+
+    // Act
+    const { toolbar } = await renderToolbar(sample)
+
+    // Assert
+    expect(within(toolbar).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
+    expect(within(toolbar).queryByRole('button', { name: 'Reportar' })).not.toBeInTheDocument()
+  })
 })

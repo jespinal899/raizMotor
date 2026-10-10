@@ -24,7 +24,19 @@ export interface PropertyReport extends ReportDetails {
   propertyId: string
 }
 
-/** Por qué no salió el reporte: `unavailable` significa que los reportes aún no están activos. */
-export type ReportFailure = 'unavailable' | 'failed'
+/** Quien recibe los reportes. */
+export interface ReportService {
+  /**
+   * Se resuelve cuando el reporte queda entregado y se rechaza si no se pudo enviar. Es idempotente: si
+   * llega dos veces con la misma clave, por un reintento o un doble envío, se registra una sola vez.
+   */
+  report(report: PropertyReport, operationKey: string): Promise<void>
+}
+
+/**
+ * Por qué no salió el reporte: `unavailable` significa que los reportes aún no están activos, y `throttled`,
+ * que llegaron demasiados en poco tiempo y hay que esperar.
+ */
+export type ReportFailure = 'unavailable' | 'throttled' | 'failed'
 
 export type ReportFormStatus = 'idle' | 'sending' | 'sent' | ReportFailure
