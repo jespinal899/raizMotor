@@ -27,6 +27,20 @@ describe('ReportFormAlert', () => {
     expect(alert).toHaveTextContent(`No se envió tu reporte. Mientras tanto, llámanos al ${CONTACT.phone.display}.`)
   })
 
+  it('si llegaron demasiados reportes, dice que no se envió el suyo y cuándo reintentar', () => {
+    // Arrange
+    const status = 'throttled'
+
+    // Act
+    render(<ReportFormAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('Ya recibimos muchos reportes')
+    expect(alert).toHaveTextContent('No se envió el tuyo')
+    expect(alert).toHaveTextContent('Inténtalo de nuevo en una hora.')
+  })
+
   it('ante un fallo del envío invita a reintentar o a llamar', () => {
     // Arrange
     const status = 'failed'

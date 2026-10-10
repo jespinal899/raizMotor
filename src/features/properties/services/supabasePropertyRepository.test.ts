@@ -59,6 +59,10 @@ const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
   const gateway = {
     currentUserId: vi.fn<PropertyGateway['currentUserId']>(async () => userId),
     listPublished: vi.fn<PropertyGateway['listPublished']>(async () => stored),
+    searchPublished: vi.fn<PropertyGateway['searchPublished']>(async ({ offset, limit }) => ({
+      rows: stored.slice(offset, offset + limit),
+      total: stored.length,
+    })),
     findById: vi.fn<PropertyGateway['findById']>(async (id) => stored.find((saved) => saved.id === id)),
     listByOwner: vi.fn<PropertyGateway['listByOwner']>(async (owner) => stored.filter((saved) => saved.owner_id === owner)),
     findLimit: vi.fn<PropertyGateway['findLimit']>(async () => limit),
@@ -240,6 +244,61 @@ describe('createSupabasePropertyRepository: leer', () => {
 
     // Assert
     expect(stored.withdrawn).toBe(withdrawn)
+  })
+
+  it('busca en la base de datos con los filtros, el orden y el tramo pedidos, y entrega cuántos los cumplen', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row(), row({ id: NEW_ID })] })
+    const filters = {
+      type: 'casa' as const,
+      operation: 'venta' as const,
+      minPrice: 100000,
+      maxPrice: 200000,
+      minBedrooms: 2,
+      minBathrooms: 1,
+      sort: 'price-asc' as const,
+    }
+
+    // Act
+    const slice = await repository.search!({ filters, offset: 0, limit: 6 })
+
+    // Assert
+    expect(gateway.searchPublished).toHaveBeenCalledExactlyOnceWith({ ...filters, place: undefined, offset: 0, limit: 6 })
+    expect(slice.total).toBe(2)
+    expect(slice.records.map((record) => record.id)).toEqual([SAVED_ID, NEW_ID])
+  })
+
+  it('busca la zona sin mayúsculas ni tildes, como la guarda la base de datos', async () => {
+    // Arrange
+    const { repository, gateway } = setup()
+
+    // Act
+    await repository.search!({ filters: { location: '  Colón ' }, offset: 0, limit: 6 })
+
+    // Assert
+    expect(gateway.searchPublished).toHaveBeenCalledWith(expect.objectContaining({ place: 'colon' }))
+  })
+
+  it.each(['%', '_', '*', '\\', '%_*'])('quita de la zona el comodín %j, que haría encontrar cualquier anuncio', async (wildcard) => {
+    // Arrange
+    const { repository, gateway } = setup()
+
+    // Act
+    await repository.search!({ filters: { location: `pal${wildcard}mira` }, offset: 0, limit: 6 })
+
+    // Assert
+    expect(gateway.searchPublished).toHaveBeenCalledWith(expect.objectContaining({ place: 'palmira' }))
+  })
+
+  it('una zona hecha solo de espacios o comodines no filtra', async () => {
+    // Arrange
+    const { repository, gateway } = setup()
+
+    // Act
+    await repository.search!({ filters: { location: ' %% ' }, offset: 0, limit: 6 })
+
+    // Assert
+    expect(gateway.searchPublished).toHaveBeenCalledWith(expect.objectContaining({ place: undefined }))
   })
 
   it('encuentra un anuncio por su identificador', async () => {

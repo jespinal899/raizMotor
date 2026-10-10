@@ -312,6 +312,102 @@ describe('createPublishedPropertyService: si el almacenamiento del navegador fal
   })
 })
 
+describe('createPublishedPropertyService: búsqueda en el servidor', () => {
+  /** Un servidor de mentira que guarda `stored` y entrega solo el tramo pedido, como la base de datos. */
+  const searchingRepository = (stored: StoredPropertyPublication[]) => {
+    const repository = repositoryFor(stored)
+    repository.search = vi.fn(async ({ offset, limit }) => ({ records: stored.slice(offset, offset + limit), total: stored.length }))
+
+    return repository
+  }
+
+  const ids = (properties: Property[]) => properties.map((property) => property.id)
+
+  it('pide al servidor solo la página, con los filtros, y no descarga el catálogo entero', async () => {
+    // Arrange
+    const repository = searchingRepository([record('a'), record('b')])
+    const service = createPublishedPropertyService([], repository, { shared: true })
+    const filters = { type: 'casa' as const, sort: 'price-desc' as const }
+
+    // Act
+    const result = await service.search(filters, { page: 1, pageSize: 6 })
+
+    // Assert
+    expect(repository.search).toHaveBeenCalledExactlyOnceWith({ filters, offset: 0, limit: 6 })
+    expect(repository.getAll).not.toHaveBeenCalled()
+    expect(result).toMatchObject({ total: 2, page: 1, pageSize: 6, totalPages: 1 })
+    expect(ids(result.items)).toEqual(['a', 'b'])
+  })
+
+  it('pone los ejemplos detrás de todos los anuncios reales, y una página puede llevar de los dos', async () => {
+    // Arrange
+    const repository = searchingRepository([record('a'), record('b')])
+    const samples = [buildProperty({ id: 'muestra-1' }), buildProperty({ id: 'muestra-2' })]
+    const service = createPublishedPropertyService(samples, repository, { shared: true })
+
+    // Act
+    const first = await service.search({}, { page: 1, pageSize: 3 })
+    const second = await service.search({}, { page: 2, pageSize: 3 })
+
+    // Assert
+    expect(ids(first.items)).toEqual(['a', 'b', 'muestra-1'])
+    expect(ids(second.items)).toEqual(['muestra-2'])
+    expect(second).toMatchObject({ total: 4, page: 2, totalPages: 2 })
+  })
+
+  it('solo suma los ejemplos que cumplen la búsqueda', async () => {
+    // Arrange
+    const repository = searchingRepository([record('a')])
+    const samples = [buildProperty({ id: 'casa', type: 'casa' }), buildProperty({ id: 'terreno', type: 'terreno' })]
+    const service = createPublishedPropertyService(samples, repository, { shared: true })
+
+    // Act
+    const result = await service.search({ type: 'terreno' }, { page: 1, pageSize: 6 })
+
+    // Assert
+    expect(ids(result.items)).toEqual(['a', 'terreno'])
+    expect(result.total).toBe(2)
+  })
+
+  it('una página que ya no existe se ajusta a la última', async () => {
+    // Arrange
+    const repository = searchingRepository([record('a'), record('b'), record('c')])
+    const service = createPublishedPropertyService([], repository, { shared: true })
+
+    // Act
+    const result = await service.search({}, { page: 9, pageSize: 2 })
+
+    // Assert
+    expect(result).toMatchObject({ page: 2, totalPages: 2, total: 3 })
+    expect(ids(result.items)).toEqual(['c'])
+    expect(repository.search).toHaveBeenLastCalledWith({ filters: {}, offset: 2, limit: 2 })
+  })
+
+  it('sin resultados entrega una sola página vacía', async () => {
+    // Arrange
+    const service = createPublishedPropertyService([], searchingRepository([]), { shared: true })
+
+    // Act
+    const result = await service.search({}, { page: 1, pageSize: 6 })
+
+    // Assert
+    expect(result).toEqual({ items: [], total: 0, page: 1, pageSize: 6, totalPages: 1 })
+  })
+
+  it('si el servidor falla, la búsqueda lo dice', async () => {
+    // Arrange
+    const repository = repositoryFor([])
+    repository.search = vi.fn(async () => Promise.reject(new Error('Sin conexión')))
+    const service = createPublishedPropertyService([buildProperty({ id: 'muestra' })], repository, { shared: true })
+
+    // Act
+    const result = service.search({}, { page: 1, pageSize: 6 })
+
+    // Assert
+    await expect(result).rejects.toThrow('Sin conexión')
+  })
+})
+
 describe('createPublishedPropertyService: si el servidor de anuncios compartidos falla', () => {
   it('la búsqueda lo dice, en lugar de mostrar el catálogo como si no hubiera anuncios', async () => {
     // Arrange

@@ -6,7 +6,8 @@ const SIBLINGS_AROUND_CURRENT = 1
 
 export type PageRangeItem = number | 'ellipsis-start' | 'ellipsis-end'
 
-const toPositiveInteger = (value: number) => (Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1)
+/** Un número de página o un tamaño válido: entero y desde 1. Lo que no es un número cuenta como 1. */
+export const toPositiveInteger = (value: number) => (Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1)
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 

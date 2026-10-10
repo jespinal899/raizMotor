@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { adminService } from '@/features/admin/services/adminService'
 import AccountMenu from '@/features/auth/components/AccountMenu'
 import { authService } from '@/features/auth/services/authService'
 import { deferred } from '@/test/deferred'
@@ -8,8 +9,10 @@ import { buildSessionUser } from '@/test/factories'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
 vi.mock('@/features/auth/services/authService', () => ({ authService: { logout: vi.fn() } }))
+vi.mock('@/features/admin/services/adminService', () => ({ adminService: { isAdmin: vi.fn(async () => false) } }))
 
 const logout = vi.mocked(authService.logout)
+const isAdmin = vi.mocked(adminService.isAdmin)
 
 const USER = buildSessionUser({ firstName: 'Ana', lastName: 'Mejía', email: 'ana@gmail.com' })
 
@@ -26,6 +29,32 @@ const openMenu = async () => {
 describe('AccountMenu', () => {
   beforeEach(() => {
     logout.mockReset()
+    isAdmin.mockReset().mockResolvedValue(false)
+  })
+
+  it('a una cuenta del equipo le ofrece el panel de administración', async () => {
+    // Arrange
+    isAdmin.mockResolvedValue(true)
+    renderWithRouter(<AccountMenu user={USER} />)
+
+    // Act
+    await openMenu()
+
+    // Assert
+    expect(await screen.findByRole('menuitem', { name: 'Panel de administración' })).toHaveAttribute('href', '/admin')
+  })
+
+  it('a las demás cuentas no les ofrece el panel', async () => {
+    // Arrange
+    renderWithRouter(<AccountMenu user={USER} />)
+
+    // Act
+    await openMenu()
+
+    // Assert
+    await screen.findByRole('menuitem', { name: 'Mi cuenta' })
+    expect(isAdmin).toHaveBeenCalled()
+    expect(screen.queryByRole('menuitem', { name: 'Panel de administración' })).not.toBeInTheDocument()
   })
 
   it('muestra en la barra el nombre de quien tiene la sesión', () => {

@@ -7,10 +7,17 @@ import type {
   PublishedPropertyRepository,
   StoredPropertyPublication,
 } from '@/features/properties/services/publishedPropertyRepository'
-import type { PropertyOperation, PropertyType, Withdrawal } from '@/features/properties/types/property.types'
+import type {
+  PropertyFilters,
+  PropertyOperation,
+  PropertySort,
+  PropertyType,
+  Withdrawal,
+} from '@/features/properties/types/property.types'
 import type { PropertyPublication, PublicationPhoto } from '@/features/properties/types/publication.types'
 import { photoExtension } from '@/features/properties/utils/photoResize'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
+import { normalizeText } from '@/shared/utils/text'
 
 /** Un anuncio tal como está en la tabla `properties`; lo que no declara llega como `null`. */
 export interface PropertyRow {
@@ -52,12 +59,31 @@ export type NewPropertyRow = Omit<
 /** Lo que se puede cambiar de un anuncio ya publicado: todo menos la clave con que se publicó. */
 export type PropertyChanges = Omit<NewPropertyRow, 'operation_key'>
 
+/**
+ * Una búsqueda en el catálogo, tal como la entiende la base de datos. `place` llega ya normalizado, sin
+ * mayúsculas ni tildes, igual que la columna `search_place` con que se compara.
+ */
+export interface CatalogSearch {
+  type?: PropertyType
+  operation?: PropertyOperation
+  place?: string
+  minPrice?: number
+  maxPrice?: number
+  minBedrooms?: number
+  minBathrooms?: number
+  sort?: PropertySort
+  offset: number
+  limit: number
+}
+
 /** Lo que este repositorio necesita de Supabase, sin su manera de escribir las consultas. */
 export interface PropertyGateway {
   /** Identificador de la cuenta con la sesión abierta; `null` si no hay ninguna. */
   currentUserId(): Promise<string | null>
   /** Los anuncios que ve cualquiera, del más reciente al más antiguo. */
   listPublished(): Promise<PropertyRow[]>
+  /** El tramo pedido de los anuncios publicados que cumplen la búsqueda, y cuántos la cumplen en total. */
+  searchPublished(search: CatalogSearch): Promise<{ rows: PropertyRow[]; total: number }>
   findById(id: string): Promise<PropertyRow | undefined>
   /** Los de una cuenta, también los ocultos, del más reciente al más antiguo. */
   listByOwner(ownerId: string): Promise<PropertyRow[]>
@@ -105,6 +131,30 @@ const isLimitReached = (reason: unknown) =>
 
 /** El fallo con que rechazar: el del límite del plan, con su nombre, o el que llegó. */
 const toFailure = (reason: unknown) => (isLimitReached(reason) ? new PublicationLimitError() : reason)
+
+/**
+ * La zona que se busca, como la compara la base de datos. Sin los comodines de la búsqueda por patrones
+ * (`%`, `_`, `*`) ni la barra con que se escaparían: ningún nombre de lugar los lleva, y escritos a propósito
+ * harían que la búsqueda encontrara cualquier cosa.
+ */
+const toPlace = (location: string | undefined) => normalizeText(location ?? '').replace(/[%_*\\]/g, '') || undefined
+
+const toCatalogSearch = (
+  { location, type, operation, minPrice, maxPrice, minBedrooms, minBathrooms, sort }: PropertyFilters,
+  offset: number,
+  limit: number,
+): CatalogSearch => ({
+  type,
+  operation,
+  place: toPlace(location),
+  minPrice,
+  maxPrice,
+  minBedrooms,
+  minBathrooms,
+  sort,
+  offset,
+  limit,
+})
 
 const toChanges = (
   { location, images: _images, builtArea, landArea, bedrooms, bathrooms, parking, ...publication }: PropertyPublication,
@@ -247,6 +297,12 @@ export const createSupabasePropertyRepository = ({
     },
 
     getAll: async () => (await gateway.listPublished()).map(toStored),
+
+    search: async ({ filters, offset, limit }) => {
+      const { rows, total } = await gateway.searchPublished(toCatalogSearch(filters, offset, limit))
+
+      return { records: rows.map(toStored), total }
+    },
 
     getOwn: async () => {
       const ownerId = await gateway.currentUserId()

@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { useReportForm } from '@/features/properties/hooks/useReportForm'
-import { ReportUnavailableError } from '@/features/properties/services/reportService'
+import { ReportThrottledError, ReportUnavailableError } from '@/features/properties/services/reportService'
 import type { ReportDetails } from '@/features/properties/types/report.types'
 import { deferred } from '@/test/deferred'
 import { anyOperationKey } from '@/test/operationKey'
@@ -85,6 +85,18 @@ describe('useReportForm', () => {
 
     // Assert
     expect(result.current.status).toBe('unavailable')
+  })
+
+  it('si llegaron demasiados reportes lo distingue de un fallo', async () => {
+    // Arrange
+    const { result } = setup(vi.fn(() => Promise.reject(new ReportThrottledError())))
+    chooseReason(result)
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(result.current.status).toBe('throttled')
   })
 
   it('cualquier otro rechazo es un fallo del envío', async () => {

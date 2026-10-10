@@ -17,6 +17,11 @@ const ALERTS: Partial<Record<ReportFormStatus, StatusAlertContent>> = {
     title: 'Los reportes aún no están disponibles',
     description: `No se envió tu reporte. Mientras tanto, llámanos al ${CONTACT.phone.display}.`,
   },
+  throttled: {
+    icon: Info,
+    title: 'Ya recibimos muchos reportes',
+    description: 'No se envió el tuyo: llegaron demasiados en poco tiempo. Inténtalo de nuevo en una hora.',
+  },
   failed: {
     icon: CircleAlert,
     title: 'No pudimos enviar tu reporte',

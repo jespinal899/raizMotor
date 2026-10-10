@@ -19,6 +19,8 @@ export const ROUTES = {
   myProperties: '/mis-publicaciones',
   editProperty: '/mis-publicaciones/:id/editar',
   account: '/mi-cuenta',
+  /** El panel del equipo del sitio. */
+  admin: '/admin',
   pricing: '/planes',
   agentPlans: '/planes/agente-inmobiliario',
   agentPlanCheckout: '/planes/agente-inmobiliario/contratar/:plan',

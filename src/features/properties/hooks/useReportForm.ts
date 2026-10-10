@@ -1,4 +1,4 @@
-import { ReportUnavailableError } from '@/features/properties/services/reportService'
+import { ReportThrottledError, ReportUnavailableError } from '@/features/properties/services/reportErrors'
 import type { ReportDetails, ReportFailure, ReportFormValues } from '@/features/properties/types/report.types'
 import { isReportReason } from '@/features/properties/utils/propertyGuards'
 import { validateReport } from '@/features/properties/utils/reportValidation'
@@ -11,8 +11,11 @@ interface ReportFormOptions {
 
 const EMPTY_REPORT: ReportFormValues = { reason: '', details: '' }
 
-const toFailureStatus = (reason: unknown): ReportFailure =>
-  reason instanceof ReportUnavailableError ? 'unavailable' : 'failed'
+const toFailureStatus = (reason: unknown): ReportFailure => {
+  if (reason instanceof ReportUnavailableError) return 'unavailable'
+
+  return reason instanceof ReportThrottledError ? 'throttled' : 'failed'
+}
 
 export const useReportForm = ({ onSubmit }: ReportFormOptions) => {
   const { values, errors, status, change, validateFields, attempt } = useAttemptForm<

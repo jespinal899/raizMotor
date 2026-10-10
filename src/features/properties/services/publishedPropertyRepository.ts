@@ -1,4 +1,9 @@
-import type { Advertiser, PhotoSource, Withdrawal } from '@/features/properties/types/property.types'
+import type {
+  Advertiser,
+  PhotoSource,
+  PropertyFilters,
+  Withdrawal,
+} from '@/features/properties/types/property.types'
 import type { PropertyPublication } from '@/features/properties/types/publication.types'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
 import { createOperationKey } from '@/shared/utils/operationKey'
@@ -22,12 +27,30 @@ export interface StoredPropertyPublication {
   withdrawn?: Withdrawal
 }
 
+/** Qué anuncios del catálogo se piden: los que cumplen los filtros, en su orden, desde `offset` y hasta `limit`. */
+export interface CatalogQuery {
+  filters: PropertyFilters
+  offset: number
+  limit: number
+}
+
+/** Un tramo del catálogo y cuántos anuncios cumplen los filtros en total. */
+export interface CatalogSlice {
+  records: StoredPropertyPublication[]
+  total: number
+}
+
 export interface PublishedPropertyRepository {
   /** Guarda el anuncio y devuelve su identificador. Repetir una clave devuelve el mismo, sin guardar otro. */
   publish(publication: PropertyPublication, operationKey: string): Promise<string>
   getById(id: string): Promise<StoredPropertyPublication | undefined>
   /** Los anuncios que puede ver quien usa el sitio, del más reciente al más antiguo. */
   getAll(): Promise<StoredPropertyPublication[]>
+  /**
+   * Busca en el catálogo donde están guardados los anuncios: solo viaja el tramo pedido. Quien no la tiene
+   * entrega el catálogo entero con `getAll` y se filtra en el navegador.
+   */
+  search?(query: CatalogQuery): Promise<CatalogSlice>
   /** Los de quien usa el sitio, también los que no están en el catálogo, del más reciente al más antiguo. */
   getOwn(): Promise<StoredPropertyPublication[]>
   /** Cuántos anuncios puede tener publicados a la vez quien usa el sitio. */

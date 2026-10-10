@@ -77,9 +77,7 @@ Las cuentas y los anuncios tienen servidor. Si la compilación no trae las varia
 | Acceso con Google | Dar de alta el sitio en Google y activarlo en Supabase; hoy el botón avisa de que aún no está disponible | `loginWithGoogle`, en `src/features/auth/services/supabaseAuthService.ts` |
 | Enviar el formulario de contacto | Servicio de correo | Última línea de `src/features/contact/services/contactService.ts` |
 | Cotizar una propiedad | Servidor que reciba la solicitud; hoy se rechaza y la ficha avisa de que no se envió | Última línea de `src/features/properties/services/quoteService.ts` |
-| Reportar una publicación | Servidor que reciba el reporte; hoy se rechaza y la ventana avisa de que no se envió | Última línea de `src/features/properties/services/reportService.ts` |
 | Vistas de una ficha | Servidor que sume las de todos los visitantes; hoy se cuentan las de este navegador y la ficha lo dice | Última línea de `src/features/properties/services/propertyViewService.ts` |
-| Búsqueda en el servidor | Hoy el navegador recibe todos los anuncios publicados y los filtra él: alcanza mientras sean cientos | `listPublished`, en `src/features/properties/services/supabasePropertyGateway.ts` |
 
 ## Nivel 2 · Contenedores
 
@@ -141,7 +139,7 @@ flowchart TB
         auth["<b>Acceso</b> · auth<br/>Registro, sesión y recuperación"]
         search["<b>Búsqueda</b> · search<br/>Filtros, orden y resultados paginados"]
         shop["<b>Planes</b> · shop<br/>Formas de publicar y planes para agentes"]
-        admin["<b>Administración</b> · admin<br/>Sin implementar"]
+        admin["<b>Administración</b> · admin<br/>Reportes, anuncios y cuentas, solo para el equipo"]
         properties["<b>Propiedades</b> · properties<br/>Catálogo, ficha y formulario de publicar"]
 
         home --> search --> properties
@@ -152,6 +150,7 @@ flowchart TB
         %% Enlaces invisibles: solo ordenan las cajas en tres columnas para que el diagrama no se ensanche.
         contact ~~~ search
         auth ~~~ admin
+        admin --> properties
     end
 
     tiles["<b>Teselas de OpenStreetMap</b><br/>[Sistema externo]"]
@@ -166,16 +165,16 @@ flowchart TB
     properties -- "Direcciones" --> nominatim
     properties -- "Fotos" --> unsplash
     auth -- "Cuentas" --> supabase
-    properties -- "Anuncios" ---> supabase
+    properties -- "Anuncios y reportes" ---> supabase
+    admin -- "Moderación" --> supabase
     nominatim ~~~ shared
     unsplash ~~~ supabase
 
     classDef componente fill:#cfe3f7,stroke:#1f6fb5,color:#0b2a45
     classDef externo fill:#6b6b6b,stroke:#4a4a4a,color:#fff
     classDef pendiente fill:#fff,stroke:#6b6b6b,color:#333,stroke-dasharray:6 4
-    class router,layout,home,search,properties,contact,shop,auth,shared componente
+    class router,layout,home,search,properties,contact,shop,auth,admin,shared componente
     class supabase,tiles,nominatim,unsplash externo
-    class admin pendiente
     style features fill:none,stroke:#8c959f,stroke-dasharray:4 4
 ```
 
@@ -184,6 +183,7 @@ Una flecha entre dos funcionalidades significa que la primera usa piezas de la s
 - **Inicio** muestra el buscador de Búsqueda y las propiedades destacadas de Propiedades. Las fotos de su carrusel también vienen de Unsplash.
 - **Búsqueda** lista el catálogo de Propiedades.
 - **Contacto** lee de Propiedades y de Planes sobre qué propiedad o plan se consulta.
+- **Administración** lee de Propiedades los motivos de los reportes y enlaza a la ficha de cada anuncio, y de Planes, los límites de cada plan.
 - **Planes** lee de Propiedades cuántas publicaciones incluye el plan gratuito: la tarjeta del plan promete las mismas que admite el formulario de publicar.
 
 La estructura común también usa Acceso: la cabecera muestra de quién es la sesión abierta y permite cerrarla.
@@ -196,7 +196,7 @@ La estructura común también usa Acceso: la cabecera muestra de quién es la se
 | Contacto | `src/features/contact` | `/contacto` | `contactService` |
 | Planes | `src/features/shop` | `/planes`, `/planes/agente-inmobiliario`, `/planes/agente-inmobiliario/contratar/:plan` | `planRequestService` |
 | Acceso | `src/features/auth` | `/iniciar-sesion`, `/registro`, `/recuperar-contrasena`, `/restablecer-contrasena`, `/mi-cuenta` | `authService` |
-| Administración | `src/features/admin` | Ninguna todavía | Ninguno |
+| Administración | `src/features/admin` | `/admin`, solo para las cuentas del equipo | `adminService` |
 
 La página de publicar se carga de forma diferida, para que la biblioteca del mapa (Leaflet) no pese en la portada.
 
@@ -275,7 +275,7 @@ Crear una cuenta, publicar una propiedad y enviar un mensaje son escrituras: rep
 - **Cambia cuando cambian los datos.** Editar el formulario lo convierte en otra operación, con otra clave.
 - **Cada formulario tiene la suya.** Abrir de nuevo el formulario empieza una operación distinta.
 
-La publicación guarda la clave junto al anuncio, con una restricción de unicidad por cuenta en la base de datos (y un índice único en IndexedDB, sin Supabase). Si llega otra vez, no guarda nada y devuelve el ID que ya había; las fotos se suben a una ruta que sale de la clave, así que un reintento reemplaza las mismas y no deja otras. Por eso el límite de anuncios del plan distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Editar un anuncio es idempotente por sí mismo: guardar otra vez los mismos cambios lo deja igual, y las fotos nuevas van a una ruta que sale de la clave de esa edición. Lo mismo al corregir los datos de la cuenta. Eliminar dos veces el mismo anuncio no hace nada la segunda vez, y las migraciones de la base pueden ejecutarse de nuevo sin alterar ningún dato. El registro y el cambio de contraseña recuerdan las claves que ya atendieron (`src/shared/utils/operationLog.ts`): si llega otra vez la misma, entregan el resultado anterior sin pedirlo de nuevo a Supabase. El contacto sigue pendiente de su servicio externo.
+La publicación guarda la clave junto al anuncio, con una restricción de unicidad por cuenta en la base de datos (y un índice único en IndexedDB, sin Supabase). Si llega otra vez, no guarda nada y devuelve el ID que ya había; las fotos se suben a una ruta que sale de la clave, así que un reintento reemplaza las mismas y no deja otras. Por eso el límite de anuncios del plan distingue por la clave: el reintento de un anuncio ya guardado pasa, y un anuncio nuevo se rechaza. Editar un anuncio es idempotente por sí mismo: guardar otra vez los mismos cambios lo deja igual, y las fotos nuevas van a una ruta que sale de la clave de esa edición. Lo mismo al corregir los datos de la cuenta. Eliminar dos veces el mismo anuncio no hace nada la segunda vez, y las migraciones de la base pueden ejecutarse de nuevo sin alterar ningún dato. El registro y el cambio de contraseña recuerdan las claves que ya atendieron (`src/shared/utils/operationLog.ts`): si llega otra vez la misma, entregan el resultado anterior sin pedirlo de nuevo a Supabase. Un reporte guarda su clave con una restricción de unicidad: repetirlo no crea otro. El contacto sigue pendiente de su servicio externo.
 
 Iniciar sesión no lleva clave: repetirlo deja la misma sesión. Pedir el enlace para elegir otra contraseña tampoco: repetirlo envía otro enlace.
 
