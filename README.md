@@ -15,12 +15,12 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | Función | Estado |
 | --- | --- |
 | Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona. Hoy solo las propiedades de ejemplo son destacadas: sin ellas, la sección no se muestra |
-| Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y, si se muestran, los de ejemplo. Se filtra en el navegador, que recibe el catálogo entero: sirve mientras sean cientos de anuncios. Si Supabase no responde, lo dice en lugar de mostrar un catálogo vacío |
+| Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y, si se muestran, los de ejemplo, que van detrás de los reales. Con Supabase, la base de datos filtra, ordena y pagina: solo viaja la página pedida. Si Supabase no responde, lo dice en lugar de mostrar un catálogo vacío |
 | Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
 | Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Contactar a quien publica | La ficha de un anuncio publicado dice quién lo publica y abre WhatsApp con el teléfono de su cuenta y el anuncio ya citado. Los de ejemplo llevan al contacto del sitio |
 | Cotizar una propiedad desde su ficha | Interfaz lista; falta el servidor que reciba la solicitud |
-| Reportar una publicación desde su ficha | Interfaz lista; falta el servidor que reciba el reporte |
+| Reportar una publicación desde su ficha | Funciona con Supabase, con o sin sesión: el reporte llega al panel de administración. Hay un tope de reportes por hora, por cuenta y por anuncio. Las propiedades de ejemplo no se reportan |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
 | Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes y pide iniciar sesión. Guarda el anuncio en Supabase con hasta 10 fotos, que se reducen antes de subirlas, y queda visible de inmediato. Cada cuenta admite los anuncios de su plan: uno con el gratuito |
 | Mis publicaciones | Cada cuenta ve las suyas en dos pestañas, «Publicadas» y «Despublicadas», y puede corregirlas, despublicarlas, volver a publicarlas o eliminarlas. Un banner dice su plan y, en una barra, cuántas tiene publicadas de las que admite (0/1, 3/25…). Solo las publicadas ocupan el plan: despublicar una deja libre su lugar |
@@ -35,7 +35,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | Planes para agentes inmobiliarios (Agente Pro y Agente Élite): precio mensual en lempiras y motivos para contratar | Se muestran; el botón de cada plan abre su página de contratación |
 | Contratar un plan de agente en tres pasos (datos de suscripción, resumen y medio de pago), con el resumen de compra y su ISV siempre a un lado | Abre WhatsApp con la solicitud ya escrita; el pago se coordina a mano, porque aún no hay pagos en línea ni cuentas. La pantalla de pago con tarjeta es una demostración de diseño que no cobra nada y solo existe al desarrollar (`npm run dev`), no en el sitio publicado |
 | Código de descuento al contratar un plan | Solo el espacio para escribirlo, en el resumen de compra: aún no existen códigos, así que cualquiera responde que no es válido |
-| Panel de administración | Sin implementar |
+| Panel de administración (`/admin`) | Solo para las cuentas del equipo, que se nombran a mano (ver [`supabase/migrations`](supabase/migrations/README.md)). Revisa los reportes, oculta anuncios o los devuelve al catálogo, y cambia cuántos anuncios admite cada cuenta. Cada decisión queda registrada con quién la tomó |
 
 ## Tecnologías
 
@@ -106,7 +106,7 @@ Falta un CAPTCHA en el registro, el inicio de sesión y la recuperación de cont
 
 #### Base de datos
 
-Las tablas, sus permisos y el depósito de fotos se crean con los archivos de [`supabase/migrations`](supabase/migrations/README.md), que se pegan en el SQL Editor del panel de Supabase. Son idempotentes: repetirlos no cambia nada. Allí se explica también cómo ocultar un anuncio y cómo dar más anuncios a una cuenta que contrató un plan, que hoy se hace a mano.
+Las tablas, sus permisos y el depósito de fotos se crean con los archivos de [`supabase/migrations`](supabase/migrations/README.md), que se aplican con `supabase db push` o se pegan en el SQL Editor del panel de Supabase. Son idempotentes: repetirlos no cambia nada. Allí se explica también cómo nombrar las cuentas del equipo, que son las que entran al panel de administración. Las migraciones se aplican **antes** de publicar el sitio que las usa: si no, lo que dependa de ellas falla.
 
 #### Pruebas
 
@@ -146,7 +146,7 @@ src/
 │   ├── auth/            Iniciar sesión, registro y recuperación
 │   ├── shop/            Planes
 │   ├── legal/           Términos y condiciones, y política de privacidad
-│   └── admin/           Panel de administración (sin implementar)
+│   └── admin/           Panel de administración del equipo
 ├── components/          Componentes compartidos por varias funcionalidades
 │   ├── layout/          Cabecera, menú y pie
 │   └── ui/              Componentes de shadcn/ui
@@ -199,17 +199,17 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 
 ## Pendiente
 
-- Conectar un servidor para compartir anuncios entre dispositivos y visitantes, además del envío de contactos, cotizaciones y reportes, y el total de vistas de cada ficha.
+- Conectar el envío de contactos y cotizaciones, y el total de vistas de cada ficha.
 - Cuentas: volver a enviar el enlace de confirmación, el acceso con Google, y cambiar el correo o la contraseña desde «Mi cuenta» (hoy la contraseña se cambia con «Olvidé mi contraseña»). Antes de abrir el registro al público hace falta conectar el servicio de correo propio descrito en [Correo](#correo).
 - Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
-- Anuncios: buscar en el servidor cuando el catálogo crezca (hoy el navegador recibe todos los anuncios, hasta 1000, y filtra él), y decidir si la ficha muestra la dirección exacta o solo la zona.
+- Anuncios: decidir si la ficha muestra la dirección exacta o solo la zona.
 - Destacar anuncios reales: hoy solo las propiedades de ejemplo son destacadas.
 - CAPTCHA en el registro, el inicio de sesión y la recuperación de contraseña (ver [Seguridad de las cuentas](#seguridad-de-las-cuentas)).
-- Activar el plan de una cuenta al confirmarse su pago: hoy se le sube el límite de anuncios a mano en el panel de Supabase.
+- Activar el plan de una cuenta al confirmarse su pago: hoy el equipo le sube el límite de anuncios desde el panel de administración.
 - Pagos en línea: cobrar con tarjeta dentro del sitio, activar el plan al confirmarse el pago, renovarlo cada mes y emitir la factura. Hoy la solicitud sale por WhatsApp y el plan se activa a mano.
 - Cupones de descuento: definir los códigos y validarlos en un servidor, para que rebajen el total.
-- Panel de administración.
+- Panel de administración: estadísticas, y ver el registro de moderación desde el sitio (hoy se consulta en la tabla `moderation_log`).

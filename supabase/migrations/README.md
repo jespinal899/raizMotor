@@ -11,6 +11,8 @@ Cada archivo de esta carpeta es un cambio en la base de datos de Supabase: tabla
 | 5 | `20261009000400_editar_anuncios.sql` | Que cada cuenta pueda editar sus anuncios, y lo que el servidor conserva al guardar un cambio: de quién es, su estado y los datos del anunciante. | La 1 y la 2 |
 | 6 | `20261009000500_despublicar_anuncios.sql` | Que cada cuenta pueda despublicar sus anuncios y volver a publicarlos (estado `unpublished`), y que el límite del plan cuente solo los publicados. | La 1, la 2 y la 5 |
 | 7 | `20261010000000_integridad_de_anuncios.sql` | Que el servidor exija a cada anuncio lo mismo que el formulario (largos, topes, municipio de la lista `municipalities`, punto dentro de Honduras y fotos de la carpeta de su cuenta), que el límite del plan no se pueda rebasar con publicaciones simultáneas, y que el perfil descarte un teléfono que no sea de Honduras. | La 1, la 2, la 4, la 5 y la 6 |
+| 8 | `20261011000000_busqueda_en_el_servidor.sql` | Las columnas que la base calcula para buscar (`search_place`, la zona sin mayúsculas ni tildes, y `area`) y los índices de la búsqueda. El sitio busca, ordena y pagina el catálogo en la base. | La 2 |
+| 9 | `20261011000100_moderacion.sql` | El papel de cada cuenta (`user` o `admin`), los reportes de anuncios (`property_reports`), el registro de moderación (`moderation_log`) y las funciones con que el equipo revisa reportes, oculta anuncios y cambia límites. | La 1, la 2 y la 7 |
 
 Cada archivo es una unidad que funciona completa: una tabla va siempre con sus permisos y con los disparadores que la protegen, nunca en archivos distintos. Una tabla sin ellos aceptaría lo que no debe.
 
@@ -38,7 +40,21 @@ Las que ya se aplicaron no hay que repetirlas, pero repetir una no rompe ni dupl
 - Toda tabla nueva lleva `enable row level security` y sus permisos en la misma migración. Sin ellos, cualquiera con la clave pública del sitio podría leerla o escribirla.
 - Los límites que comprueba `validate_property` son los de `src/features/properties/utils/publicationValidation.ts`, y los municipios de `municipalities`, los de `src/features/properties/data/departments.data.ts`. Si cambian en el sitio, cambian también aquí, con una migración nueva; una prueba avisa si los municipios dejan de coincidir.
 
-## Tareas que se hacen a mano en el panel
+## Tareas que se hacen a mano en el panel de Supabase
 
-- **Ocultar un anuncio:** en Table Editor > `properties`, cambia su `status` a `hidden`. Deja de verse en el catálogo, y quien lo publicó lo sigue viendo en «Mis publicaciones», entre las despublicadas, sin poder volver a publicarlo. Para devolverlo al catálogo, ponle `published`. El estado `unpublished` es el de los que despublica su propio dueño, que sí puede volver a publicarlos.
-- **Dar más anuncios a una cuenta que contrató un plan:** en Table Editor > `profiles`, sube su `max_publications`: 25 para Agente Pro y 100 para Agente Élite. Es cuántos puede tener publicados a la vez, y de ese número saca «Mis publicaciones» el nombre del plan; con otra cantidad lo llama «Plan a medida».
+- **Nombrar una cuenta del equipo:** es lo único que no se hace desde el sitio, a propósito: nadie puede darse a sí mismo el papel de administración. La cuenta tiene que existir (registrarse en el sitio) y después, en el SQL Editor, con su correo:
+
+  ```sql
+  update public.profiles set role = 'admin'
+  where id = (select id from auth.users where email = 'correo@del-equipo.hn');
+  ```
+
+  Para quitarle el papel, lo mismo con `role = 'user'`. Al volver a entrar al sitio, el menú de la cuenta ofrece el «Panel de administración».
+
+## Tareas que se hacen desde el panel de administración del sitio (`/admin`)
+
+- **Revisar los reportes:** ocultar el anuncio reportado, darlo por resuelto o descartarlo.
+- **Ocultar un anuncio, o devolverlo al catálogo:** deja de verse en el catálogo, y quien lo publicó lo sigue viendo en «Mis publicaciones», entre las despublicadas, sin poder volver a publicarlo. El estado `unpublished` es el de los que despublica su propio dueño, que sí puede volver a publicarlos; el equipo no los vuelve a publicar.
+- **Dar más anuncios a una cuenta que contrató un plan:** en la pestaña Cuentas, «Cambiar límite»: 25 para Agente Pro y 100 para Agente Élite. Es cuántos puede tener publicados a la vez, y de ese número saca «Mis publicaciones» el nombre del plan; con otra cantidad lo llama «Plan a medida».
+
+Cada decisión queda en la tabla `moderation_log`, con quién la tomó, cuándo y la nota que se escribió.
