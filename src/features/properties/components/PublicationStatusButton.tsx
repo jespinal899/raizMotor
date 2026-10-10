@@ -2,7 +2,7 @@ import { CircleAlert, Eye, EyeOff } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import BusyButton from '@/components/BusyButton'
 import StatusAlert from '@/components/StatusAlert'
-import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
+import { PublicationLimitError, RateLimitedError } from '@/features/properties/services/publicationErrors'
 import { useAttempt } from '@/hooks/useAttempt'
 
 /** Lo que quien publicó un anuncio puede hacer con su lugar en el catálogo. */
@@ -50,6 +50,11 @@ const PLAN_FULL: Notice = {
   description: 'Para volver a publicarla, despublica o elimina otra, o cambia de plan.',
 }
 
+const RATE_LIMITED: Notice = {
+  title: 'Hiciste muchos cambios seguidos',
+  description: 'Para proteger el sitio hay un límite por hora. No cambió nada: inténtalo de nuevo en una hora.',
+}
+
 interface PublicationStatusButtonProps {
   action: StatusAction
   /** Se resuelve cuando el cambio quedó guardado; se rechaza si no se pudo. */
@@ -62,11 +67,15 @@ interface PublicationStatusButtonProps {
  * módulo y este botón desaparece con ella.
  */
 const PublicationStatusButton = ({ action, onAct }: PublicationStatusButtonProps) => {
-  const { status, attempt } = useAttempt<'working', 'planFull' | 'failed'>({
-    toFailure: (reason) => (reason instanceof PublicationLimitError ? 'planFull' : 'failed'),
+  const { status, attempt } = useAttempt<'working', 'planFull' | 'rateLimited' | 'failed'>({
+    toFailure: (reason) => {
+      if (reason instanceof PublicationLimitError) return 'planFull'
+
+      return reason instanceof RateLimitedError ? 'rateLimited' : 'failed'
+    },
   })
   const { icon, label, busyLabel, variant, failed } = ACTIONS[action]
-  const notices: Partial<Record<typeof status, Notice>> = { planFull: PLAN_FULL, failed }
+  const notices: Partial<Record<typeof status, Notice>> = { planFull: PLAN_FULL, rateLimited: RATE_LIMITED, failed }
   const notice = notices[status]
 
   return (

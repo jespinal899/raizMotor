@@ -1,4 +1,4 @@
-import { PublicationLimitError } from '@/features/properties/services/publicationErrors'
+import { PublicationLimitError, RateLimitedError } from '@/features/properties/services/publicationErrors'
 import type { PropertyPublication, PublicationFormValues } from '@/features/properties/types/publication.types'
 import { ADDRESS_FIELDS } from '@/features/properties/utils/publicationSteps'
 import { validatePublication } from '@/features/properties/utils/publicationValidation'
@@ -33,8 +33,12 @@ const EMPTY_PUBLICATION: PublicationFormValues = {
   images: [],
 }
 
-/** Haber usado ya la publicación gratuita no es un fallo del navegador: reintentar no lo arregla. */
-const toFailureStatus = (reason: unknown) => (reason instanceof PublicationLimitError ? 'limitReached' : 'failed')
+/** Haber usado ya la publicación gratuita, o un límite de uso, no es un fallo del navegador: reintentar no lo arregla. */
+const toFailureStatus = (reason: unknown) => {
+  if (reason instanceof PublicationLimitError) return 'limitReached'
+
+  return reason instanceof RateLimitedError ? 'rateLimited' : 'failed'
+}
 
 type PublicationForm = ReturnType<typeof usePublicationForm>
 
@@ -58,7 +62,7 @@ export const usePublicationForm = ({ onSubmit, initialValues = EMPTY_PUBLICATION
     change: changeField,
     validateFields,
   } = useFormFields({ initialValues, validate: validatePublication })
-  const { status, attempt, reset } = useAttempt<'submitting', 'failed' | 'limitReached', 'published'>({
+  const { status, attempt, reset } = useAttempt<'submitting', 'failed' | 'limitReached' | 'rateLimited', 'published'>({
     toFailure: toFailureStatus,
     succeeded: 'published',
   })

@@ -6,6 +6,17 @@ export class PublicationLimitError extends Error {
   }
 }
 
+/**
+ * Se alcanzó un límite de uso: demasiados cambios o demasiadas fotos en poco tiempo. No se guardó nada, y
+ * reintentar enseguida no cambia el resultado: el límite se renueva solo, en una o dos horas.
+ */
+export class RateLimitedError extends Error {
+  constructor() {
+    super('Se alcanzó el límite de cambios por ahora.')
+    this.name = 'RateLimitedError'
+  }
+}
+
 /** Para publicar hace falta una cuenta: el anuncio queda a nombre de quien tiene la sesión abierta. */
 export class PublicationSignInRequiredError extends Error {
   constructor() {

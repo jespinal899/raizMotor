@@ -14,8 +14,18 @@ const LIMIT_REACHED: StatusAlertContent = {
   variant: 'destructive',
 }
 
+/** Solo con los anuncios compartidos: los límites de uso los pone el servidor. */
+const RATE_LIMITED: StatusAlertContent = {
+  icon: CircleAlert,
+  title: 'Hiciste muchos cambios en poco tiempo',
+  description:
+    'Para proteger el sitio hay un límite de cambios y de fotos por hora. No se guardó nada: vuelve a intentarlo en una o dos horas.',
+  variant: 'destructive',
+}
+
 /** Con los anuncios compartidos, publicar lleva a la ficha: solo hay que explicar por qué no se pudo. */
 const SHARED_ALERTS: Alerts = {
+  rateLimited: RATE_LIMITED,
   failed: {
     icon: CircleAlert,
     title: 'No pudimos publicar tu propiedad',
@@ -27,6 +37,7 @@ const SHARED_ALERTS: Alerts = {
 
 /** Al editar, guardar lleva a la ficha: solo hay que explicar por qué no se pudo. */
 const EDITING_ALERTS: Alerts = {
+  rateLimited: RATE_LIMITED,
   failed: {
     icon: CircleAlert,
     title: 'No pudimos guardar los cambios',

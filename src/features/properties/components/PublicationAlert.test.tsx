@@ -64,4 +64,20 @@ describe('PublicationAlert', () => {
     expect(alert).toHaveTextContent('Ya usaste tu publicación gratuita')
     expect(alert).toHaveTextContent('El plan Propietario incluye una sola publicación. Este anuncio no se guardó.')
   })
+
+  it.each([
+    ['al publicar', false],
+    ['al editar', true],
+  ])('si se alcanzó un límite de uso %s, dice que no se guardó nada y cuándo reintentar', (_case, editing) => {
+    // Arrange
+    const status = 'rateLimited'
+
+    // Act
+    render(<PublicationAlert status={status} shared editing={editing} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('Hiciste muchos cambios en poco tiempo')
+    expect(alert).toHaveTextContent('No se guardó nada: vuelve a intentarlo en una o dos horas.')
+  })
 })
