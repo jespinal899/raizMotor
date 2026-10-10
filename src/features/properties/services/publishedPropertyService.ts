@@ -4,8 +4,12 @@ import type {
   PublishedPropertyRepository,
   StoredPropertyPublication,
 } from '@/features/properties/services/publishedPropertyRepository'
-import type { Property } from '@/features/properties/types/property.types'
+import type { Property, PropertyFilters } from '@/features/properties/types/property.types'
 import { getDepartmentName } from '@/features/properties/utils/departments'
+import { matchesFilters } from '@/features/properties/utils/matchesFilters'
+import { sortProperties } from '@/features/properties/utils/sortProperties'
+import type { PageRequest, Paginated } from '@/shared/types/common.types'
+import { toPositiveInteger } from '@/shared/utils/pagination'
 
 interface CatalogOptions {
   /** Los anuncios del repositorio los ve cualquiera, no solo quien los guardó en este navegador. */
@@ -93,11 +97,51 @@ export const createPublishedPropertyService = (
       return record && toProperty(record)
     }, undefined)
 
+  /**
+   * Busca en el almacén, que solo entrega la página pedida. Los ejemplos que cumplen la búsqueda van detrás
+   * de todos los anuncios reales, en su propio orden: una página puede acabar con unos y seguir con otros.
+   */
+  const searchStored = async (
+    search: NonNullable<PublishedPropertyRepository['search']>,
+    filters: PropertyFilters,
+    pageRequest: PageRequest,
+  ): Promise<Paginated<Property>> => {
+    const pageSize = toPositiveInteger(pageRequest.pageSize)
+    const matchingExamples = sortProperties(
+      examples.filter((property) => matchesFilters(property, filters)),
+      filters.sort,
+    )
+
+    const readPage = async (page: number) => {
+      const offset = (page - 1) * pageSize
+      const { records, total } = await readOr(() => search({ filters, offset, limit: pageSize }), {
+        records: [],
+        total: 0,
+      })
+      const stored = records.map(toProperty)
+      const firstExample = Math.max(0, offset - total)
+      const filling = matchingExamples.slice(firstExample, firstExample + pageSize - stored.length)
+
+      return { items: [...stored, ...filling], total: total + matchingExamples.length }
+    }
+
+    const requested = toPositiveInteger(pageRequest.page)
+    const first = await readPage(requested)
+    const totalPages = Math.max(1, Math.ceil(first.total / pageSize))
+    // Una página que ya no existe se ajusta a la última, como al filtrar en el navegador.
+    const page = Math.min(requested, totalPages)
+    const { items, total } = page === requested ? first : await readPage(page)
+
+    return { items, total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) }
+  }
+
   return {
     // Un anuncio publicado nunca es destacado, así que la portada no necesita leer el almacén.
     getFeatured: () => samples.getFeatured(),
     search: async (filters, pageRequest) =>
-      createInMemoryPropertyService([...(await getPublished()), ...examples]).search(filters, pageRequest),
+      repository.search
+        ? searchStored(repository.search, filters, pageRequest)
+        : createInMemoryPropertyService([...(await getPublished()), ...examples]).search(filters, pageRequest),
     getById: async (id) => (await findPublished(id)) ?? samples.getById(id),
     // Aquí un fallo no se calla: decir «no tienes anuncios» a quien sí los tiene sería falso.
     getOwn: async () => (await repository.getOwn()).map(toProperty),
