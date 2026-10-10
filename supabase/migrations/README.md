@@ -10,6 +10,7 @@ Cada archivo de esta carpeta es un cambio en la base de datos de Supabase: tabla
 | 4 | `20261009000300_cambios_de_cuenta.sql` | Lo que pasa cuando una cuenta corrige su nombre o su teléfono: su perfil los copia y sus anuncios pasan a mostrarlos. | La 1 y la 2 |
 | 5 | `20261009000400_editar_anuncios.sql` | Que cada cuenta pueda editar sus anuncios, y lo que el servidor conserva al guardar un cambio: de quién es, su estado y los datos del anunciante. | La 1 y la 2 |
 | 6 | `20261009000500_despublicar_anuncios.sql` | Que cada cuenta pueda despublicar sus anuncios y volver a publicarlos (estado `unpublished`), y que el límite del plan cuente solo los publicados. | La 1, la 2 y la 5 |
+| 7 | `20261010000000_integridad_de_anuncios.sql` | Que el servidor exija a cada anuncio lo mismo que el formulario (largos, topes, municipio de la lista `municipalities`, punto dentro de Honduras y fotos de la carpeta de su cuenta), que el límite del plan no se pueda rebasar con publicaciones simultáneas, y que el perfil descarte un teléfono que no sea de Honduras. | La 1, la 2, la 4, la 5 y la 6 |
 
 Cada archivo es una unidad que funciona completa: una tabla va siempre con sus permisos y con los disparadores que la protegen, nunca en archivos distintos. Una tabla sin ellos aceptaría lo que no debe.
 
@@ -35,6 +36,7 @@ Las que ya se aplicaron no hay que repetirlas, pero repetir una no rompe ni dupl
 - Nunca se edita una migración ya aplicada: lo que haya que corregir va en otra nueva.
 - Debe poder ejecutarse dos veces sin fallar: `create table if not exists`, `create or replace function`, y `drop policy if exists` antes de cada `create policy`.
 - Toda tabla nueva lleva `enable row level security` y sus permisos en la misma migración. Sin ellos, cualquiera con la clave pública del sitio podría leerla o escribirla.
+- Los límites que comprueba `validate_property` son los de `src/features/properties/utils/publicationValidation.ts`, y los municipios de `municipalities`, los de `src/features/properties/data/departments.data.ts`. Si cambian en el sitio, cambian también aquí, con una migración nueva; una prueba avisa si los municipios dejan de coincidir.
 
 ## Tareas que se hacen a mano en el panel
 

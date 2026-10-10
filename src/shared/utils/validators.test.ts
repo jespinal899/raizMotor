@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   INVALID_PHONE_MESSAGE,
+  atMost,
   email,
   hasErrors,
   maxLength,
@@ -228,6 +229,41 @@ describe('positiveNumber', () => {
 
     // Assert
     expect(error).toBe('Debe ser mayor que 0')
+  })
+})
+
+describe('atMost', () => {
+  it.each(['100', '99.5', '0', ' 7 '])('acepta %j, que no pasa del tope', (value) => {
+    // Arrange
+    const validator = atMost(100, 'Demasiado')
+
+    // Act
+    const error = validator(value)
+
+    // Assert
+    expect(error).toBeUndefined()
+  })
+
+  it.each(['100.01', '1000', 'Infinity'])('rechaza %j, que pasa del tope', (value) => {
+    // Arrange
+    const validator = atMost(100, 'Demasiado')
+
+    // Act
+    const error = validator(value)
+
+    // Assert
+    expect(error).toBe('Demasiado')
+  })
+
+  it.each(['', 'abc'])('deja %j a la regla que exige un número', (value) => {
+    // Arrange
+    const validator = atMost(100, 'Demasiado')
+
+    // Act
+    const error = validator(value)
+
+    // Assert
+    expect(error).toBeUndefined()
   })
 })
 

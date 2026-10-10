@@ -79,6 +79,12 @@ export const positiveNumber =
     return Number.isFinite(number) && number > 0 ? undefined : message
   }
 
+/** Un número que no pasa del tope. Solo mira el tope: que sea un número lo comprueba otra regla. */
+export const atMost =
+  (max: number, message: string): Validator =>
+  (value) =>
+    toNumber(value) > max ? message : undefined
+
 /** Entero desde cero: sirve para cantidades como cuartos o baños. */
 export const wholeNumber =
   (message: string): Validator =>
