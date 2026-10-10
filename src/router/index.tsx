@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import MainLayout from '@/components/layout/MainLayout'
+import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage'
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage'
 import AccountPage from '@/features/auth/pages/AccountPage'
 import LoginPage from '@/features/auth/pages/LoginPage'
@@ -78,6 +79,17 @@ export const routes: RouteObject[] = [
             description="Aquí corriges tu nombre y el teléfono al que te escriben por tus anuncios."
           >
             <AccountPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.admin,
+        element: (
+          <ProtectedRoute
+            title="Inicia sesión para entrar al panel"
+            description="El panel de administración es solo para las cuentas del equipo del sitio."
+          >
+            <AdminDashboardPage />
           </ProtectedRoute>
         ),
       },

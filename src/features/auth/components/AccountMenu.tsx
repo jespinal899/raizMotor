@@ -1,4 +1,12 @@
-import { ChevronDown, CircleUserRound, LayoutList, LoaderCircle, LogOut, UserRoundPen } from 'lucide-react'
+import {
+  ChevronDown,
+  CircleUserRound,
+  LayoutList,
+  LoaderCircle,
+  LogOut,
+  ShieldCheck,
+  UserRoundPen,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useIsAdmin } from '@/features/admin/hooks/useIsAdmin'
 import AccountSummary from '@/features/auth/components/AccountSummary'
 import LogoutError from '@/features/auth/components/LogoutError'
 import { useLogout } from '@/features/auth/hooks/useLogout'
@@ -24,6 +33,7 @@ interface AccountMenuProps {
 /** La cuenta de quien tiene la sesión, en la barra de navegación: su nombre y, al abrirlo, cómo salir. */
 const AccountMenu = ({ user, className }: AccountMenuProps) => {
   const { status, logout } = useLogout()
+  const { isAdmin } = useIsAdmin(user.email)
   const isLeaving = status === 'leaving'
   const name = shortName(user)
 
@@ -55,6 +65,12 @@ const AccountMenu = ({ user, className }: AccountMenuProps) => {
           <UserRoundPen />
           Mi cuenta
         </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem render={<Link to={ROUTES.admin} />}>
+            <ShieldCheck />
+            Panel de administración
+          </DropdownMenuItem>
+        )}
         {/* No se cierra al pulsarlo: si la sesión no pudo cerrarse, el aviso tiene que verse aquí mismo. */}
         <DropdownMenuItem closeOnClick={false} disabled={isLeaving} onClick={() => void logout()}>
           {isLeaving ? <LoaderCircle className="animate-spin" /> : <LogOut />}

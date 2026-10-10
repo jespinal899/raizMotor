@@ -57,6 +57,8 @@ describe('routes', () => {
     ['Contratar Agente Pro', agentPlanCheckoutPath('agente-plan-1')],
     // Sin llegar desde el enlace del correo, la página de elegir contraseña solo puede decir que ya no vale.
     ['El enlace ya no es válido', ROUTES.resetPassword],
+    // Sin cuentas en la compilación nadie es del equipo: el panel lo dice en lugar de mostrarse.
+    ['No tienes acceso a esta página', ROUTES.admin],
   ])('abre la página "%s" en su dirección', async (title, route) => {
     // Arrange: aplicación sin abrir
 
