@@ -4,6 +4,7 @@ import TextField from '@/components/TextField'
 import { DEPARTMENT_OPTIONS } from '@/features/properties/data/departments.data'
 import type { PublicationFieldsProps } from '@/features/properties/hooks/usePublicationForm'
 import { getCityOptions, isDepartmentId } from '@/features/properties/utils/departments'
+import { MAX_ADDRESS_LENGTH, MAX_NEIGHBORHOOD_LENGTH } from '@/features/properties/utils/publicationValidation'
 
 interface PublicationLocationFieldsProps extends PublicationFieldsProps {
   /** Para devolver el foco a estos datos cuando la persona decide editar la ubicación. */
@@ -36,6 +37,7 @@ const PublicationLocationFields = ({ values, errors, change, ref }: PublicationL
         label="Colonia, barrio o residencial"
         name="neighborhood"
         autoComplete="address-level3"
+        maxLength={MAX_NEIGHBORHOOD_LENGTH}
         value={values.neighborhood}
         onChange={(neighborhood) => change('neighborhood', neighborhood)}
         error={errors.neighborhood}
@@ -45,6 +47,7 @@ const PublicationLocationFields = ({ values, errors, change, ref }: PublicationL
         name="address"
         autoComplete="street-address"
         placeholder="Calle, bloque o número de casa"
+        maxLength={MAX_ADDRESS_LENGTH}
         value={values.address}
         onChange={(address) => change('address', address)}
         error={errors.address}

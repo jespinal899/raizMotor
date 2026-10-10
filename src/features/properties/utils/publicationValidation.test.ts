@@ -194,6 +194,76 @@ describe('validatePublication', () => {
     expect(zeroErrors.price).toBe('El precio debe ser mayor que 0.')
   })
 
+  it('pone un tope al precio, las superficies y los cuartos, igual que la base de datos', () => {
+    // Arrange
+    const values = buildPublicationValues({
+      type: 'casa',
+      price: '100000001',
+      builtArea: '100000001',
+      landArea: '100000001',
+      bedrooms: '101',
+      bathrooms: '101',
+      parking: '101',
+    })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors).toMatchObject({
+      price: 'El precio no puede pasar de 100 millones de dólares.',
+      builtArea: 'La superficie construida no puede pasar de 100 millones de m².',
+      landArea: 'La superficie del terreno no puede pasar de 100 millones de m².',
+      bedrooms: 'Los cuartos no pueden pasar de 100.',
+      bathrooms: 'Los baños no pueden pasar de 100.',
+      parking: 'Los estacionamientos no pueden pasar de 100.',
+    })
+  })
+
+  it('limita el largo de la colonia y de la dirección', () => {
+    // Arrange
+    const values = buildPublicationValues({ neighborhood: 'a'.repeat(121), address: 'a'.repeat(201) })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors).toMatchObject({
+      neighborhood: 'La colonia no puede pasar de 120 caracteres.',
+      address: 'La dirección no puede pasar de 200 caracteres.',
+    })
+  })
+
+  it.each([
+    { place: 'Guatemala', coordinates: { lat: 14.63, lng: -90.51 } },
+    { place: 'Managua', coordinates: { lat: 12.11, lng: -86.24 } },
+    { place: 'el mar Caribe, al norte', coordinates: { lat: 18.2, lng: -86.5 } },
+  ])('rechaza un punto en $place: el anuncio tiene que estar en Honduras', ({ coordinates }) => {
+    // Arrange
+    const values = buildPublicationValues({ coordinates })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors.coordinates).toBe('El punto del mapa debe quedar dentro de Honduras.')
+  })
+
+  it.each([
+    { place: 'Roatán', coordinates: { lat: 16.32, lng: -86.53 } },
+    { place: 'Puerto Lempira', coordinates: { lat: 15.26, lng: -83.77 } },
+    { place: 'Amapala', coordinates: { lat: 13.29, lng: -87.65 } },
+  ])('acepta un punto en $place', ({ coordinates }) => {
+    // Arrange
+    const values = buildPublicationValues({ coordinates })
+
+    // Act
+    const errors = validatePublication(values)
+
+    // Assert
+    expect(errors.coordinates).toBeUndefined()
+  })
+
   it('exige al menos una foto', () => {
     // Arrange
     const values = buildPublicationValues({ images: [] })
