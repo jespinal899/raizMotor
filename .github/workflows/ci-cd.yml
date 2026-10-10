@@ -78,6 +78,11 @@ jobs:
       - name: Traer la configuración del proyecto de Vercel
         run: npx --yes "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
 
+      # Sin Supabase el sitio compila igual, pero guarda los anuncios solo en el navegador de quien publica.
+      # Tampoco se publica con una clave privilegiada en una variable VITE_, que viajaría dentro del sitio.
+      - name: Comprobar las variables de producción
+        run: node .github/scripts/checkProductionEnv.mjs
+
       - name: Compilar para Vercel
         run: npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
 
