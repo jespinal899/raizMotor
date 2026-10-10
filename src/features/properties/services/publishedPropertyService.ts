@@ -59,7 +59,10 @@ export const toPublishedProperty = (
 
 /**
  * Combina los anuncios publicados con el catálogo de ejemplo, cuyas propiedades salen marcadas como tales.
- * El almacén de anuncios es un añadido: si no responde, el catálogo de ejemplo se sigue sirviendo.
+ *
+ * Si los anuncios están solo en este navegador, su almacén es un añadido: si no responde, el catálogo de
+ * ejemplo se sigue sirviendo. Si son compartidos, un fallo se entrega tal cual: callarlo haría creer que no
+ * hay anuncios, o que uno que existe ya no está disponible.
  */
 export const createPublishedPropertyService = (
   properties: readonly Property[],
@@ -70,23 +73,25 @@ export const createPublishedPropertyService = (
   const samples = createInMemoryPropertyService(examples)
   const toProperty = (record: StoredPropertyPublication) => toPublishedProperty(record, options)
 
-  const getPublished = async (): Promise<Property[]> => {
+  /** Lo que lee del almacén, o el valor de reserva si el almacén es el del navegador y no responde. */
+  const readOr = async <T>(read: () => Promise<T>, fallback: T): Promise<T> => {
+    if (options.shared) return read()
+
     try {
-      return (await repository.getAll()).map(toProperty)
+      return await read()
     } catch {
-      return []
+      return fallback
     }
   }
 
-  const findPublished = async (id: string): Promise<Property | undefined> => {
-    try {
+  const getPublished = () => readOr(async () => (await repository.getAll()).map(toProperty), [])
+
+  const findPublished = (id: string) =>
+    readOr(async () => {
       const record = await repository.getById(id)
 
       return record && toProperty(record)
-    } catch {
-      return undefined
-    }
-  }
+    }, undefined)
 
   return {
     // Un anuncio publicado nunca es destacado, así que la portada no necesita leer el almacén.

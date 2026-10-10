@@ -311,3 +311,29 @@ describe('createPublishedPropertyService: si el almacenamiento del navegador fal
     expect(found).toBeUndefined()
   })
 })
+
+describe('createPublishedPropertyService: si el servidor de anuncios compartidos falla', () => {
+  it('la búsqueda lo dice, en lugar de mostrar el catálogo como si no hubiera anuncios', async () => {
+    // Arrange
+    const service = createPublishedPropertyService([buildProperty({ id: 'muestra' })], brokenRepository(), {
+      shared: true,
+    })
+
+    // Act
+    const result = service.search({}, { page: 1, pageSize: 10 })
+
+    // Assert
+    await expect(result).rejects.toThrow('Este navegador no permite guardar publicaciones.')
+  })
+
+  it('la ficha lo dice, en lugar de dar por retirado un anuncio que puede seguir publicado', async () => {
+    // Arrange
+    const service = createPublishedPropertyService([], brokenRepository(), { shared: true })
+
+    // Act
+    const found = service.getById('3f1c2a9e-8b7d-4c6e-9a5f-1b2c3d4e5f60')
+
+    // Assert
+    await expect(found).rejects.toThrow('Este navegador no permite guardar publicaciones.')
+  })
+})
