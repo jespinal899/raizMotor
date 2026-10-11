@@ -160,7 +160,9 @@ const DATABASE_FAILURES: Record<string, { status: number; error: string }> = {
 
 const corsHeaders = (origin: string | null, allowedOrigins: string[]): Record<string, string> => ({
   ...(origin && allowedOrigins.includes(origin) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {}),
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  // Las cabeceras que manda supabase-js (ver @supabase/supabase-js/cors): si falta una, el navegador no envía nada.
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 })
 
@@ -171,6 +173,14 @@ export const handleContact = async (request: Request, deps: ContactDependencies)
     new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors })
+
+  // Desde un sitio que no está en ALLOWED_ORIGINS el navegador no dejaría leer la respuesta: si se enviara el
+  // correo, el publicador lo recibiría y el visitante vería un error. Se rechaza antes de hacer nada.
+  const origin = request.headers.get('origin')
+  if (origin && !deps.allowedOrigins.includes(origin)) {
+    console.warn(`contact-publisher: el origen ${origin} no está en ALLOWED_ORIGINS.`)
+    return reply(403, { error: 'origin_not_allowed' })
+  }
   if (request.method !== 'POST') return reply(405, { error: 'method_not_allowed' })
 
   let body: unknown
