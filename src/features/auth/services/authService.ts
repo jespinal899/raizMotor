@@ -93,6 +93,6 @@ export const authService: AuthService = supabase
       returnUrl: new URL(import.meta.env.BASE_URL, window.location.origin).href,
       cameFromRecoveryLink: AUTH_LINK === 'recovery',
       // Con la clave del sitio, entrar, registrarse y pedir el enlace llevan el token de la verificación.
-      captcha: { required: CAPTCHA_SITE_KEY !== null, takeToken: captchaSession.takeToken },
+      captcha: { required: CAPTCHA_SITE_KEY !== null, takeToken: () => captchaSession.takeToken() },
     })
   : createPendingAuthService()

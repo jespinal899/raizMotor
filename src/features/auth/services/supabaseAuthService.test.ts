@@ -446,7 +446,7 @@ describe('createSupabaseAuthService: quién tiene la sesión', () => {
 })
 
 describe('createSupabaseAuthService: verificación contra bots', () => {
-  const withToken = (token: string | null) => ({ required: true, takeToken: vi.fn(() => token) })
+  const withToken = (token: string | null) => ({ required: true, takeToken: vi.fn(async () => token) })
 
   it('envía el token al iniciar sesión, al registrarse y al pedir el enlace de recuperación', async () => {
     // Arrange

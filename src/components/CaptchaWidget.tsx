@@ -9,6 +9,8 @@ export interface TurnstileApi {
     options: {
       sitekey: string
       language: string
+      /** `interaction-only`: el widget no se ve salvo que Cloudflare pida a la persona que interactúe. */
+      appearance: 'always' | 'execute' | 'interaction-only'
       callback: (token: string) => void
       'expired-callback': () => void
       'error-callback': () => void
@@ -52,7 +54,8 @@ interface CaptchaWidgetProps {
 }
 
 /**
- * La casilla de verificación contra bots, encima del botón de enviar. Sin clave del sitio no se muestra.
+ * La verificación contra bots, encima del botón de enviar. No se ve ni ocupa espacio: Cloudflare comprueba en
+ * segundo plano y solo muestra una casilla si sospecha que quien está es un bot. Sin clave del sitio no existe.
  * Tras cada envío se reinicia: un token no sirve dos veces.
  */
 const CaptchaWidget = ({ siteKey = CAPTCHA_SITE_KEY, session = captchaSession, load = loadTurnstile }: CaptchaWidgetProps) => {
@@ -73,6 +76,7 @@ const CaptchaWidget = ({ siteKey = CAPTCHA_SITE_KEY, session = captchaSession, l
         widgetId = loaded.render(element, {
           sitekey: siteKey,
           language: 'es',
+          appearance: 'interaction-only',
           callback: (token) => session.setToken(token),
           'expired-callback': () => session.setToken(null),
           'error-callback': () => session.setToken(null),
@@ -95,7 +99,8 @@ const CaptchaWidget = ({ siteKey = CAPTCHA_SITE_KEY, session = captchaSession, l
 
   if (!siteKey) return null
 
-  return <div ref={container} className="min-h-[65px]" />
+  // Vacío no ocupa espacio; si Cloudflare muestra la casilla, el contenedor crece con ella.
+  return <div ref={container} className="empty:hidden" />
 }
 
 export default CaptchaWidget

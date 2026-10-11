@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
-import { CAPTCHA_SITE_KEY, createCaptchaSession, toCaptchaSiteKey } from '@/lib/captcha'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CAPTCHA_SITE_KEY, TOKEN_WAIT_MS, createCaptchaSession, toCaptchaSiteKey } from '@/lib/captcha'
 
 describe('toCaptchaSiteKey', () => {
   it('toma la clave del sitio sin espacios sobrantes', () => {
@@ -38,36 +38,69 @@ describe('toCaptchaSiteKey', () => {
 })
 
 describe('createCaptchaSession', () => {
-  it('entrega el token una sola vez: después ya está usado', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('entrega el token una sola vez: después ya está usado', async () => {
     // Arrange
     const session = createCaptchaSession()
     session.setToken('token-1')
 
     // Act
-    const first = session.takeToken()
-    const second = session.takeToken()
+    const first = await session.takeToken()
+    const second = await session.takeToken(0)
 
     // Assert
     expect(first).toBe('token-1')
     expect(second).toBeNull()
   })
 
-  it('al usar el token avisa para reiniciar el widget, hasta que se deja de escuchar', () => {
+  it('si la comprobación en segundo plano aún no terminó, espera el token al enviar', async () => {
+    // Arrange
+    const session = createCaptchaSession()
+
+    // Act
+    const taking = session.takeToken()
+    await vi.advanceTimersByTimeAsync(2000)
+    session.setToken('token-tardio')
+
+    // Assert
+    await expect(taking).resolves.toBe('token-tardio')
+  })
+
+  it(`si el token no llega en ${TOKEN_WAIT_MS / 1000} segundos, deja de esperar y no entrega ninguno`, async () => {
+    // Arrange
+    const session = createCaptchaSession()
+
+    // Act
+    const taking = session.takeToken()
+    await vi.advanceTimersByTimeAsync(TOKEN_WAIT_MS)
+
+    // Assert
+    await expect(taking).resolves.toBeNull()
+  })
+
+  it('al usar el token avisa para reiniciar el widget, hasta que se deja de escuchar', async () => {
     // Arrange
     const session = createCaptchaSession()
     const reset = vi.fn()
     const stop = session.onReset(reset)
 
     // Act
-    session.takeToken()
+    await session.takeToken(0)
     stop()
-    session.takeToken()
+    await session.takeToken(0)
 
     // Assert
     expect(reset).toHaveBeenCalledOnce()
   })
 
-  it('un token que caducó deja de entregarse', () => {
+  it('un token que caducó deja de entregarse', async () => {
     // Arrange
     const session = createCaptchaSession()
     session.setToken('token-1')
@@ -76,6 +109,6 @@ describe('createCaptchaSession', () => {
     session.setToken(null)
 
     // Assert
-    expect(session.takeToken()).toBeNull()
+    await expect(session.takeToken(0)).resolves.toBeNull()
   })
 })
