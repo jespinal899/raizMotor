@@ -8,7 +8,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ACCOUNTS_AVAILABLE } from '@/features/auth/services/authService'
 import { ROUTES, loginPath } from '@/shared/constants/routes'
 
-interface ProtectedRouteProps {
+export interface ProtectedRouteProps {
   /** Qué se le pide a quien llega sin sesión, p. ej. "Inicia sesión para publicar". */
   title: string
   /** Por qué esa página necesita una cuenta. */
