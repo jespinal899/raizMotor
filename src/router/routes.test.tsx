@@ -1,13 +1,21 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { routes } from '@/router'
 import { BRAND } from '@/shared/constants/brand'
 import { ROUTES, agentPlanCheckoutPath } from '@/shared/constants/routes'
 
-/** Abre la aplicación, con sus rutas de verdad, en la dirección indicada, y espera a que pinte el pie. */
+/**
+ * Abre la aplicación, con sus rutas de verdad, en la dirección indicada, y espera a que llegue el código de la
+ * página: cada una se descarga al entrar en ella.
+ */
 const openAt = async (route: string) => {
-  render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [route] })} />)
+  const router = createMemoryRouter(routes, { initialEntries: [route] })
+  render(<RouterProvider router={router} />)
+  await waitFor(() => {
+    expect(router.state.initialized).toBe(true)
+    expect(screen.queryByLabelText('Cargando página')).not.toBeInTheDocument()
+  })
 
   return { footer: await screen.findByRole('contentinfo') }
 }
@@ -24,6 +32,20 @@ describe('routes', () => {
   // jsdom no implementa el desplazamiento de la ventana, que la aplicación ajusta al cambiar de página.
   beforeEach(() => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+  })
+
+  it('al abrir una página directamente, mientras llega su código, ya se ven la barra y el pie', async () => {
+    // Arrange
+    const router = createMemoryRouter(routes, { initialEntries: [ROUTES.terms] })
+
+    // Act
+    render(<RouterProvider router={router} />)
+
+    // Assert
+    expect(screen.getByLabelText('Cargando página')).toBeInTheDocument()
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Términos y condiciones' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Cargando página')).not.toBeInTheDocument()
   })
 
   it.each(ACCESS_SCREENS)('en la pantalla de %s el pie lleva solo el aviso de derechos', async (_screen, route) => {
