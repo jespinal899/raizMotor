@@ -24,8 +24,8 @@ const ALERTS: Partial<Record<RegistrationStatus, StatusAlertContent>> = {
   },
   captcha: {
     icon: ShieldAlert,
-    title: 'Completa la verificación de seguridad',
-    description: 'Marca la casilla de verificación, encima del botón, y vuelve a intentarlo.',
+    title: 'No pudimos comprobar que no eres un robot',
+    description: 'Si aparece una casilla encima del botón, márcala. Si no, vuelve a intentarlo en unos segundos.',
     variant: 'destructive',
   },
   failed: {

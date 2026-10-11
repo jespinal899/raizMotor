@@ -35,8 +35,8 @@ interface CaptchaOptions {
 export interface CaptchaCheck {
   /** Si el sitio la exige: sin token no se pregunta a Supabase, que lo rechazaría. */
   required: boolean
-  /** El token del widget, que queda usado. */
-  takeToken(): string | null
+  /** El token del widget, que queda usado. Si la comprobación aún no terminó, lo espera un momento. */
+  takeToken(): Promise<string | null>
 }
 
 /** Lo que este servicio usa del cliente de cuentas de Supabase, y nada más. */
@@ -128,8 +128,8 @@ export const createSupabaseAuthService = ({
   const changePasswordOnce = createOperationLog<void>()
 
   /** El token de la verificación, si la hay. Sin él, cuando el sitio la exige, no se pregunta a Supabase. */
-  const captchaOptions = (): CaptchaOptions => {
-    const captchaToken = captcha?.takeToken() ?? null
+  const captchaOptions = async (): Promise<CaptchaOptions> => {
+    const captchaToken = captcha ? await captcha.takeToken() : null
     if (captcha?.required && !captchaToken) throw new CaptchaFailedError()
 
     return captchaToken ? { captchaToken } : {}
@@ -142,7 +142,7 @@ export const createSupabaseAuthService = ({
       options: {
         data: { first_name: firstName, last_name: lastName, phone },
         emailRedirectTo: returnUrl,
-        ...captchaOptions(),
+        ...(await captchaOptions()),
       },
     })
 
@@ -157,7 +157,7 @@ export const createSupabaseAuthService = ({
     login: async ({ email, password, remember }) => {
       // Antes de entrar: la sesión se guarda en cuanto Supabase la entrega.
       rememberSession(remember)
-      const options = captchaOptions()
+      const options = await captchaOptions()
       const { error } = await accounts.signInWithPassword(
         options.captchaToken ? { email, password, options } : { email, password },
       )
@@ -173,7 +173,7 @@ export const createSupabaseAuthService = ({
     register: (credentials, operationKey) => registerOnce(operationKey, () => signUp(credentials)),
 
     requestPasswordReset: async (email) => {
-      const { error } = await accounts.resetPasswordForEmail(email, { redirectTo: returnUrl, ...captchaOptions() })
+      const { error } = await accounts.resetPasswordForEmail(email, { redirectTo: returnUrl, ...(await captchaOptions()) })
 
       if (error) throw toRejection(error, CAPTCHA_REJECTIONS)
     },

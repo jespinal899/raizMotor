@@ -108,9 +108,11 @@ Estos ajustes viven en el panel de Supabase, no en el repositorio: `supabase/con
 
 Iniciar sesión, registrarse y pedir el enlace de recuperación pueden llevar una verificación contra bots, que Supabase comprueba en su servidor: es lo que frena a quien prueba contraseñas desde muchas IP a la vez. El sitio la muestra solo si la compilación trae `VITE_TURNSTILE_SITE_KEY`. Para activarla, **en este orden**:
 
-1. En [Cloudflare](https://dash.cloudflare.com/) > Turnstile, crea un widget para el dominio del sitio. Da dos claves: la «Site Key», pública, y la «Secret Key».
+1. En [Cloudflare](https://dash.cloudflare.com/) > Turnstile, crea un widget para el dominio del sitio, en modo **Managed**. Da dos claves: la «Site Key», pública, y la «Secret Key».
 2. En Vercel, añade `VITE_TURNSTILE_SITE_KEY` con la «Site Key» (Production) y publica el sitio. Comprueba que la casilla aparece en las tres pantallas.
 3. Solo entonces, en Supabase > Authentication > Attack Protection, activa «Enable Captcha protection» con el proveedor Turnstile y la «Secret Key». La secreta nunca va en el repositorio ni en una variable `VITE_`.
+
+La verificación no se ve: Cloudflare comprueba en segundo plano a quien visita y solo muestra una casilla encima del botón cuando sospecha que es un bot (el sitio pinta el widget con `appearance: interaction-only`). Al enviar, si la comprobación aún no terminó, el formulario la espera unos segundos. En modo **Invisible** nunca habría casilla, ni siquiera para un bot sospechoso; en **Non-interactive** se vería siempre un recuadro: por eso Managed.
 
 Si se activa en Supabase antes de publicar el sitio con la casilla, nadie podrá entrar ni registrarse. Para desactivarla, al revés: primero en Supabase y después se retira la variable.
 

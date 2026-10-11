@@ -46,7 +46,20 @@ describe('CaptchaWidget', () => {
 
     // Assert
     expect(turnstile.options()).toMatchObject({ sitekey: 'clave-del-sitio', language: 'es' })
-    expect(session.takeToken()).toBe('token-1')
+    await expect(session.takeToken(0)).resolves.toBe('token-1')
+  })
+
+  it('no se ve: solo aparece si Cloudflare pide interactuar, cuando sospecha de un bot', async () => {
+    // Arrange
+    const turnstile = fakeTurnstile()
+
+    // Act
+    const { container } = render(<CaptchaWidget siteKey="clave-del-sitio" session={createCaptchaSession()} load={turnstile.load} />)
+    await waitFor(() => expect(turnstile.api.render).toHaveBeenCalled())
+
+    // Assert
+    expect(turnstile.options().appearance).toBe('interaction-only')
+    expect(container.firstElementChild).toHaveClass('empty:hidden')
   })
 
   it('se reinicia cada vez que se usa el token, porque no sirve dos veces', async () => {
@@ -57,7 +70,7 @@ describe('CaptchaWidget', () => {
     await waitFor(() => expect(turnstile.api.render).toHaveBeenCalled())
 
     // Act
-    session.takeToken()
+    await session.takeToken(0)
 
     // Assert
     expect(turnstile.api.reset).toHaveBeenCalledExactlyOnceWith('widget-1')
@@ -76,6 +89,6 @@ describe('CaptchaWidget', () => {
 
     // Assert
     expect(turnstile.api.remove).toHaveBeenCalledExactlyOnceWith('widget-1')
-    expect(session.takeToken()).toBeNull()
+    await expect(session.takeToken(0)).resolves.toBeNull()
   })
 })
