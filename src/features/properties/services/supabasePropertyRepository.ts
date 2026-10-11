@@ -88,6 +88,8 @@ export interface PropertyGateway {
   findById(id: string): Promise<PropertyRow | undefined>
   /** Los de una cuenta, también los ocultos, del más reciente al más antiguo. */
   listByOwner(ownerId: string): Promise<PropertyRow[]>
+  /** El anuncio que la cuenta guardó con esa clave, si ya lo guardó. */
+  findByOperationKey(ownerId: string, operationKey: string): Promise<PropertyRow | undefined>
   /** Cuántos anuncios admite la cuenta; sin valor si no tiene perfil. */
   findLimit(ownerId: string): Promise<number | undefined>
   /** Guarda el anuncio si su clave no estaba ya guardada: repetirlo no hace nada. Rechaza con el fallo de la base. */
@@ -288,8 +290,7 @@ export const createSupabasePropertyRepository = ({
       const ownerId = await gateway.currentUserId()
       if (!ownerId) throw new PublicationSignInRequiredError()
 
-      const findSaved = async () =>
-        (await gateway.listByOwner(ownerId)).find((row) => row.operation_key === operationKey)
+      const findSaved = () => gateway.findByOperationKey(ownerId, operationKey)
 
       // Un anuncio que ya se guardó con esta clave no se vuelve a subir.
       const saved = await findSaved()

@@ -26,7 +26,7 @@ const fakeClient = (...answers: Answer[]) => {
       then: (resolve: (value: unknown) => unknown) =>
         resolve({ data: answer.data ?? null, count: answer.count ?? null, error: answer.error ?? null }),
     }
-    for (const method of ['select', 'eq', 'ilike', 'gte', 'lte', 'order', 'range']) {
+    for (const method of ['select', 'eq', 'ilike', 'gte', 'lte', 'order', 'range', 'limit']) {
       builder[method] = (...args: unknown[]) => {
         calls.push([method, ...args])
         return builder
@@ -149,5 +149,60 @@ describe('createSupabasePropertyGateway: searchPublished', () => {
 
     // Assert
     await expect(result).rejects.toEqual(failure)
+  })
+})
+
+describe('createSupabasePropertyGateway: listas enteras', () => {
+  const rows = (count: number, prefix: string) => Array.from({ length: count }, (_, position) => ({ id: `${prefix}-${position}` }))
+
+  it('lee los anuncios de una cuenta de 100 en 100 hasta tenerlos todos: Supabase no entrega más por respuesta', async () => {
+    // Arrange
+    const { client, queries } = fakeClient({ data: rows(100, 'a') }, { data: rows(3, 'b') })
+
+    // Act
+    const own = await createSupabasePropertyGateway(client).listByOwner('cuenta-de-ana')
+
+    // Assert
+    expect(own).toHaveLength(103)
+    expect(queries[0]).toEqual([
+      ['from', 'properties'],
+      ['select', '*'],
+      ['eq', 'owner_id', 'cuenta-de-ana'],
+      ['order', 'created_at', { ascending: false }],
+      ['order', 'id', { ascending: true }],
+      ['range', 0, 99],
+    ])
+    expect(queries[1]).toContainEqual(['range', 100, 199])
+    expect(queries).toHaveLength(2)
+  })
+
+  it('con menos de 100 anuncios basta una petición', async () => {
+    // Arrange
+    const { client, queries } = fakeClient({ data: rows(7, 'a') })
+
+    // Act
+    const own = await createSupabasePropertyGateway(client).listByOwner('cuenta-de-ana')
+
+    // Assert
+    expect(own).toHaveLength(7)
+    expect(queries).toHaveLength(1)
+  })
+
+  it('busca un anuncio de la cuenta por la clave con que se publicó, sin leer todos', async () => {
+    // Arrange
+    const { client, queries } = fakeClient({ data: [{ id: 'nuevo' }] })
+
+    // Act
+    const found = await createSupabasePropertyGateway(client).findByOperationKey('cuenta-de-ana', 'clave-1')
+
+    // Assert
+    expect(found).toEqual({ id: 'nuevo' })
+    expect(queries[0]).toEqual([
+      ['from', 'properties'],
+      ['select', '*'],
+      ['eq', 'owner_id', 'cuenta-de-ana'],
+      ['eq', 'operation_key', 'clave-1'],
+      ['limit', 1],
+    ])
   })
 })

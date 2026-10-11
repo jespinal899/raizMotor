@@ -66,6 +66,9 @@ const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
     })),
     findById: vi.fn<PropertyGateway['findById']>(async (id) => stored.find((saved) => saved.id === id)),
     listByOwner: vi.fn<PropertyGateway['listByOwner']>(async (owner) => stored.filter((saved) => saved.owner_id === owner)),
+    findByOperationKey: vi.fn<PropertyGateway['findByOperationKey']>(async (owner, key) =>
+      stored.find((saved) => saved.owner_id === owner && saved.operation_key === key),
+    ),
     findLimit: vi.fn<PropertyGateway['findLimit']>(async () => limit),
     insertOnce: vi.fn<PropertyGateway['insertOnce']>(async (added) => {
       if (stored.some((saved) => saved.operation_key === added.operation_key)) return

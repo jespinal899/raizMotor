@@ -21,6 +21,9 @@ const ORDERS: Record<PropertySort | 'recent', { column: string; ascending: boole
   'area-desc': { column: 'area', ascending: false },
 }
 
+/** Filas por petición al leer una lista entera. Igual al «Max Rows» del proyecto: con más, Supabase cortaría. */
+const READ_BATCH = 100
+
 /** Lo que responde Supabase cuando se pide un tramo que empieza después del último anuncio. */
 const RANGE_NOT_SATISFIABLE = 'PGRST103'
 
@@ -38,6 +41,26 @@ const unwrap = <Data>({ data, error }: { data: Data; error: Error | null }): Dat
 export const createSupabasePropertyGateway = (client: SupabaseClient): PropertyGateway => {
   const properties = () => client.from(PROPERTIES)
   const photos = () => client.storage.from(PHOTOS)
+
+  /** Del más reciente al más antiguo, y siempre en el mismo orden entre los que empatan: así ningún tramo se solapa. */
+  const newestFirst = <Query extends { order: (column: string, options: { ascending: boolean }) => Query }>(
+    query: Query,
+  ) => query.order('created_at', { ascending: false }).order('id', { ascending: true })
+
+  /**
+   * Todas las filas de una consulta, de tramo en tramo: Supabase entrega como mucho `READ_BATCH` por respuesta
+   * (Max Rows), y lo que pase de ahí se quedaría fuera sin avisar.
+   */
+  const readAll = async (
+    readBatch: (from: number, to: number) => PromiseLike<{ data: PropertyRow[] | null; error: Error | null }>,
+  ) => {
+    const rows: PropertyRow[] = []
+    for (let from = 0; ; from += READ_BATCH) {
+      const batch = unwrap(await readBatch(from, from + READ_BATCH - 1)) ?? []
+      rows.push(...batch)
+      if (batch.length < READ_BATCH) return rows
+    }
+  }
 
   /** Los anuncios publicados que cumplen la búsqueda. `head` pide solo cuántos son, sin traer ninguno. */
   const matching = (search: CatalogSearch, head = false) => {
@@ -57,10 +80,7 @@ export const createSupabasePropertyGateway = (client: SupabaseClient): PropertyG
   return {
     currentUserId: async () => (await client.auth.getSession()).data.session?.user.id ?? null,
 
-    listPublished: async () =>
-      unwrap<PropertyRow[] | null>(
-        await properties().select('*').eq('status', 'published').order('created_at', { ascending: false }),
-      ) ?? [],
+    listPublished: () => readAll((from, to) => newestFirst(properties().select('*').eq('status', 'published')).range(from, to)),
 
     searchPublished: async (search) => {
       const { column, ascending } = ORDERS[search.sort ?? 'recent']
@@ -85,10 +105,13 @@ export const createSupabasePropertyGateway = (client: SupabaseClient): PropertyG
 
     findById: async (id) => unwrap<PropertyRow[] | null>(await properties().select('*').eq('id', id).limit(1))?.[0],
 
-    listByOwner: async (ownerId) =>
+    listByOwner: (ownerId) =>
+      readAll((from, to) => newestFirst(properties().select('*').eq('owner_id', ownerId)).range(from, to)),
+
+    findByOperationKey: async (ownerId, operationKey) =>
       unwrap<PropertyRow[] | null>(
-        await properties().select('*').eq('owner_id', ownerId).order('created_at', { ascending: false }),
-      ) ?? [],
+        await properties().select('*').eq('owner_id', ownerId).eq('operation_key', operationKey).limit(1),
+      )?.[0],
 
     findLimit: async (ownerId) =>
       unwrap<{ max_publications: number }[] | null>(
