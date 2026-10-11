@@ -37,7 +37,7 @@ export type AccessInProgress = 'submitting' | 'connecting'
  * `rejected`, que el correo o la contraseña no son correctos; `unconfirmed`, que falta confirmar el correo,
  * y `googleUnavailable`, que las cuentas funcionan pero el acceso con Google todavía no.
  */
-export type LoginFailure = 'unavailable' | 'rejected' | 'unconfirmed' | 'googleUnavailable' | 'failed'
+export type LoginFailure = 'unavailable' | 'rejected' | 'unconfirmed' | 'googleUnavailable' | 'captcha' | 'failed'
 
 export type LoginStatus = 'idle' | AccessInProgress | LoginFailure
 
@@ -45,12 +45,12 @@ export type LoginStatus = 'idle' | AccessInProgress | LoginFailure
  * Por qué no se pudo crear la cuenta: `unavailable` significa que el registro aún no está activo;
  * `taken`, que ese correo ya tiene cuenta, y `googleUnavailable`, que el registro con Google todavía no funciona.
  */
-export type RegistrationFailure = 'unavailable' | 'taken' | 'googleUnavailable' | 'failed'
+export type RegistrationFailure = 'unavailable' | 'taken' | 'googleUnavailable' | 'captcha' | 'failed'
 
 export type RegistrationStatus = 'idle' | AccessInProgress | RegistrationFailure
 
 /** Estado del formulario que pide el enlace para elegir otra contraseña: `sent` cuando ya se pidió. */
-export type PasswordResetRequestStatus = 'idle' | 'submitting' | 'sent' | 'failed'
+export type PasswordResetRequestStatus = 'idle' | 'submitting' | 'sent' | 'captcha' | 'failed'
 
 /**
  * Por qué no se guardó la contraseña nueva: `unchanged` significa que es la misma de antes y `expired`,

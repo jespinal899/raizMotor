@@ -1,4 +1,4 @@
-import { CircleAlert, Info, MailWarning } from 'lucide-react'
+import { CircleAlert, Info, MailWarning, ShieldAlert } from 'lucide-react'
 import StatusAlert from '@/components/StatusAlert'
 import type { StatusAlertContent } from '@/components/StatusAlert'
 import type { LoginStatus } from '@/features/auth/types/auth.types'
@@ -26,6 +26,12 @@ const ALERTS: Partial<Record<LoginStatus, StatusAlertContent>> = {
     icon: Info,
     title: 'El acceso con Google aún no está disponible',
     description: 'Por ahora, inicia sesión con tu correo y tu contraseña.',
+  },
+  captcha: {
+    icon: ShieldAlert,
+    title: 'Completa la verificación de seguridad',
+    description: 'Marca la casilla de verificación, encima del botón, y vuelve a intentarlo.',
+    variant: 'destructive',
   },
   failed: {
     icon: CircleAlert,

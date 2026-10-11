@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   PublicationLimitError,
   PublicationSignInRequiredError,
+  RateLimitedError,
 } from '@/features/properties/services/publicationErrors'
 import { createSupabasePropertyRepository } from '@/features/properties/services/supabasePropertyRepository'
 import type { PropertyGateway, PropertyRow } from '@/features/properties/services/supabasePropertyRepository'
@@ -166,6 +167,32 @@ describe('createSupabasePropertyRepository: publicar', () => {
 
     // Assert
     await expect(publishing).rejects.toBeInstanceOf(PublicationLimitError)
+  })
+
+  it('si Storage rechaza una foto por el límite de subidas, rechaza con RateLimitedError, sin guardar el anuncio', async () => {
+    // Arrange
+    const { repository, gateway } = setup()
+    gateway.uploadPhoto.mockRejectedValue(new Error('rate_limited:photo_upload'))
+
+    // Act
+    const publishing = repository.publish(PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(publishing).rejects.toBeInstanceOf(RateLimitedError)
+    expect(gateway.insertOnce).not.toHaveBeenCalled()
+  })
+
+  it('si se alcanzó el límite de correcciones, editar rechaza con RateLimitedError y no borra ninguna foto', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+    gateway.updateById.mockRejectedValue({ code: 'RZ005', message: 'rate_limited:property_edit' })
+
+    // Act
+    const updating = repository.update(SAVED_ID, PUBLICATION, TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(updating).rejects.toBeInstanceOf(RateLimitedError)
+    expect(gateway.removePhotos).not.toHaveBeenCalled()
   })
 
   it('cualquier otro fallo al guardar se entrega tal cual', async () => {
@@ -457,6 +484,18 @@ describe('createSupabasePropertyRepository: despublicar y volver a publicar', ()
     // Assert
     expect(gateway.setStatus).toHaveBeenCalledExactlyOnceWith(SAVED_ID, 'published')
     expect((await repository.getOwn())[0].withdrawn).toBeUndefined()
+  })
+
+  it('si se alcanzó el límite de cambios de estado, rechaza con RateLimitedError', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+    gateway.setStatus.mockRejectedValue({ code: 'RZ005', message: 'rate_limited:property_status' })
+
+    // Act
+    const unpublishing = repository.unpublish(SAVED_ID)
+
+    // Assert
+    await expect(unpublishing).rejects.toBeInstanceOf(RateLimitedError)
   })
 
   it('si la base de datos dice que el plan está lleno, volver a publicar rechaza con PublicationLimitError', async () => {

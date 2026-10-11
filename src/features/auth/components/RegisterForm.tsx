@@ -3,6 +3,7 @@ import { UserPlus } from 'lucide-react'
 import EmailField from '@/components/EmailField'
 import PasswordField from '@/components/PasswordField'
 import PhoneField from '@/components/PhoneField'
+import CaptchaWidget from '@/components/CaptchaWidget'
 import SubmitButton from '@/components/SubmitButton'
 import { FieldGroup } from '@/components/ui/field'
 import AccessSeparator from '@/features/auth/components/AccessSeparator'
@@ -62,6 +63,8 @@ const RegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormProps) => {
           onChange={(value) => change('password', value)}
           readOnly={isBusy}
         />
+
+        <CaptchaWidget />
 
         <SubmitButton
           isSubmitting={isSubmitting}

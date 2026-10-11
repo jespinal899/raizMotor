@@ -8,6 +8,7 @@ import type {
   SessionUser,
 } from '@/features/auth/types/auth.types'
 import { readAuthLink } from '@/features/auth/utils/authLink'
+import { CAPTCHA_SITE_KEY, captchaSession } from '@/lib/captcha'
 import { sessionVault, supabase } from '@/lib/supabaseClient'
 
 export interface AuthService {
@@ -91,5 +92,7 @@ export const authService: AuthService = supabase
       // el enrutador lleva a la página de elegir contraseña a quien venga a eso.
       returnUrl: new URL(import.meta.env.BASE_URL, window.location.origin).href,
       cameFromRecoveryLink: AUTH_LINK === 'recovery',
+      // Con la clave del sitio, entrar, registrarse y pedir el enlace llevan el token de la verificación.
+      captcha: { required: CAPTCHA_SITE_KEY !== null, takeToken: captchaSession.takeToken },
     })
   : createPendingAuthService()

@@ -46,6 +46,14 @@ export class GoogleAccessUnavailableError extends Error {
   }
 }
 
+/** Falta la verificación contra bots, o Supabase la rechazó (caducó o ya se usó). */
+export class CaptchaFailedError extends Error {
+  constructor() {
+    super('No se completó la verificación de seguridad.')
+    this.name = 'CaptchaFailedError'
+  }
+}
+
 /** La contraseña nueva es la misma que la cuenta ya tenía. */
 export class SamePasswordError extends Error {
   constructor() {

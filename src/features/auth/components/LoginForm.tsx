@@ -3,6 +3,7 @@ import { LogIn } from 'lucide-react'
 import CheckboxField from '@/components/CheckboxField'
 import EmailField from '@/components/EmailField'
 import PasswordField from '@/components/PasswordField'
+import CaptchaWidget from '@/components/CaptchaWidget'
 import SubmitButton from '@/components/SubmitButton'
 import TextLink from '@/components/TextLink'
 import { FieldGroup } from '@/components/ui/field'
@@ -58,6 +59,8 @@ const LoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormProps) => {
           onChange={(checked) => change('remember', checked)}
           readOnly={isBusy}
         />
+
+        <CaptchaWidget />
 
         <SubmitButton isSubmitting={isSubmitting} disabled={isConnecting} icon={LogIn} submittingLabel="Ingresando…">
           Iniciar sesión

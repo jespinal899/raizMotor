@@ -36,6 +36,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | Contratar un plan de agente en tres pasos (datos de suscripción, resumen y medio de pago), con el resumen de compra y su ISV siempre a un lado | Abre WhatsApp con la solicitud ya escrita; el pago se coordina a mano, porque aún no hay pagos en línea ni cuentas. La pantalla de pago con tarjeta es una demostración de diseño que no cobra nada y solo existe al desarrollar (`npm run dev`), no en el sitio publicado |
 | Código de descuento al contratar un plan | Solo el espacio para escribirlo, en el resumen de compra: aún no existen códigos, así que cualquiera responde que no es válido |
 | Panel de administración (`/admin`) | Solo para las cuentas del equipo, que se nombran a mano (ver [`supabase/migrations`](supabase/migrations/README.md)). Revisa los reportes, oculta anuncios o los devuelve al catálogo, y cambia cuántos anuncios admite cada cuenta. Cada decisión queda registrada con quién la tomó |
+| Límites de uso | La base de datos limita cuántas veces se corrige un anuncio (30 por hora), se despublica o se vuelve a publicar (20 por hora), se suben fotos con el plan Propietario (50 cada 2 horas; sin límite con un plan de pago) y se reporta sin sesión (1 por hora por IP). El sitio explica el límite en lugar de presentarlo como un fallo. El inicio de sesión, el registro y la recuperación los limita Supabase, y pueden llevar la verificación contra bots (ver [Seguridad de las cuentas](#seguridad-de-las-cuentas)) |
 
 ## Tecnologías
 
@@ -98,11 +99,20 @@ Estos ajustes viven en el panel de Supabase, no en el repositorio: `supabase/con
 | Sign In / Providers > Email | «Confirm email» activado: quien se registra confirma su correo antes de entrar. |
 | Sign In / Providers > Email | «Minimum password length» en 8, lo mismo que pide el formulario. |
 | Attack Protection | «Prevent use of leaked passwords» activado, si el plan del proyecto lo incluye. |
-| Rate Limits | Los límites de correos y de inicios de sesión por hora, ajustados al tráfico esperado. |
+| Rate Limits | Inicios de sesión y registros por IP cada 5 minutos: unos 10; verificaciones de códigos: unos 10; correos por hora: según el servicio de correo. Son el primer freno contra quien prueba contraseñas. |
+| API Settings (en Project Settings > Data API) | «Max Rows» en 100: el sitio pide como mucho 20 filas por página, y así nadie descarga el catálogo de mil en mil. |
 | Emails > SMTP Settings | El servicio de correo propio descrito en [Correo](#correo). |
 | URL Configuration | «Site URL» con la dirección del sitio publicado, y solo las «Redirect URLs» que se usan. |
 
-Falta un CAPTCHA en el registro, el inicio de sesión y la recuperación de contraseña. Activarlo en Attack Protection exige a la vez el widget en esos formularios (Cloudflare Turnstile o hCaptcha): si se activa solo en el panel, nadie podrá entrar ni registrarse.
+##### Verificación contra bots (Cloudflare Turnstile)
+
+Iniciar sesión, registrarse y pedir el enlace de recuperación pueden llevar una verificación contra bots, que Supabase comprueba en su servidor: es lo que frena a quien prueba contraseñas desde muchas IP a la vez. El sitio la muestra solo si la compilación trae `VITE_TURNSTILE_SITE_KEY`. Para activarla, **en este orden**:
+
+1. En [Cloudflare](https://dash.cloudflare.com/) > Turnstile, crea un widget para el dominio del sitio. Da dos claves: la «Site Key», pública, y la «Secret Key».
+2. En Vercel, añade `VITE_TURNSTILE_SITE_KEY` con la «Site Key» (Production) y publica el sitio. Comprueba que la casilla aparece en las tres pantallas.
+3. Solo entonces, en Supabase > Authentication > Attack Protection, activa «Enable Captcha protection» con el proveedor Turnstile y la «Secret Key». La secreta nunca va en el repositorio ni en una variable `VITE_`.
+
+Si se activa en Supabase antes de publicar el sitio con la casilla, nadie podrá entrar ni registrarse. Para desactivarla, al revés: primero en Supabase y después se retira la variable.
 
 #### Base de datos
 
@@ -195,7 +205,7 @@ npm test
 npm run build
 ```
 
-El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página, y fija las cabeceras de seguridad de cada respuesta. La más delicada es la política de contenido (`Content-Security-Policy`): solo deja cargar scripts del propio sitio, y datos e imágenes de Supabase (`*.supabase.co`), de OpenStreetMap (teselas y buscador de direcciones) y de Unsplash (las fotos de la portada). Si el sitio pasa a usar otro servicio, o Supabase con un dominio propio, hay que añadirlo ahí: si no, el navegador lo bloquea.
+El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página, y fija las cabeceras de seguridad de cada respuesta. La más delicada es la política de contenido (`Content-Security-Policy`): solo deja cargar scripts del propio sitio, y datos e imágenes de Supabase (`*.supabase.co`), de OpenStreetMap (teselas y buscador de direcciones) de Unsplash (las fotos de la portada) y de Cloudflare Turnstile (la verificación contra bots). Si el sitio pasa a usar otro servicio, o Supabase con un dominio propio, hay que añadirlo ahí: si no, el navegador lo bloquea.
 
 ## Pendiente
 
@@ -208,7 +218,6 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
 - Anuncios: decidir si la ficha muestra la dirección exacta o solo la zona.
 - Destacar anuncios reales: hoy solo las propiedades de ejemplo son destacadas.
-- CAPTCHA en el registro, el inicio de sesión y la recuperación de contraseña (ver [Seguridad de las cuentas](#seguridad-de-las-cuentas)).
 - Activar el plan de una cuenta al confirmarse su pago: hoy el equipo le sube el límite de anuncios desde el panel de administración.
 - Pagos en línea: cobrar con tarjeta dentro del sitio, activar el plan al confirmarse el pago, renovarlo cada mes y emitir la factura. Hoy la solicitud sale por WhatsApp y el plan se activa a mano.
 - Cupones de descuento: definir los códigos y validarlos en un servidor, para que rebajen el total.

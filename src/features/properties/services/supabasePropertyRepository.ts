@@ -1,6 +1,7 @@
 import {
   PublicationLimitError,
   PublicationSignInRequiredError,
+  RateLimitedError,
 } from '@/features/properties/services/publicationErrors'
 import { NOT_EDITABLE } from '@/features/properties/services/publishedPropertyRepository'
 import type {
@@ -114,6 +115,8 @@ interface SupabasePropertyOptions {
 
 /** Código con el que la base de datos dice que el plan de la cuenta no admite más anuncios. */
 const LIMIT_REACHED = 'RZ001'
+/** Código con el que la base de datos dice que se alcanzó un límite de uso (supabase/migrations). */
+const RATE_LIMITED = 'RZ005'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 /** Con qué nombre se presenta una cuenta que no guardó el suyo. */
 const UNNAMED_ADVERTISER = 'Anunciante'
@@ -126,11 +129,31 @@ const WITHDRAWALS: Record<PropertyRow['status'], Withdrawal | undefined> = {
   hidden: 'bySite',
 }
 
-const isLimitReached = (reason: unknown) =>
-  typeof reason === 'object' && reason !== null && 'code' in reason && reason.code === LIMIT_REACHED
+const hasCode = (reason: unknown, code: string) =>
+  typeof reason === 'object' && reason !== null && 'code' in reason && reason.code === code
 
-/** El fallo con que rechazar: el del límite del plan, con su nombre, o el que llegó. */
-const toFailure = (reason: unknown) => (isLimitReached(reason) ? new PublicationLimitError() : reason)
+/**
+ * Si el fallo es un límite de uso. La base lo dice con su código; al subir una foto, Storage solo deja pasar
+ * el mensaje de la base, que empieza por `rate_limited`.
+ */
+const isRateLimited = (reason: unknown) =>
+  hasCode(reason, RATE_LIMITED) || (reason instanceof Error && reason.message.includes('rate_limited'))
+
+/** El fallo con que rechazar: el del límite del plan o el de un límite de uso, con su nombre, o el que llegó. */
+const toFailure = (reason: unknown) => {
+  if (hasCode(reason, LIMIT_REACHED)) return new PublicationLimitError()
+
+  return isRateLimited(reason) ? new RateLimitedError() : reason
+}
+
+/** Lo mismo que `action`, pero si falla rechaza con el fallo ya traducido. */
+const translatingFailure = async <T>(action: () => Promise<T>): Promise<T> => {
+  try {
+    return await action()
+  } catch (reason) {
+    throw toFailure(reason)
+  }
+}
 
 /**
  * La zona que se busca, como la compara la base de datos. Sin los comodines de la búsqueda por patrones
@@ -257,11 +280,7 @@ export const createSupabasePropertyRepository = ({
     // Lo que ocultó el equipo solo lo devuelve el equipo. La base lo dejaría igual sin avisar: aquí se dice.
     if (row.status === 'hidden') throw new Error(WITHDRAWN_BY_SITE)
 
-    try {
-      await gateway.setStatus(id, status)
-    } catch (reason) {
-      throw toFailure(reason)
-    }
+    await translatingFailure(() => gateway.setStatus(id, status))
   }
 
   return {
@@ -276,12 +295,10 @@ export const createSupabasePropertyRepository = ({
       const saved = await findSaved()
       if (saved) return saved.id
 
-      const photos = await storePhotos(ownerId, operationKey, publication.images)
-      try {
+      await translatingFailure(async () => {
+        const photos = await storePhotos(ownerId, operationKey, publication.images)
         await gateway.insertOnce({ ...toChanges(publication, photos), operation_key: operationKey })
-      } catch (reason) {
-        throw toFailure(reason)
-      }
+      })
 
       const created = await findSaved()
       if (!created) throw new Error('El anuncio no quedó guardado.')
@@ -321,8 +338,12 @@ export const createSupabasePropertyRepository = ({
       const { ownerId, row } = await requireOwn(id)
       const kept = new Map(row.photos.map((path) => [gateway.photoUrl(path), path]))
       // Las nuevas van a una carpeta con la clave de esta edición: reintentarla reemplaza las mismas.
-      const photos = await storePhotos(ownerId, operationKey, publication.images, kept)
-      await gateway.updateById(id, toChanges(publication, photos))
+      const photos = await translatingFailure(async () => {
+        const stored = await storePhotos(ownerId, operationKey, publication.images, kept)
+        await gateway.updateById(id, toChanges(publication, stored))
+
+        return stored
+      })
       // Las que el anuncio ya no usa se borran al final: si fallara, sobrarían archivos, no faltarían fotos.
       await gateway.removePhotos(row.photos.filter((path) => !photos.includes(path)))
     },

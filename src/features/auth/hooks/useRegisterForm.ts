@@ -1,5 +1,6 @@
 import {
   AuthUnavailableError,
+  CaptchaFailedError,
   EmailTakenError,
   GoogleAccessUnavailableError,
   RegistrationUnavailableError,
@@ -39,6 +40,7 @@ const toFailureStatus = toFailure<RegistrationFailure>(
     [AuthUnavailableError, 'unavailable'],
     [EmailTakenError, 'taken'],
     [GoogleAccessUnavailableError, 'googleUnavailable'],
+    [CaptchaFailedError, 'captcha'],
   ],
   'failed',
 )

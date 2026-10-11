@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  CaptchaFailedError,
   EmailNotConfirmedError,
   EmailTakenError,
   GoogleAccessUnavailableError,
@@ -8,7 +9,7 @@ import {
   SamePasswordError,
 } from '@/features/auth/services/authErrors'
 import { createSupabaseAuthService } from '@/features/auth/services/supabaseAuthService'
-import type { AccountsClient } from '@/features/auth/services/supabaseAuthService'
+import type { AccountsClient, CaptchaCheck } from '@/features/auth/services/supabaseAuthService'
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
 import { buildRegistration } from '@/test/factories'
 import { TEST_OPERATION_KEY } from '@/test/operationKey'
@@ -46,9 +47,11 @@ const fakeAccounts = () => {
 interface Arrival {
   /** Si la página se abrió desde el enlace para elegir otra contraseña. */
   cameFromRecoveryLink?: boolean
+  /** La verificación contra bots; sin ella, no se envía ningún token. */
+  captcha?: CaptchaCheck
 }
 
-const setup = ({ cameFromRecoveryLink = false }: Arrival = {}) => {
+const setup = ({ cameFromRecoveryLink = false, captcha }: Arrival = {}) => {
   const fake = fakeAccounts()
   const rememberSession = vi.fn()
   const service = createSupabaseAuthService({
@@ -56,6 +59,7 @@ const setup = ({ cameFromRecoveryLink = false }: Arrival = {}) => {
     rememberSession,
     returnUrl: RETURN_URL,
     cameFromRecoveryLink,
+    captcha,
   })
 
   return { ...fake, rememberSession, service }
@@ -438,5 +442,80 @@ describe('createSupabaseAuthService: quién tiene la sesión', () => {
 
     // Assert
     expect(unsubscribe).toHaveBeenCalledOnce()
+  })
+})
+
+describe('createSupabaseAuthService: verificación contra bots', () => {
+  const withToken = (token: string | null) => ({ required: true, takeToken: vi.fn(() => token) })
+
+  it('envía el token al iniciar sesión, al registrarse y al pedir el enlace de recuperación', async () => {
+    // Arrange
+    const { service, accounts } = setup({ captcha: withToken('token-1') })
+
+    // Act
+    await service.login(CREDENTIALS)
+    await service.register(buildRegistration(), TEST_OPERATION_KEY)
+    await service.requestPasswordReset('ana@gmail.com')
+
+    // Assert
+    expect(accounts.signInWithPassword).toHaveBeenCalledWith(
+      expect.objectContaining({ options: { captchaToken: 'token-1' } }),
+    )
+    expect(accounts.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({ options: expect.objectContaining({ captchaToken: 'token-1' }) }),
+    )
+    expect(accounts.resetPasswordForEmail).toHaveBeenCalledWith('ana@gmail.com', {
+      redirectTo: RETURN_URL,
+      captchaToken: 'token-1',
+    })
+  })
+
+  it('si el sitio la exige y no hay token, rechaza con CaptchaFailedError sin preguntar a Supabase', async () => {
+    // Arrange
+    const { service, accounts } = setup({ captcha: withToken(null) })
+
+    // Act
+    const results = await Promise.allSettled([
+      service.login(CREDENTIALS),
+      service.register(buildRegistration(), TEST_OPERATION_KEY),
+      service.requestPasswordReset('ana@gmail.com'),
+    ])
+
+    // Assert
+    for (const result of results) {
+      expect(result).toMatchObject({ status: 'rejected', reason: expect.any(CaptchaFailedError) })
+    }
+    expect(accounts.signInWithPassword).not.toHaveBeenCalled()
+    expect(accounts.signUp).not.toHaveBeenCalled()
+    expect(accounts.resetPasswordForEmail).not.toHaveBeenCalled()
+  })
+
+  it('si Supabase rechaza el token, rechaza con CaptchaFailedError', async () => {
+    // Arrange
+    const { service, accounts } = setup({ captcha: withToken('token-caducado') })
+    accounts.signInWithPassword.mockResolvedValue({ error: supabaseError('captcha_failed') })
+    accounts.resetPasswordForEmail.mockResolvedValue({ error: supabaseError('captcha_failed') })
+
+    // Act
+    const login = service.login(CREDENTIALS)
+    const reset = service.requestPasswordReset('ana@gmail.com')
+
+    // Assert
+    await expect(login).rejects.toBeInstanceOf(CaptchaFailedError)
+    await expect(reset).rejects.toBeInstanceOf(CaptchaFailedError)
+  })
+
+  it('sin verificación configurada no envía ningún token', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+
+    // Act
+    await service.login(CREDENTIALS)
+
+    // Assert
+    expect(accounts.signInWithPassword).toHaveBeenCalledExactlyOnceWith({
+      email: CREDENTIALS.email,
+      password: CREDENTIALS.password,
+    })
   })
 })
