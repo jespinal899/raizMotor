@@ -38,7 +38,7 @@ export const createCaptchaSession = (): CaptchaSession => {
   /** Quienes esperan un token: se les entrega el primero que llegue. */
   const waiting = new Set<(token: string) => void>()
 
-  const use = (taken: string | null) => {
+  const consume = (taken: string | null) => {
     token = null
     resetListeners.forEach((listener) => listener())
 
@@ -58,16 +58,16 @@ export const createCaptchaSession = (): CaptchaSession => {
     },
 
     takeToken: (waitMs = TOKEN_WAIT_MS) => {
-      if (token !== null || waitMs <= 0) return Promise.resolve(use(token))
+      if (token !== null || waitMs <= 0) return Promise.resolve(consume(token))
 
       return new Promise((resolve) => {
         const deliver = (arrived: string) => {
           clearTimeout(timer)
-          resolve(use(arrived))
+          resolve(consume(arrived))
         }
         const timer = setTimeout(() => {
           waiting.delete(deliver)
-          resolve(use(null))
+          resolve(consume(null))
         }, waitMs)
         waiting.add(deliver)
       })
