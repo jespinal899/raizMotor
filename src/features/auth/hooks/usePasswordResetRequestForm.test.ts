@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { usePasswordResetRequestForm } from '@/features/auth/hooks/usePasswordResetRequestForm'
+import { CaptchaFailedError } from '@/features/auth/services/authErrors'
 import { deferred } from '@/test/deferred'
 
 type Submit = (email: string) => Promise<void>
@@ -85,6 +86,18 @@ describe('usePasswordResetRequestForm', () => {
 
     // Assert
     expect(result.current.status).toBe('failed')
+  })
+
+  it('si falta la verificación contra bots, lo distingue de un fallo', async () => {
+    // Arrange
+    const { result } = setup(() => Promise.reject(new CaptchaFailedError()))
+    act(() => result.current.change('email', 'ana@gmail.com'))
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(result.current.status).toBe('captcha')
   })
 
   it('pedirlo dos veces seguidas, con el primer envío aún en curso, lo pide una sola vez', async () => {

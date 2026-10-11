@@ -1,3 +1,4 @@
+import { CaptchaFailedError } from '@/features/auth/services/authErrors'
 import { useAttemptForm } from '@/hooks/useAttemptForm'
 import { EMAIL_RULES } from '@/shared/utils/fieldRules'
 import { validate } from '@/shared/utils/validators'
@@ -18,12 +19,12 @@ export const usePasswordResetRequestForm = ({ onSubmit }: PasswordResetRequestFo
   const { values, errors, status, change, validateFields, attempt } = useAttemptForm<
     PasswordResetRequest,
     'submitting',
-    'failed',
+    'captcha' | 'failed',
     'sent'
   >({
     initialValues: EMPTY_REQUEST,
     validate: ({ email }) => ({ email: validate(email, EMAIL_RULES) }),
-    toFailure: () => 'failed',
+    toFailure: (reason) => (reason instanceof CaptchaFailedError ? 'captcha' : 'failed'),
     succeeded: 'sent',
   })
 

@@ -11,4 +11,9 @@ interface ImportMetaEnv {
    * cuando no hay Supabase, es decir, cuando el sitio funciona sin anuncios compartidos.
    */
   readonly VITE_SHOW_SAMPLE_LISTINGS?: string
+  /**
+   * Clave del sitio de Cloudflare Turnstile, la pública. Con ella, iniciar sesión, registrarse y pedir el
+   * enlace de recuperación piden la verificación contra bots. La secreta va solo en el panel de Supabase.
+   */
+  readonly VITE_TURNSTILE_SITE_KEY?: string
 }

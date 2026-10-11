@@ -1,4 +1,5 @@
 import {
+  CaptchaFailedError,
   EmailNotConfirmedError,
   EmailTakenError,
   GoogleAccessUnavailableError,
@@ -25,16 +26,36 @@ interface AccountsSession {
   user: AccountsUser
 }
 
+/** El token de la verificación contra bots, cuando la hay. */
+interface CaptchaOptions {
+  captchaToken?: string
+}
+
+/** La verificación contra bots que acompaña a iniciar sesión, registrarse y pedir el enlace de recuperación. */
+export interface CaptchaCheck {
+  /** Si el sitio la exige: sin token no se pregunta a Supabase, que lo rechazaría. */
+  required: boolean
+  /** El token del widget, que queda usado. */
+  takeToken(): string | null
+}
+
 /** Lo que este servicio usa del cliente de cuentas de Supabase, y nada más. */
 export interface AccountsClient {
-  signInWithPassword(credentials: { email: string; password: string }): Promise<{ error: AccountsError | null }>
+  signInWithPassword(credentials: {
+    email: string
+    password: string
+    options?: CaptchaOptions
+  }): Promise<{ error: AccountsError | null }>
   signUp(credentials: {
     email: string
     password: string
-    options: { data: Record<string, string>; emailRedirectTo: string }
+    options: { data: Record<string, string>; emailRedirectTo: string } & CaptchaOptions
   }): Promise<{ data: { user: AccountsUser | null; session: AccountsSession | null }; error: AccountsError | null }>
   signOut(options: { scope: 'local' }): Promise<{ error: AccountsError | null }>
-  resetPasswordForEmail(email: string, options: { redirectTo: string }): Promise<{ error: AccountsError | null }>
+  resetPasswordForEmail(
+    email: string,
+    options: { redirectTo: string } & CaptchaOptions,
+  ): Promise<{ error: AccountsError | null }>
   updateUser(attributes: { password?: string; data?: Record<string, string> }): Promise<{ error: AccountsError | null }>
   onAuthStateChange(listener: (event: string, session: AccountsSession | null) => void): {
     data: { subscription: { unsubscribe(): void } }
@@ -49,17 +70,25 @@ interface SupabaseAuthOptions {
   returnUrl: string
   /** Si la página se abrió desde el enlace para elegir otra contraseña. */
   cameFromRecoveryLink: boolean
+  /** Sin ella, no se envía ningún token. */
+  captcha?: CaptchaCheck
 }
 
 type Rejections = Record<string, () => Error>
 
 /** Motivos de Supabase que la interfaz sabe explicar. Cualquier otro se entrega tal cual, como un fallo. */
+const CAPTCHA_REJECTIONS: Rejections = {
+  captcha_failed: () => new CaptchaFailedError(),
+}
+
 const LOGIN_REJECTIONS: Rejections = {
+  ...CAPTCHA_REJECTIONS,
   invalid_credentials: () => new InvalidCredentialsError(),
   email_not_confirmed: () => new EmailNotConfirmedError(),
 }
 
 const REGISTRATION_REJECTIONS: Rejections = {
+  ...CAPTCHA_REJECTIONS,
   user_already_exists: () => new EmailTakenError(),
   email_exists: () => new EmailTakenError(),
 }
@@ -92,16 +121,29 @@ export const createSupabaseAuthService = ({
   rememberSession,
   returnUrl,
   cameFromRecoveryLink,
+  captcha,
 }: SupabaseAuthOptions): AuthService => {
   // Repetir un registro o un cambio de contraseña con la misma clave no lo pide otra vez a Supabase.
   const registerOnce = createOperationLog<RegistrationOutcome>()
   const changePasswordOnce = createOperationLog<void>()
 
+  /** El token de la verificación, si la hay. Sin él, cuando el sitio la exige, no se pregunta a Supabase. */
+  const captchaOptions = (): CaptchaOptions => {
+    const captchaToken = captcha?.takeToken() ?? null
+    if (captcha?.required && !captchaToken) throw new CaptchaFailedError()
+
+    return captchaToken ? { captchaToken } : {}
+  }
+
   const signUp = async ({ firstName, lastName, email, phone, password }: RegistrationCredentials) => {
     const { data, error } = await accounts.signUp({
       email,
       password,
-      options: { data: { first_name: firstName, last_name: lastName, phone }, emailRedirectTo: returnUrl },
+      options: {
+        data: { first_name: firstName, last_name: lastName, phone },
+        emailRedirectTo: returnUrl,
+        ...captchaOptions(),
+      },
     })
 
     if (error) throw toRejection(error, REGISTRATION_REJECTIONS)
@@ -115,7 +157,10 @@ export const createSupabaseAuthService = ({
     login: async ({ email, password, remember }) => {
       // Antes de entrar: la sesión se guarda en cuanto Supabase la entrega.
       rememberSession(remember)
-      const { error } = await accounts.signInWithPassword({ email, password })
+      const options = captchaOptions()
+      const { error } = await accounts.signInWithPassword(
+        options.captchaToken ? { email, password, options } : { email, password },
+      )
 
       if (error) throw toRejection(error, LOGIN_REJECTIONS)
     },
@@ -128,9 +173,9 @@ export const createSupabaseAuthService = ({
     register: (credentials, operationKey) => registerOnce(operationKey, () => signUp(credentials)),
 
     requestPasswordReset: async (email) => {
-      const { error } = await accounts.resetPasswordForEmail(email, { redirectTo: returnUrl })
+      const { error } = await accounts.resetPasswordForEmail(email, { redirectTo: returnUrl, ...captchaOptions() })
 
-      if (error) throw error
+      if (error) throw toRejection(error, CAPTCHA_REJECTIONS)
     },
 
     isRecoveringPassword: () => cameFromRecoveryLink,

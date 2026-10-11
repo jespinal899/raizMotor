@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react'
-import { CircleAlert, MailCheck, Send } from 'lucide-react'
+import { CircleAlert, MailCheck, Send, ShieldAlert } from 'lucide-react'
+import CaptchaWidget from '@/components/CaptchaWidget'
 import EmailField from '@/components/EmailField'
 import StatusAlert from '@/components/StatusAlert'
 import SubmitButton from '@/components/SubmitButton'
@@ -42,9 +43,20 @@ const ForgotPasswordForm = ({ onSubmit }: ForgotPasswordFormProps) => {
           readOnly={isSubmitting}
         />
 
+        <CaptchaWidget />
+
         <SubmitButton isSubmitting={isSubmitting} icon={Send} submittingLabel="Enviando…">
           Enviar enlace
         </SubmitButton>
+
+        {status === 'captcha' && (
+          <StatusAlert
+            icon={ShieldAlert}
+            title="Completa la verificación de seguridad"
+            description="Marca la casilla de verificación, encima del botón, y vuelve a intentarlo."
+            variant="destructive"
+          />
+        )}
 
         {status === 'failed' && (
           <StatusAlert

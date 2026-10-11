@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm'
 import {
   AuthUnavailableError,
+  CaptchaFailedError,
   EmailNotConfirmedError,
   GoogleAccessUnavailableError,
   InvalidCredentialsError,
@@ -101,6 +102,7 @@ describe('useLoginForm', () => {
     { reason: new AuthUnavailableError(), status: 'unavailable', when: 'las cuentas aún no están activas' },
     { reason: new InvalidCredentialsError(), status: 'rejected', when: 'las credenciales no son correctas' },
     { reason: new EmailNotConfirmedError(), status: 'unconfirmed', when: 'falta confirmar el correo' },
+    { reason: new CaptchaFailedError(), status: 'captcha', when: 'falta la verificación contra bots' },
     { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
   ])('queda como "$status" cuando $when', async ({ reason, status }) => {
     // Arrange
