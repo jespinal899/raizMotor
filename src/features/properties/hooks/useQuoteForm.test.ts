@@ -1,7 +1,11 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { useQuoteForm } from '@/features/properties/hooks/useQuoteForm'
-import { QuoteUnavailableError } from '@/features/properties/services/quoteService'
+import {
+  QuoteCaptchaError,
+  QuoteThrottledError,
+  QuoteUnavailableError,
+} from '@/features/properties/services/quoteService'
 import type { QuoteApplicant } from '@/features/properties/types/quote.types'
 import { deferred } from '@/test/deferred'
 import { anyOperationKey } from '@/test/operationKey'
@@ -46,7 +50,7 @@ describe('useQuoteForm', () => {
       fullName: 'Escribe tu nombre y apellido.',
       email: 'Escribe tu correo.',
       phone: 'Escribe tu teléfono.',
-      acceptsTerms: 'Acepta los términos y condiciones para cotizar.',
+      acceptsTerms: 'Acepta los términos y condiciones para enviar tus datos.',
     })
     expect(result.current.status).toBe('idle')
   })
@@ -62,7 +66,7 @@ describe('useQuoteForm', () => {
 
     // Assert
     expect(onSubmit).not.toHaveBeenCalled()
-    expect(result.current.errors.acceptsTerms).toBe('Acepta los términos y condiciones para cotizar.')
+    expect(result.current.errors.acceptsTerms).toBe('Acepta los términos y condiciones para enviar tus datos.')
   })
 
   it('envía los datos sin espacios sobrantes y el teléfono completo, y queda como enviada', async () => {
@@ -111,6 +115,21 @@ describe('useQuoteForm', () => {
 
     // Assert
     expect(result.current.status).toBe('unavailable')
+  })
+
+  it.each([
+    { reason: new QuoteThrottledError(), status: 'throttled', when: 'llegaron demasiados contactos' },
+    { reason: new QuoteCaptchaError(), status: 'captcha', when: 'falta la verificación contra bots' },
+  ])('queda como "$status" cuando $when', async ({ reason, status }) => {
+    // Arrange
+    const { result } = setup(vi.fn(() => Promise.reject(reason)))
+    fillValidForm(result)
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(result.current.status).toBe(status)
   })
 
   it('cualquier otro rechazo es un fallo del envío', async () => {

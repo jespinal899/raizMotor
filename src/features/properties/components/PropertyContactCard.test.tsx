@@ -20,7 +20,7 @@ const follows = (first: HTMLElement, second: HTMLElement) =>
 const renderCard = (property = PROPERTY) => renderWithRouter(<PropertyContactCard property={property} />)
 
 describe('PropertyContactCard', () => {
-  it('empieza por el formulario de cotización y, debajo, dice quién publica', () => {
+  it('empieza por el formulario para dejar los datos al publicador y, debajo, dice quién publica', () => {
     // Arrange: ficha con anunciante
 
     // Act
@@ -29,6 +29,21 @@ describe('PropertyContactCard', () => {
     // Assert
     expect(follows(quoteForm.form(), screen.getByText('Publicado por'))).toBe(true)
     expect(screen.getByText('Inmobiliaria de prueba')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['de ejemplo, que no es de nadie', { example: true }],
+    ['guardada solo en este navegador, que es de quien la ve', { localOnly: true }],
+  ])('en una propiedad %s no ofrece dejar los datos al publicador', (_case, flags) => {
+    // Arrange
+    const property = buildProperty({ ...PROPERTY, ...flags })
+
+    // Act
+    renderCard(property)
+
+    // Assert
+    expect(screen.queryByRole('form')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Contactar al anunciante' })).toBeInTheDocument()
   })
 
   it('no lleva el precio ni el icono de compartir: van fuera de la tarjeta', () => {
@@ -42,7 +57,7 @@ describe('PropertyContactCard', () => {
     expect(screen.queryByRole('button', { name: 'Compartir' })).not.toBeInTheDocument()
   })
 
-  it('al cotizar pide la cotización de esta propiedad con los datos del formulario', async () => {
+  it('al enviar, manda los datos del formulario al publicador de esta propiedad', async () => {
     // Arrange
     const user = userEvent.setup()
     const request = vi.spyOn(quoteService, 'request').mockResolvedValue()
@@ -57,10 +72,10 @@ describe('PropertyContactCard', () => {
       { propertyId: 'casa-1', fullName: 'Ana Mejía', email: 'ana@gmail.com', phone: '+50499999999' },
       anyOperationKey(),
     )
-    expect(await screen.findByRole('status')).toHaveTextContent('Recibimos tu solicitud')
+    expect(await screen.findByRole('status')).toHaveTextContent('Le enviamos tus datos al publicador')
   })
 
-  it('hoy, sin servidor, avisa de que la cotización no se envió', async () => {
+  it('sin servidor, avisa de que los datos no se enviaron', async () => {
     // Arrange
     const user = userEvent.setup()
     renderCard()
@@ -71,8 +86,8 @@ describe('PropertyContactCard', () => {
 
     // Assert
     const alert = await within(quoteForm.form()).findByRole('alert')
-    expect(alert).toHaveTextContent('Las cotizaciones aún no están disponibles')
-    expect(alert).toHaveTextContent('No se envió tu solicitud.')
+    expect(alert).toHaveTextContent('El contacto por correo aún no está disponible')
+    expect(alert).toHaveTextContent('No se enviaron tus datos.')
   })
 
   it('junto a quién publica deja escribirle por esta propiedad', () => {

@@ -82,7 +82,7 @@ describe('validateQuote', () => {
     expect(errors[2].phone).toBe('Revisa el número: en Honduras empiezan por 2, 3, 7, 8 o 9.')
   })
 
-  it('no deja cotizar sin aceptar los términos y condiciones', () => {
+  it('no deja enviar los datos sin aceptar los términos y condiciones', () => {
     // Arrange
     const values = buildQuote({ acceptsTerms: false })
 
@@ -90,6 +90,6 @@ describe('validateQuote', () => {
     const errors = validateQuote(values)
 
     // Assert
-    expect(errors.acceptsTerms).toBe('Acepta los términos y condiciones para cotizar.')
+    expect(errors.acceptsTerms).toBe('Acepta los términos y condiciones para enviar tus datos.')
   })
 })

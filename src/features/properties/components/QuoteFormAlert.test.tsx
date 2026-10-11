@@ -14,7 +14,7 @@ describe('QuoteFormAlert', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('cuando las cotizaciones aún no están activas lo dice y deja claro que no se envió nada', () => {
+  it('cuando el contacto por correo aún no está activo lo dice y deja claro que no se envió nada', () => {
     // Arrange
     const status = 'unavailable'
 
@@ -23,8 +23,34 @@ describe('QuoteFormAlert', () => {
 
     // Assert
     const alert = screen.getByRole('alert')
-    expect(alert).toHaveTextContent('Las cotizaciones aún no están disponibles')
-    expect(alert).toHaveTextContent(`No se envió tu solicitud. Mientras tanto, llámanos al ${CONTACT.phone.display}.`)
+    expect(alert).toHaveTextContent('El contacto por correo aún no está disponible')
+    expect(alert).toHaveTextContent(`No se enviaron tus datos. Mientras tanto, llámanos al ${CONTACT.phone.display}.`)
+  })
+
+  it('si llegaron demasiados contactos, dice que no se enviaron los datos y cuándo reintentar', () => {
+    // Arrange
+    const status = 'throttled'
+
+    // Act
+    render(<QuoteFormAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('Ya se enviaron muchos contactos')
+    expect(alert).toHaveTextContent('Inténtalo de nuevo en una hora.')
+  })
+
+  it('si no se pudo comprobar que no es un bot, pide marcar la casilla si aparece', () => {
+    // Arrange
+    const status = 'captcha'
+
+    // Act
+    render(<QuoteFormAlert status={status} />)
+
+    // Assert
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('No pudimos comprobar que no eres un robot')
+    expect(alert).toHaveTextContent('Si aparece una casilla encima del botón, márcala.')
   })
 
   it('ante un fallo del envío invita a reintentar o a llamar', () => {
@@ -36,7 +62,7 @@ describe('QuoteFormAlert', () => {
 
     // Assert
     const alert = screen.getByRole('alert')
-    expect(alert).toHaveTextContent('No pudimos enviar tu solicitud')
+    expect(alert).toHaveTextContent('No pudimos enviar tus datos')
     expect(alert).toHaveTextContent(`Inténtalo de nuevo o llámanos al ${CONTACT.phone.display}.`)
   })
 
@@ -49,7 +75,7 @@ describe('QuoteFormAlert', () => {
 
     // Assert
     const confirmation = screen.getByRole('status')
-    expect(confirmation).toHaveTextContent('Recibimos tu solicitud')
-    expect(confirmation).toHaveTextContent('Te contactaremos pronto con la cotización de esta propiedad.')
+    expect(confirmation).toHaveTextContent('Le enviamos tus datos al publicador')
+    expect(confirmation).toHaveTextContent('Te escribirá o te llamará directamente. Revisa también tu correo no deseado.')
   })
 })

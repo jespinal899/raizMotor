@@ -11,7 +11,7 @@ import { renderWithRouter } from '@/test/renderWithRouter'
 const sent = () => vi.fn(async () => {})
 
 describe('PropertyQuoteForm', () => {
-  it('se titula "Cotizar esta propiedad" y pide nombre y apellido, correo, teléfono y aceptar los términos', () => {
+  it('se titula "Contacta al publicador en segundos" y pide nombre y apellido, correo, teléfono y aceptar los términos', () => {
     // Arrange
     const onSubmit = sent()
 
@@ -19,15 +19,15 @@ describe('PropertyQuoteForm', () => {
     renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
 
     // Assert
-    expect(within(quoteForm.form()).getByRole('heading', { name: 'Cotizar esta propiedad' })).toBeInTheDocument()
+    expect(within(quoteForm.form()).getByRole('heading', { name: 'Contacta al publicador en segundos' })).toBeInTheDocument()
     expect(quoteForm.fullName()).toHaveAttribute('autocomplete', 'name')
     expect(quoteForm.email()).toHaveAttribute('type', 'email')
     expect(quoteForm.phone()).toHaveAttribute('type', 'tel')
     expect(quoteForm.terms()).not.toBeChecked()
-    expect(quoteForm.submitButton()).toHaveTextContent('Cotizar')
+    expect(quoteForm.submitButton()).toHaveTextContent('Enviar mis datos')
   })
 
-  it('bajo el título explica qué se recibe al cotizar', () => {
+  it('bajo el título explica qué pasa con los datos', () => {
     // Arrange
     const onSubmit = sent()
 
@@ -35,8 +35,8 @@ describe('PropertyQuoteForm', () => {
     renderWithRouter(<PropertyQuoteForm onSubmit={onSubmit} />)
 
     // Assert
-    const message = 'Recibe en tu correo un valor estimado en segundos.'
-    const title = within(quoteForm.form()).getByRole('heading', { name: 'Cotizar esta propiedad' })
+    const message = 'Déjale tus datos y te escribirá o llamará directamente.'
+    const title = within(quoteForm.form()).getByRole('heading', { name: 'Contacta al publicador en segundos' })
     expect(quoteForm.form()).toHaveAccessibleDescription(message)
     expect(title.compareDocumentPosition(screen.getByText(message)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.getByText(message).compareDocumentPosition(quoteForm.fullName()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -55,7 +55,7 @@ describe('PropertyQuoteForm', () => {
     expect(quoteForm.phone()).toHaveValue('9999-8888')
   })
 
-  it('envía quién pide la cotización, con el teléfono completo', async () => {
+  it('envía los datos de quien quiere que lo contacten, con el teléfono completo', async () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = sent()
@@ -86,7 +86,7 @@ describe('PropertyQuoteForm', () => {
     expect(quoteForm.fullName()).toHaveAccessibleDescription('Escribe tu nombre y apellido.')
     expect(quoteForm.email()).toHaveAccessibleDescription('Escribe tu correo.')
     expect(quoteForm.phone()).toHaveAccessibleDescription('Escribe tu teléfono.')
-    expect(quoteForm.terms()).toHaveAccessibleDescription('Acepta los términos y condiciones para cotizar.')
+    expect(quoteForm.terms()).toHaveAccessibleDescription('Acepta los términos y condiciones para enviar tus datos.')
   })
 
   it('no envía si no se aceptan los términos y condiciones', async () => {
@@ -102,7 +102,7 @@ describe('PropertyQuoteForm', () => {
 
     // Assert
     expect(onSubmit).not.toHaveBeenCalled()
-    expect(quoteForm.terms()).toHaveAccessibleDescription('Acepta los términos y condiciones para cotizar.')
+    expect(quoteForm.terms()).toHaveAccessibleDescription('Acepta los términos y condiciones para enviar tus datos.')
   })
 
   it('al aceptar los términos se retira su aviso', async () => {
@@ -138,7 +138,7 @@ describe('PropertyQuoteForm', () => {
     expect(await screen.findByRole('status')).toBeInTheDocument()
   })
 
-  it('cuando las cotizaciones aún no están activas lo dice, sin fingir que se envió', async () => {
+  it('cuando el contacto por correo aún no está activo lo dice, sin fingir que se envió', async () => {
     // Arrange
     const user = userEvent.setup()
     const onSubmit = vi.fn(() => Promise.reject(new QuoteUnavailableError()))
@@ -149,8 +149,8 @@ describe('PropertyQuoteForm', () => {
     await user.click(quoteForm.submitButton())
 
     // Assert
-    const alert = await within(quoteForm.form()).findByText('Las cotizaciones aún no están disponibles')
-    expect(alert.closest('[role="alert"]')).toHaveTextContent('No se envió tu solicitud.')
+    const alert = await within(quoteForm.form()).findByText('El contacto por correo aún no está disponible')
+    expect(alert.closest('[role="alert"]')).toHaveTextContent('No se enviaron tus datos.')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(quoteForm.submitButton()).toBeEnabled()
   })
@@ -166,7 +166,7 @@ describe('PropertyQuoteForm', () => {
     await user.click(quoteForm.submitButton())
 
     // Assert
-    expect(await within(quoteForm.form()).findByText('No pudimos enviar tu solicitud')).toBeInTheDocument()
+    expect(await within(quoteForm.form()).findByText('No pudimos enviar tus datos')).toBeInTheDocument()
     expect(quoteForm.submitButton()).toBeEnabled()
   })
 
@@ -181,7 +181,7 @@ describe('PropertyQuoteForm', () => {
     await user.click(quoteForm.submitButton())
 
     // Assert
-    expect(await screen.findByRole('status')).toHaveTextContent('Recibimos tu solicitud')
+    expect(await screen.findByRole('status')).toHaveTextContent('Le enviamos tus datos al publicador')
     expect(quoteForm.submitButton()).toBeDisabled()
   })
 
