@@ -234,6 +234,37 @@ describe('handleContact', () => {
     expect(foreign.headers.get('Access-Control-Allow-Origin')).toBeNull()
   })
 
+  it('desde un sitio que no está autorizado no envía nada y deja el motivo en los registros', async () => {
+    // Arrange
+    const dependencies = deps()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    // Act
+    const response = await handleContact(post(CONTACT, { Origin: 'https://www.domusraiz.hn' }), dependencies)
+
+    // Assert
+    expect(response.status).toBe(403)
+    expect(dependencies.claim).not.toHaveBeenCalled()
+    expect(dependencies.sendEmail).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('https://www.domusraiz.hn'))
+    warn.mockRestore()
+  })
+
+  it('admite las cabeceras que manda supabase-js', async () => {
+    // Arrange
+    const request = new Request('https://proyecto.supabase.co/functions/v1/contact-publisher', {
+      method: 'OPTIONS',
+      headers: { Origin: SITE },
+    })
+
+    // Act
+    const response = await handleContact(request, deps())
+
+    // Assert
+    const allowed = response.headers.get('Access-Control-Allow-Headers')?.split(', ')
+    expect(allowed).toEqual(expect.arrayContaining(['authorization', 'x-client-info', 'apikey', 'content-type', 'traceparent']))
+  })
+
   it('solo admite POST', async () => {
     // Arrange
     const request = new Request('https://proyecto.supabase.co/functions/v1/contact-publisher', { method: 'GET' })

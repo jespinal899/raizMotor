@@ -132,6 +132,8 @@ supabase secrets set ALLOWED_ORIGINS=https://tudominio.hn,https://raiz-motor.ver
 supabase secrets set TURNSTILE_SECRET_KEY=…                     # la misma «Secret Key» de Turnstile; sin ella no se exige la verificación
 ```
 
+`ALLOWED_ORIGINS` lleva cada dirección exacta desde la que se abre el sitio, sin barra al final: con `www` y sin ella son dos orígenes distintos, y también lo es cada dominio de Vercel. Una llamada desde un origen que no está en la lista se rechaza sin enviar nada, y el registro de la función (Edge Functions → contact-publisher → Logs) dice qué origen fue.
+
 `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` los pone Supabase solo en cada función: no hay que añadirlos. Después se publica la función, sin exigir sesión, porque quien escribe no necesita cuenta:
 
 ```bash
