@@ -271,6 +271,18 @@ npm run build
 
 El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página, y fija las cabeceras de seguridad de cada respuesta. La más delicada es la política de contenido (`Content-Security-Policy`): solo deja cargar scripts del propio sitio, y datos e imágenes de Supabase (`*.supabase.co`), de OpenStreetMap (teselas y buscador de direcciones) de Unsplash (las fotos de la portada) y de Cloudflare Turnstile (la verificación contra bots). Si el sitio pasa a usar otro servicio, o Supabase con un dominio propio, hay que añadirlo ahí: si no, el navegador lo bloquea.
 
+### Buscadores y vista previa al compartir
+
+Google, WhatsApp y Facebook leen el HTML tal como llega, y el sitio se arma en el navegador: sin ayuda, todas las fichas dirían solo «DomusRaíz», sin foto. Tres funciones de Vercel, en `api/`, lo completan (la lógica está en `api/_lib/seo.ts` y la prueban las pruebas del proyecto):
+
+- **`/propiedad/:id`** (`api/propiedad.ts`): entrega el sitio con la cabecera de ese anuncio: su título con el precio, una descripción con el tipo, la zona y el precio, la portada como imagen de la vista previa, la dirección canónica y los datos estructurados (schema.org `RealEstateListing`) que Google usa para entender el precio y la ubicación. Solo con anuncios publicados; si no existe responde 404, y si Supabase no responde abre la ficha igual, sin vista previa.
+- **`/sitemap.xml`** (`api/sitemap.ts`): las páginas públicas y cada anuncio publicado, con su fecha de última edición.
+- **`/robots.txt`** (`api/robots.ts`): cierra a los buscadores las páginas de cuenta, publicar, administrar y entrar, y señala el mapa del sitio.
+
+Usan las mismas variables de Supabase de la compilación, con la clave pública. Conviene añadir en Vercel (Settings > Environment Variables, en Production) la variable `SITE_URL` con la dirección del sitio, por ejemplo `https://www.tudominio.hn`: así la dirección canónica y el mapa del sitio usan siempre esa, aunque se entre por el dominio de Vercel. Sin ella, usan la dirección con que se pidió la página.
+
+Para comprobarlo después de publicar: pegar el enlace de una ficha en WhatsApp (debe salir la foto y el precio) o en el [depurador de Facebook](https://developers.facebook.com/tools/debug/), y dar de alta el sitio en [Google Search Console](https://search.google.com/search-console) con el mapa `https://<tu dominio>/sitemap.xml`.
+
 ## Pendiente
 
 - Conectar el formulario de la página de contacto y el total de vistas de cada ficha.
