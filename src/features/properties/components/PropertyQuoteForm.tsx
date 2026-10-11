@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import type { FormEvent } from 'react'
-import { ReceiptText } from 'lucide-react'
+import { Send } from 'lucide-react'
+import CaptchaWidget from '@/components/CaptchaWidget'
 import EmailField from '@/components/EmailField'
 import PhoneField from '@/components/PhoneField'
 import SubmitButton from '@/components/SubmitButton'
@@ -16,7 +17,10 @@ interface PropertyQuoteFormProps {
   onSubmit: (applicant: QuoteApplicant, operationKey: string) => Promise<void>
 }
 
-/** Formulario breve de la ficha para pedir la cotización de la propiedad. */
+/**
+ * Formulario breve de la ficha para que el publicador contacte a quien está interesado: sus datos le llegan
+ * por correo, sin que haga falta una cuenta.
+ */
 const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
   const titleId = useId()
   const descriptionId = useId()
@@ -38,10 +42,10 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
     >
       <div className="grid gap-1">
         <h2 id={titleId} className="font-heading text-lg font-semibold tracking-tight">
-          Cotizar esta propiedad
+          Contacta al publicador en segundos
         </h2>
         <p id={descriptionId} className="text-sm text-pretty text-muted-foreground">
-          Recibe en tu correo un valor estimado en segundos.
+          Déjale tus datos y te escribirá o llamará directamente.
         </p>
       </div>
 
@@ -79,14 +83,16 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
         readOnly={isSending}
       />
 
+      <CaptchaWidget />
+
       {/* Ya enviada, repetirla no mandaría nada: el botón vuelve a activarse al cambiar algún dato. */}
       <SubmitButton
         isSubmitting={isSending}
         disabled={status === 'sent'}
-        icon={ReceiptText}
+        icon={Send}
         submittingLabel="Enviando…"
       >
-        Cotizar
+        Enviar mis datos
       </SubmitButton>
 
       <QuoteFormAlert status={status} />

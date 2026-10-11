@@ -287,7 +287,7 @@ describe('PropertyDetail', () => {
     expect(within(sidebar).queryByText(/baños/)).not.toBeInTheDocument()
   })
 
-  it('a la derecha ofrece cotizar la propiedad y contactar al anunciante', () => {
+  it('a la derecha ofrece dejar los datos al publicador y contactar al anunciante', () => {
     // Arrange
     const property = buildProperty()
 
@@ -296,7 +296,7 @@ describe('PropertyDetail', () => {
 
     // Assert
     const sidebar = screen.getByRole('complementary')
-    expect(within(sidebar).getByRole('form', { name: 'Cotizar esta propiedad' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('form', { name: 'Contacta al publicador en segundos' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('link', { name: 'Contactar al anunciante' })).toBeInTheDocument()
   })
 

@@ -1,4 +1,8 @@
-import { QuoteUnavailableError } from '@/features/properties/services/quoteService'
+import {
+  QuoteCaptchaError,
+  QuoteThrottledError,
+  QuoteUnavailableError,
+} from '@/features/properties/services/quoteErrors'
 import type { QuoteApplicant, QuoteFailure, QuoteFormValues } from '@/features/properties/types/quote.types'
 import { validateQuote } from '@/features/properties/utils/quoteValidation'
 import { useAttemptForm } from '@/hooks/useAttemptForm'
@@ -11,8 +15,12 @@ interface QuoteFormOptions {
 
 const EMPTY_QUOTE: QuoteFormValues = { fullName: '', email: '', phone: '', acceptsTerms: false }
 
-const toFailureStatus = (reason: unknown): QuoteFailure =>
-  reason instanceof QuoteUnavailableError ? 'unavailable' : 'failed'
+const toFailureStatus = (reason: unknown): QuoteFailure => {
+  if (reason instanceof QuoteUnavailableError) return 'unavailable'
+  if (reason instanceof QuoteThrottledError) return 'throttled'
+
+  return reason instanceof QuoteCaptchaError ? 'captcha' : 'failed'
+}
 
 /** Los datos se envían sin espacios sobrantes y el teléfono, completo: en el formulario solo se escribe el número local. */
 const toApplicant = (values: QuoteFormValues): QuoteApplicant => ({

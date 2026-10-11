@@ -19,7 +19,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
 | Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Contactar a quien publica | La ficha de un anuncio publicado dice quién lo publica y abre WhatsApp con el teléfono de su cuenta y el anuncio ya citado. Los de ejemplo llevan al contacto del sitio |
-| Cotizar una propiedad desde su ficha | Interfaz lista; falta el servidor que reciba la solicitud |
+| Contactar al publicador desde la ficha («Contacta al publicador en segundos») | Quien ve un anuncio, sin necesidad de cuenta, deja su nombre, su correo y su teléfono, y le llegan por correo a quien lo publicó, que puede responderle directamente. Lo envía la Edge Function `contact-publisher` con Resend: el correo del publicador nunca llega al navegador, y los datos de quien escribe no se guardan. Tiene verificación contra bots y un límite de 5 envíos por hora por IP y 20 por anuncio. No aparece en las propiedades de ejemplo |
 | Reportar una publicación desde su ficha | Funciona con Supabase, con o sin sesión: el reporte llega al panel de administración. Hay un tope de reportes por hora, por cuenta y por anuncio. Las propiedades de ejemplo no se reportan |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
 | Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes y pide iniciar sesión. Guarda el anuncio en Supabase con hasta 10 fotos, que se reducen antes de subirlas, y queda visible de inmediato. Cada cuenta admite los anuncios de su plan: uno con el gratuito |
@@ -120,6 +120,26 @@ Si se activa en Supabase antes de publicar el sitio con la casilla, nadie podrá
 
 Las tablas, sus permisos y el depósito de fotos se crean con los archivos de [`supabase/migrations`](supabase/migrations/README.md), que se aplican con `supabase db push` o se pegan en el SQL Editor del panel de Supabase. Son idempotentes: repetirlos no cambia nada. Allí se explica también cómo nombrar las cuentas del equipo, que son las que entran al panel de administración. Las migraciones se aplican **antes** de publicar el sitio que las usa: si no, lo que dependa de ellas falla.
 
+#### Contacto al publicador (Edge Function)
+
+El formulario de la ficha llama a la función `supabase/functions/contact-publisher`, que busca el correo de quien publicó el anuncio y le envía los datos con [Resend](https://resend.com/). Necesita la migración 11 y estos secretos de Supabase, que se ponen desde tu equipo y nunca van al repositorio:
+
+```bash
+supabase secrets set RESEND_API_KEY=re_…                       # la clave de API de Resend
+supabase secrets set CONTACT_FROM_EMAIL="DomusRaíz <no-reply@tudominio.hn>"   # un remitente de tu dominio verificado en Resend
+supabase secrets set SITE_URL=https://tudominio.hn              # para enlazar el anuncio en el correo
+supabase secrets set ALLOWED_ORIGINS=https://tudominio.hn,https://raiz-motor.vercel.app   # desde dónde se puede llamar
+supabase secrets set TURNSTILE_SECRET_KEY=…                     # la misma «Secret Key» de Turnstile; sin ella no se exige la verificación
+```
+
+`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` los pone Supabase solo en cada función: no hay que añadirlos. Después se publica la función, sin exigir sesión, porque quien escribe no necesita cuenta:
+
+```bash
+supabase functions deploy contact-publisher --no-verify-jwt
+```
+
+Se vuelve a publicar cada vez que cambia algo en `supabase/functions/contact-publisher`. El pipeline no la publica: igual que las migraciones, se hace desde tu equipo. Su lógica está en `contact.ts`, sin nada propio de Deno, y la prueban las pruebas del proyecto (`contact.test.ts`).
+
 #### Pruebas
 
 Las pruebas nunca hablan con el proyecto real, aunque exista `.env.local`: la configuración de Vitest (`vite.config.ts`) deja vacías las dos variables, y lo que necesita cuentas usa un servicio simulado.
@@ -211,7 +231,7 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 
 ## Pendiente
 
-- Conectar el envío de contactos y cotizaciones, y el total de vistas de cada ficha.
+- Conectar el formulario de la página de contacto y el total de vistas de cada ficha.
 - Cuentas: volver a enviar el enlace de confirmación, el acceso con Google, y cambiar el correo o la contraseña desde «Mi cuenta» (hoy la contraseña se cambia con «Olvidé mi contraseña»). Antes de abrir el registro al público hace falta conectar el servicio de correo propio descrito en [Correo](#correo).
 - Revisar con un abogado los términos y condiciones y la política de privacidad: hoy son un texto preliminar que describe el sitio tal como funciona, y la página lo avisa.
 - Verificar el teléfono del registro con un código por SMS.

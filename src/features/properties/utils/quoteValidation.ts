@@ -17,5 +17,5 @@ export const validateQuote = (values: QuoteFormValues): QuoteFormErrors => ({
   ]),
   email: validate(values.email, EMAIL_RULES),
   phone: validate(values.phone, PHONE_RULES),
-  acceptsTerms: values.acceptsTerms ? undefined : 'Acepta los términos y condiciones para cotizar.',
+  acceptsTerms: values.acceptsTerms ? undefined : 'Acepta los términos y condiciones para enviar tus datos.',
 })

@@ -1,27 +1,34 @@
+import { createPublisherContactService } from '@/features/properties/services/publisherContactService'
+import { QuoteUnavailableError } from '@/features/properties/services/quoteErrors'
 import type { QuoteRequest } from '@/features/properties/types/quote.types'
+import { CAPTCHA_SITE_KEY, captchaSession } from '@/lib/captcha'
+import { supabase } from '@/lib/supabaseClient'
 
-/** Las cotizaciones no están conectadas todavía; no es un fallo de red ni de quien la pide. */
-export class QuoteUnavailableError extends Error {
-  constructor() {
-    super('El envío de cotizaciones aún no está configurado.')
-    this.name = 'QuoteUnavailableError'
-  }
-}
+export { QuoteCaptchaError, QuoteThrottledError, QuoteUnavailableError } from '@/features/properties/services/quoteErrors'
 
+/** Quien recibe los datos de quien quiere que el publicador lo contacte. */
 export interface QuoteService {
   /**
-   * Se resuelve cuando la solicitud queda entregada y se rechaza si no se pudo enviar. Es idempotente: si
-   * llega dos veces con la misma clave, por un reintento o un doble envío, se registra una sola vez.
+   * Se resuelve cuando los datos quedan entregados y se rechaza si no se pudieron enviar. Es idempotente: si
+   * llega dos veces con la misma clave, por un reintento o un doble envío, se envían una sola vez.
    */
   request(quote: QuoteRequest, operationKey: string): Promise<void>
 }
 
-/** Implementación provisional mientras no exista el servidor: nunca finge que la solicitud salió. */
+/** Sin servidor no hay a quién enviarlos: nunca finge que salieron. */
 export const createPendingQuoteService = (): QuoteService => ({
   request: async () => {
     throw new QuoteUnavailableError()
   },
 })
 
-// Único punto donde se elige cómo se envían las cotizaciones: al conectar el servidor, se cambia solo esta línea.
-export const quoteService: QuoteService = createPendingQuoteService()
+const client = supabase
+
+// Único punto donde se elige cómo se contacta al publicador: con Supabase, por correo desde el servidor.
+export const quoteService: QuoteService = client
+  ? createPublisherContactService({
+      invoke: (body) => client.functions.invoke('contact-publisher', { body }),
+      takeCaptchaToken: () => captchaSession.takeToken(),
+      captchaRequired: CAPTCHA_SITE_KEY !== null,
+    })
+  : createPendingQuoteService()

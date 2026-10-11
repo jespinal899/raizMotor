@@ -24,7 +24,10 @@ export interface QuoteRequest extends QuoteApplicant {
   propertyId: string
 }
 
-/** Por qué no salió la solicitud: `unavailable` significa que las cotizaciones aún no están activas. */
-export type QuoteFailure = 'unavailable' | 'failed'
+/**
+ * Por qué no salieron los datos: `unavailable`, el contacto por correo no está activo; `throttled`, llegaron
+ * demasiados en poco tiempo; `captcha`, no se pudo comprobar que quien escribe no es un bot.
+ */
+export type QuoteFailure = 'unavailable' | 'throttled' | 'captcha' | 'failed'
 
 export type QuoteFormStatus = 'idle' | 'sending' | 'sent' | QuoteFailure

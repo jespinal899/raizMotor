@@ -4,56 +4,64 @@ import { CONTACT } from '@/shared/constants/contact'
 import { ROUTES } from '@/shared/constants/routes'
 
 /**
- * Política de privacidad. Dice lo que el sitio hace hoy con los datos, que es poco porque no hay
- * servidor: si cambia qué se guarda o a quién se envía, este texto tiene que cambiar con ello.
+ * Política de privacidad. Dice lo que el sitio hace hoy con los datos: si cambia qué se guarda o a quién se
+ * envía, este texto tiene que cambiar con ello. Es un texto preliminar, pendiente de revisión legal.
  */
 export const PRIVACY: LegalDocumentContent = {
   title: 'Política de privacidad',
   summary: `Qué pasa con tus datos cuando usas ${BRAND.name}.`,
-  updatedOn: '2026-10-06',
+  updatedOn: '2026-10-11',
   related: { label: 'Leer los términos y condiciones', to: ROUTES.terms },
   sections: [
     {
       id: 'datos',
-      title: 'Qué datos tratamos hoy',
-      paragraphs: [`Hoy ${BRAND.name} no tiene un servidor propio que reciba tus datos:`],
+      title: 'Qué datos tratamos',
+      paragraphs: [`Estos son los datos que ${BRAND.name} guarda o envía, y para qué:`],
       items: [
-        'Lo que escribes en los formularios de registro, inicio de sesión, contacto, cotización y reporte no se envía ni se guarda. El sitio te avisa de que el envío aún no está disponible.',
-        'Un anuncio que publicas, con sus fotos y su dirección, se guarda solo en tu navegador.',
-        'El contador de vistas de cada ficha se guarda también en tu navegador y solo cuenta tus propias visitas.',
+        'Tu cuenta: tu correo, tu nombre, tu apellido y tu teléfono. Tu nombre y tu teléfono se muestran en tus anuncios, para que quien esté interesado te escriba.',
+        'Tus anuncios: lo que escribes en ellos, sus fotos y su dirección. Los ve cualquier visitante mientras estén publicados.',
+        'Contactar al publicador: el nombre, el correo y el teléfono que escribes en la ficha de un anuncio se envían por correo a quien lo publicó, para que te contacte. No los guardamos: solo anotamos que se hizo un envío y sobre qué anuncio, para no mandarlo dos veces y para limitar los abusos.',
+        'Los reportes de anuncios: el motivo y el comentario que escribes, y tu cuenta si tenías la sesión abierta. Los lee el equipo del sitio para revisar el anuncio.',
+        'Para proteger el sitio de abusos guardamos una huella de tu dirección IP, nunca la IP tal cual, durante como mucho un día.',
+        'El contador de vistas de cada ficha se guarda en tu navegador y solo cuenta tus propias visitas.',
       ],
     },
     {
       id: 'terceros',
       title: 'Servicios de terceros',
       paragraphs: [
-        'Para funcionar, el sitio carga contenido de otros servicios. Al hacerlo, tu navegador les comunica tu dirección IP, como ocurre en cualquier página web:',
+        'Para funcionar, el sitio usa otros servicios. Al hacerlo, tu navegador les comunica tu dirección IP, como ocurre en cualquier página web:',
       ],
       items: [
-        'GitHub Pages, donde está alojado el sitio.',
+        'Vercel, donde está alojado el sitio.',
+        'Supabase, donde se guardan las cuentas, los anuncios, sus fotos y los reportes.',
+        'Resend, que entrega los correos: los de tu cuenta y los datos que envías a quien publicó un anuncio.',
+        'Cloudflare Turnstile, que comprueba que quien inicia sesión, se registra o contacta a un publicador no es un programa automático.',
         'OpenStreetMap, que dibuja los mapas. Al buscar una dirección para publicar se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa.',
-        'Unsplash, de donde vienen las fotos de los anuncios de ejemplo.',
+        'Unsplash, de donde vienen las fotos de la portada y de los anuncios de ejemplo.',
         'Google Maps, solo si pulsas «Cómo llegar»: recibe el punto de la propiedad para trazar la ruta.',
-        'WhatsApp, solo si eliges compartir una ficha por ese medio.',
+        'WhatsApp, solo si eliges escribir a quien publica o compartir una ficha por ese medio.',
       ],
     },
     {
       id: 'cookies',
       title: 'Cookies',
-      paragraphs: [`${BRAND.name} no usa cookies propias, ni de publicidad, ni para medir las visitas.`],
+      paragraphs: [
+        `${BRAND.name} no usa cookies de publicidad ni para medir las visitas. Tu sesión se guarda en tu navegador para que no tengas que entrar cada vez.`,
+      ],
     },
     {
       id: 'borrar',
       title: 'Cómo borrar tus datos',
       paragraphs: [
-        'Como todo se guarda en tu navegador, puedes borrarlo tú. Al eliminar los datos de este sitio desde la configuración del navegador desaparecen tus anuncios y el contador de vistas.',
+        'Puedes eliminar tus anuncios, con sus fotos, desde «Mis publicaciones», y corregir tu nombre y tu teléfono desde «Mi cuenta». Para eliminar tu cuenta, escríbenos o llámanos.',
       ],
     },
     {
       id: 'futuro',
-      title: 'Cuando el servicio esté completo',
+      title: 'Cambios en esta política',
       paragraphs: [
-        'Cuando existan las cuentas y el envío de mensajes, esta política se actualizará antes de empezar a recoger datos. Explicará qué se guarda, para qué y durante cuánto tiempo.',
+        'Si cambia qué datos guardamos o a quién se los enviamos, actualizaremos esta política antes de hacerlo, con la fecha de la última revisión.',
       ],
     },
     {

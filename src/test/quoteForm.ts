@@ -1,14 +1,14 @@
 import { screen } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 
-/** Los campos y el botón de la cotización, buscados como los percibe quien usa el formulario. */
+/** Los campos y el botón del contacto al publicador, buscados como los percibe quien usa el formulario. */
 export const quoteForm = {
-  form: () => screen.getByRole('form', { name: 'Cotizar esta propiedad' }),
+  form: () => screen.getByRole('form', { name: 'Contacta al publicador en segundos' }),
   fullName: () => screen.getByRole('textbox', { name: 'Nombre y apellido' }),
   email: () => screen.getByRole('textbox', { name: 'Correo' }),
   phone: () => screen.getByRole('textbox', { name: 'Teléfono' }),
   terms: () => screen.getByRole('checkbox', { name: 'Acepto los términos y condiciones' }),
-  submitButton: () => screen.getByRole('button', { name: /^Cotizar$|Enviando/ }),
+  submitButton: () => screen.getByRole('button', { name: /^Enviar mis datos$|Enviando/ }),
 }
 
 const VALID_APPLICANT = { fullName: 'Ana Mejía', email: 'ana@gmail.com', phone: '99999999' }

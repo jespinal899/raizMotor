@@ -86,25 +86,45 @@ describe('PrivacyPage', () => {
     // Assert
     expect(screen.getByRole('heading', { level: 1, name: 'Política de privacidad' })).toBeInTheDocument()
     expect(sectionTitles()).toEqual([
-      '1. Qué datos tratamos hoy',
+      '1. Qué datos tratamos',
       '2. Servicios de terceros',
       '3. Cookies',
       '4. Cómo borrar tus datos',
-      '5. Cuando el servicio esté completo',
+      '5. Cambios en esta política',
       '6. Contacto',
     ])
   })
 
-  it('nombra los servicios de terceros que cargan contenido en el sitio', () => {
+  it('nombra los servicios de terceros que usa el sitio', () => {
     // Arrange: página sin estado previo
 
     // Act
     renderWithRouter(<PrivacyPage />)
 
     // Assert
-    for (const service of ['GitHub Pages', 'OpenStreetMap', 'Unsplash', 'Google Maps', 'WhatsApp']) {
+    for (const service of [
+      'Vercel',
+      'Supabase',
+      'Resend',
+      'Cloudflare Turnstile',
+      'OpenStreetMap',
+      'Unsplash',
+      'Google Maps',
+      'WhatsApp',
+    ]) {
       expect(main()).toContain(service)
     }
+  })
+
+  it('dice que los datos que se dejan al publicador se le envían por correo y no se guardan', () => {
+    // Arrange: página sin estado previo
+
+    // Act
+    renderWithRouter(<PrivacyPage />)
+
+    // Assert
+    expect(main()).toContain('se envían por correo a quien lo publicó')
+    expect(main()).toContain('No los guardamos')
   })
 
   it('aclara que al buscar una dirección nunca se envían la calle ni el número', () => {
