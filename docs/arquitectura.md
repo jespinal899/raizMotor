@@ -76,7 +76,6 @@ Las cuentas y los anuncios tienen servidor. Si la compilación no trae las varia
 | --- | --- | --- |
 | Acceso con Google | Dar de alta el sitio en Google y activarlo en Supabase; hoy el botón avisa de que aún no está disponible | `loginWithGoogle`, en `src/features/auth/services/supabaseAuthService.ts` |
 | Enviar el formulario de contacto | Servicio de correo | Última línea de `src/features/contact/services/contactService.ts` |
-| Cotizar una propiedad | Servidor que reciba la solicitud; hoy se rechaza y la ficha avisa de que no se envió | Última línea de `src/features/properties/services/quoteService.ts` |
 | Vistas de una ficha | Servidor que sume las de todos los visitantes; hoy se cuentan las de este navegador y la ficha lo dice | Última línea de `src/features/properties/services/propertyViewService.ts` |
 
 ## Nivel 2 · Contenedores
