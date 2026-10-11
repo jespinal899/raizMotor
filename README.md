@@ -142,6 +142,46 @@ supabase functions deploy contact-publisher --no-verify-jwt
 
 Se vuelve a publicar cada vez que cambia algo en `supabase/functions/contact-publisher`. El pipeline no la publica: igual que las migraciones, se hace desde tu equipo. Su lógica está en `contact.ts`, sin nada propio de Deno, y la prueban las pruebas del proyecto (`contact.test.ts`).
 
+#### Limpieza de fotos huérfanas (Edge Function)
+
+Al publicar, primero se suben las fotos y después se guarda el anuncio. Si el anuncio no llega a guardarse (el límite del plan, una conexión cortada, una página cerrada a medias), si falla el borrado de las fotos viejas al editar o borrar un anuncio, o si se elimina una cuenta, quedan en el depósito fotos que no usa ningún anuncio. La función `supabase/functions/cleanup-photos` las borra una vez al día: solo las que no están en ningún anuncio, esté publicado, despublicado u oculto, y que se subieron hace más de 24 horas, para no tocar lo de quien está publicando en ese momento. Borra como mucho 10.000 por ejecución; si quedan más, salen al día siguiente.
+
+Necesita la migración 12 y un secreto propio, de al menos 32 caracteres, que solo conocen la función y la tarea programada. En PowerShell se genera uno con `[guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')`:
+
+```bash
+supabase secrets set CLEANUP_SECRET=…
+supabase functions deploy cleanup-photos --no-verify-jwt
+```
+
+La primera vez conviene ejecutarla en modo de prueba, que solo cuenta las fotos que borraría, sin tocar nada (en PowerShell, `curl.exe`):
+
+```bash
+curl.exe -X POST "https://<proyecto>.supabase.co/functions/v1/cleanup-photos?dry_run=1" -H "x-cleanup-secret: <secreto>"
+```
+
+Responde `{"dryRun":true,"orphans":N}`. Si la cifra tiene sentido, se programa en el SQL Editor. Hacen falta las extensiones `pg_cron` y `pg_net` (Database > Extensions, o Integrations > Cron), y el secreto se guarda en el Vault, no en el repositorio. Se ejecuta a las 9:00 UTC, que son las 3:00 en Honduras:
+
+```sql
+select vault.create_secret('<el mismo valor de CLEANUP_SECRET>', 'cleanup_photos_secret');
+
+select cron.schedule(
+  'limpiar-fotos-huerfanas',
+  '0 9 * * *',
+  $$
+  select net.http_post(
+    url := 'https://<proyecto>.supabase.co/functions/v1/cleanup-photos',
+    headers := jsonb_build_object(
+      'x-cleanup-secret',
+      (select decrypted_secret from vault.decrypted_secrets where name = 'cleanup_photos_secret')
+    ),
+    timeout_milliseconds := 60000
+  );
+  $$
+);
+```
+
+Cada ejecución deja en los registros de la función (Edge Functions > cleanup-photos > Logs) cuántas fotos borró, nunca cuáles. Para dejar de ejecutarla: `select cron.unschedule('limpiar-fotos-huerfanas');`. Se vuelve a publicar cada vez que cambia algo en `supabase/functions/cleanup-photos`; su lógica está en `cleanup.ts` y la prueban las pruebas del proyecto (`cleanup.test.ts`).
+
 #### Pruebas
 
 Las pruebas nunca hablan con el proyecto real, aunque exista `.env.local`: la configuración de Vitest (`vite.config.ts`) deja vacías las dos variables, y lo que necesita cuentas usa un servicio simulado.

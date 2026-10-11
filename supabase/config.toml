@@ -374,6 +374,10 @@ allow_dynamic_registration = false
 [functions.contact-publisher]
 verify_jwt = false
 
+# La protege su propio secreto (CLEANUP_SECRET), no una sesión: la llama una tarea programada.
+[functions.cleanup-photos]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.
