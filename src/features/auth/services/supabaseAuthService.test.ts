@@ -336,58 +336,54 @@ describe('createSupabaseAuthService: recuperar la contraseña', () => {
 })
 
 describe('createSupabaseAuthService: códigos de verificación', () => {
-  const RESET = { email: 'ana@gmail.com', code: '123456', password: 'nueva-secreta' }
-
-  it('con el código de recuperación abre la sesión y guarda la contraseña nueva', async () => {
+  it('comprueba el código de recuperación del correo, sin tocar todavía la contraseña', async () => {
     // Arrange
     const { service, accounts } = setup()
 
     // Act
-    await service.resetPassword(RESET, TEST_OPERATION_KEY)
+    await service.verifyRecoveryCode('ana@gmail.com', '123456')
 
     // Assert
     expect(accounts.verifyOtp).toHaveBeenCalledExactlyOnceWith({ email: 'ana@gmail.com', token: '123456', type: 'recovery' })
-    expect(accounts.updateUser).toHaveBeenCalledExactlyOnceWith({ password: 'nueva-secreta' })
-    expect(accounts.verifyOtp.mock.invocationCallOrder[0]).toBeLessThan(accounts.updateUser.mock.invocationCallOrder[0])
+    expect(accounts.updateUser).not.toHaveBeenCalled()
   })
 
-  it('un código equivocado, usado o vencido se rechaza sin tocar la contraseña', async () => {
+  it('un código de recuperación equivocado, usado o vencido se rechaza', async () => {
     // Arrange
     const { service, accounts } = setup()
     accounts.verifyOtp.mockResolvedValueOnce({ error: supabaseError('otp_expired') })
 
     // Act
-    const reset = service.resetPassword(RESET, TEST_OPERATION_KEY)
+    const verification = service.verifyRecoveryCode('ana@gmail.com', '000000')
 
     // Assert
-    await expect(reset).rejects.toBeInstanceOf(InvalidCodeError)
+    await expect(verification).rejects.toBeInstanceOf(InvalidCodeError)
+  })
+
+  it('con el código ya comprobado deja guardar la contraseña nueva', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+    await service.verifyRecoveryCode('ana@gmail.com', '123456')
+
+    // Act
+    await service.changePassword('nueva-secreta', TEST_OPERATION_KEY)
+
+    // Assert
+    expect(accounts.updateUser).toHaveBeenCalledExactlyOnceWith({ password: 'nueva-secreta' })
+  })
+
+  it('si el código no se aceptó, no deja guardar ninguna contraseña', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+    accounts.verifyOtp.mockResolvedValueOnce({ error: supabaseError('otp_expired') })
+    await service.verifyRecoveryCode('ana@gmail.com', '000000').catch(() => {})
+
+    // Act
+    const change = service.changePassword('nueva-secreta', TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(change).rejects.toBeInstanceOf(RecoveryLinkExpiredError)
     expect(accounts.updateUser).not.toHaveBeenCalled()
-  })
-
-  it('si la contraseña nueva era la de antes, al reintentar con otra no vuelve a gastar el código', async () => {
-    // Arrange
-    const { service, accounts } = setup()
-    accounts.updateUser.mockResolvedValueOnce({ error: supabaseError('same_password') })
-
-    // Act
-    const first = service.resetPassword(RESET, 'primer-intento')
-    await expect(first).rejects.toBeInstanceOf(SamePasswordError)
-    await service.resetPassword({ ...RESET, password: 'otra-distinta' }, 'segundo-intento')
-
-    // Assert
-    expect(accounts.verifyOtp).toHaveBeenCalledOnce()
-    expect(accounts.updateUser).toHaveBeenLastCalledWith({ password: 'otra-distinta' })
-  })
-
-  it('con la misma clave guarda la contraseña una sola vez', async () => {
-    // Arrange
-    const { service, accounts } = setup()
-
-    // Act
-    await Promise.all([service.resetPassword(RESET, TEST_OPERATION_KEY), service.resetPassword(RESET, TEST_OPERATION_KEY)])
-
-    // Assert
-    expect(accounts.updateUser).toHaveBeenCalledOnce()
   })
 
   it('confirma la cuenta con el código del registro', async () => {

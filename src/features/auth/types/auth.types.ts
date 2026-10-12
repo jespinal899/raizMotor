@@ -52,26 +52,15 @@ export type RegistrationStatus = 'idle' | AccessInProgress | RegistrationFailure
 /** Estado del formulario que pide el código para elegir otra contraseña: `sent` cuando ya se pidió. */
 export type PasswordResetRequestStatus = 'idle' | 'submitting' | 'sent' | 'captcha' | 'tooSoon' | 'failed'
 
-/** Lo que escribe quien recibió el código para elegir otra contraseña. */
-export interface PasswordReset {
-  email: string
-  /** Los 6 dígitos que llegaron al correo. */
-  code: string
-  password: string
-}
-
-/**
- * Por qué no se pudo usar un código: `invalidCode` significa que no es el enviado, ya se usó o venció, y
- * `unchanged`, que la contraseña nueva es la misma de antes.
- */
-export type CodeFailure = 'invalidCode' | 'unchanged' | 'failed'
+/** Por qué no se pudo usar un código: `invalidCode` significa que no es el enviado, ya se usó o venció. */
+export type CodeFailure = 'invalidCode' | 'failed'
 
 /** Por qué no se pudo enviar otro código: `tooSoon` significa que hay que esperar un momento. */
 export type CodeResendFailure = 'tooSoon' | 'captcha' | 'failed'
 
 /**
  * Por qué no se guardó la contraseña nueva: `unchanged` significa que es la misma de antes y `expired`,
- * que el enlace con el que se llegó ya no vale.
+ * que el código o el enlace con el que se llegó ya no vale.
  */
 export type PasswordChangeFailure = 'unchanged' | 'expired' | 'failed'
 

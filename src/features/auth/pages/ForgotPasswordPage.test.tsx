@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage'
-import { CodeRequestTooSoonError, InvalidCodeError } from '@/features/auth/services/authErrors'
+import { CodeRequestTooSoonError, InvalidCodeError, SamePasswordError } from '@/features/auth/services/authErrors'
 import { authService } from '@/features/auth/services/authService'
 import { BRAND } from '@/shared/constants/brand'
 import { renderWithRouter } from '@/test/renderWithRouter'
@@ -14,11 +14,12 @@ vi.mock('@/features/auth/services/authService', () => ({
   get ACCOUNTS_AVAILABLE() {
     return accounts.available
   },
-  authService: { requestPasswordReset: vi.fn(), resetPassword: vi.fn() },
+  authService: { requestPasswordReset: vi.fn(), verifyRecoveryCode: vi.fn(), changePassword: vi.fn() },
 }))
 
 const requestPasswordReset = vi.mocked(authService.requestPasswordReset)
-const resetPassword = vi.mocked(authService.resetPassword)
+const verifyRecoveryCode = vi.mocked(authService.verifyRecoveryCode)
+const changePassword = vi.mocked(authService.changePassword)
 
 const FORGOT_PATH = '/recuperar-contrasena'
 
@@ -35,28 +36,33 @@ const askFor = async (email: string) => {
   return user
 }
 
-/** Pide el código y escribe el que llegó, con la contraseña nueva repetida. */
-const resetWith = async ({
-  code = '123456',
-  password = 'nueva-secreta',
-  confirmation,
-}: { code?: string; password?: string; confirmation?: string } = {}) => {
+const codeField = () => screen.getByRole('textbox', { name: /Código de verificación/ })
+const verifyButton = () => screen.getByRole('button', { name: /^Verificar código$|Verificando/ })
+
+/** Pide el código y escribe el que llegó. */
+const verifyWith = async (code = '123456') => {
   requestPasswordReset.mockResolvedValue(undefined)
   const view = renderPage()
   const user = await askFor('ana@gmail.com')
   await user.type(await screen.findByRole('textbox', { name: /Código de verificación/ }), code)
-  await user.type(screen.getByLabelText(/^Contraseña nueva/), password)
-  await user.type(screen.getByLabelText('Repite la contraseña nueva'), confirmation ?? password)
-  await user.click(screen.getByRole('button', { name: /^Guardar contraseña$|Guardando/ }))
+  await user.click(verifyButton())
 
-  return view
+  return { ...view, user }
+}
+
+/** Con el código ya aceptado, escribe la contraseña nueva dos veces y la guarda. */
+const saveNewPassword = async (user: ReturnType<typeof userEvent.setup>, password = 'nueva-secreta', confirmation = password) => {
+  await user.type(await screen.findByLabelText(/^Contraseña nueva/), password)
+  await user.type(screen.getByLabelText('Repite la contraseña nueva'), confirmation)
+  await user.click(screen.getByRole('button', { name: /^Guardar contraseña$|Guardando/ }))
 }
 
 describe('ForgotPasswordPage', () => {
   beforeEach(() => {
     accounts.available = true
     requestPasswordReset.mockReset()
-    resetPassword.mockReset()
+    verifyRecoveryCode.mockReset()
+    changePassword.mockReset()
   })
 
   it('pide el correo de la cuenta y pone su título en la pestaña', async () => {
@@ -106,47 +112,102 @@ describe('ForgotPasswordPage', () => {
     const notice = await screen.findByRole('status')
     expect(requestPasswordReset).toHaveBeenCalledExactlyOnceWith('ana@gmail.com')
     expect(notice).toHaveTextContent('Si hay una cuenta con ana@gmail.com, te enviamos un código de 6 dígitos. Vence en 15 minutos.')
-    expect(screen.getByRole('form', { name: 'Formulario para elegir otra contraseña' })).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: 'Formulario para verificar el código' })).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: 'Correo' })).not.toBeInTheDocument()
   })
 
-  it('con el código y la contraseña nueva la guarda y lleva a la portada, que avisa del cambio', async () => {
+  it('pide primero solo el código: la contraseña nueva aún no se puede escribir', async () => {
     // Arrange
-    resetPassword.mockResolvedValue(undefined)
+    requestPasswordReset.mockResolvedValue(undefined)
+    renderPage()
 
     // Act
-    const { currentPath } = await resetWith()
+    await askFor('ana@gmail.com')
 
     // Assert
-    await waitFor(() => expect(currentPath()).toBe('/'))
-    expect(resetPassword).toHaveBeenCalledExactlyOnceWith(
-      { email: 'ana@gmail.com', code: '123456', password: 'nueva-secreta' },
-      expect.any(String),
-    )
+    expect(await screen.findByRole('form', { name: 'Formulario para verificar el código' })).toBeInTheDocument()
+    expect(codeField()).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Contraseña nueva/)).not.toBeInTheDocument()
   })
 
-  it('si el código no es correcto o venció lo explica y deja corregirlo', async () => {
+  it('con el código correcto deja elegir la contraseña nueva', async () => {
     // Arrange
-    resetPassword.mockRejectedValue(new InvalidCodeError())
+    verifyRecoveryCode.mockResolvedValue(undefined)
 
     // Act
-    const { currentPath } = await resetWith()
+    await verifyWith('123456')
+
+    // Assert
+    expect(await screen.findByText('Código verificado')).toBeInTheDocument()
+    expect(verifyRecoveryCode).toHaveBeenCalledExactlyOnceWith('ana@gmail.com', '123456')
+    expect(screen.getByRole('form', { name: 'Formulario para elegir otra contraseña' })).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: /Código de verificación/ })).not.toBeInTheDocument()
+  })
+
+  it('si el código no es correcto o venció lo explica y no deja elegir contraseña', async () => {
+    // Arrange
+    verifyRecoveryCode.mockRejectedValue(new InvalidCodeError())
+
+    // Act
+    const { currentPath } = await verifyWith('000000')
 
     // Assert
     expect(await screen.findByText('El código no es correcto o ya venció')).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Contraseña nueva/)).not.toBeInTheDocument()
+    expect(codeField()).toBeInTheDocument()
     expect(currentPath()).toBe(FORGOT_PATH)
   })
 
-  it('no envía nada si las contraseñas no coinciden o el código no tiene 6 dígitos', async () => {
-    // Arrange: el código y la contraseña se escriben mal
+  it('no comprueba un código que no tiene 6 dígitos', async () => {
+    // Arrange: el código se escribe incompleto
 
     // Act
-    await resetWith({ code: '123', confirmation: 'otra-distinta' })
+    await verifyWith('123')
 
     // Assert
-    expect(resetPassword).not.toHaveBeenCalled()
-    expect(screen.getByRole('textbox', { name: /Código de verificación/ })).toHaveAccessibleDescription(/El código tiene 6 dígitos/)
+    expect(verifyRecoveryCode).not.toHaveBeenCalled()
+    expect(codeField()).toHaveAccessibleDescription(/El código tiene 6 dígitos/)
+  })
+
+  it('con el código aceptado guarda la contraseña nueva y lleva a la portada, que avisa del cambio', async () => {
+    // Arrange
+    verifyRecoveryCode.mockResolvedValue(undefined)
+    changePassword.mockResolvedValue(undefined)
+    const { currentPath, user } = await verifyWith()
+
+    // Act
+    await saveNewPassword(user)
+
+    // Assert
+    await waitFor(() => expect(currentPath()).toBe('/'))
+    expect(changePassword).toHaveBeenCalledExactlyOnceWith('nueva-secreta', expect.any(String))
+  })
+
+  it('no guarda la contraseña si la repetida no coincide', async () => {
+    // Arrange
+    verifyRecoveryCode.mockResolvedValue(undefined)
+    const { user } = await verifyWith()
+
+    // Act
+    await saveNewPassword(user, 'nueva-secreta', 'otra-distinta')
+
+    // Assert
+    expect(changePassword).not.toHaveBeenCalled()
     expect(screen.getByLabelText('Repite la contraseña nueva')).toHaveAccessibleDescription('Las contraseñas no coinciden.')
+  })
+
+  it('si la contraseña nueva es la de antes pide otra, sin volver a pedir el código', async () => {
+    // Arrange
+    verifyRecoveryCode.mockResolvedValue(undefined)
+    changePassword.mockRejectedValue(new SamePasswordError())
+    const { user } = await verifyWith()
+
+    // Act
+    await saveNewPassword(user)
+
+    // Assert
+    expect(await screen.findByText('Elige una distinta de la anterior.')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: /Código de verificación/ })).not.toBeInTheDocument()
   })
 
   it('no pide nada si lo escrito no tiene forma de correo, y dice cómo corregirlo', async () => {

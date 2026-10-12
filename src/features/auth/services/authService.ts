@@ -3,7 +3,6 @@ import { createSupabaseAuthService } from '@/features/auth/services/supabaseAuth
 import type {
   AccountProfile,
   LoginCredentials,
-  PasswordReset,
   RegistrationCredentials,
   RegistrationOutcome,
   SessionUser,
@@ -30,10 +29,10 @@ export interface AuthService {
    */
   requestPasswordReset(email: string): Promise<void>
   /**
-   * Con el código que llegó al correo, guarda la contraseña nueva y deja la sesión abierta. Se rechaza si el
-   * código no es el enviado, ya se usó o venció. Es idempotente: con la misma clave se guarda una sola vez.
+   * Comprueba el código que llegó al correo para elegir otra contraseña y deja la sesión abierta: desde ahí
+   * se puede guardar la nueva con `changePassword`. Se rechaza si el código no es el enviado, ya se usó o venció.
    */
-  resetPassword(reset: PasswordReset, operationKey: string): Promise<void>
+  verifyRecoveryCode(email: string, code: string): Promise<void>
   /** Confirma la cuenta recién creada con el código que llegó al correo y deja la sesión abierta. */
   confirmEmail(email: string, code: string): Promise<void>
   /** Envía otra vez el código para confirmar la cuenta; si es demasiado pronto, se rechaza. */
@@ -44,7 +43,8 @@ export interface AuthService {
    */
   isRecoveringPassword(): boolean
   /**
-   * Guarda la contraseña nueva de quien llegó desde el enlace y se rechaza si no se pudo. Es idempotente:
+   * Guarda la contraseña nueva de quien comprobó el código o llegó desde el enlace, y se rechaza si no se
+   * pudo o si no hizo ninguna de las dos cosas. Es idempotente:
    * si llega dos veces con la misma clave, se guarda una sola vez.
    */
   changePassword(password: string, operationKey: string): Promise<void>
@@ -76,7 +76,7 @@ export const createPendingAuthService = (): AuthService => {
     loginWithGoogle: rejectLoginAsUnavailable,
     register: rejectRegistrationAsUnavailable,
     requestPasswordReset: rejectLoginAsUnavailable,
-    resetPassword: rejectLoginAsUnavailable,
+    verifyRecoveryCode: rejectLoginAsUnavailable,
     confirmEmail: rejectLoginAsUnavailable,
     resendConfirmation: rejectLoginAsUnavailable,
     isRecoveringPassword: () => false,

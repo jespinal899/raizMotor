@@ -166,7 +166,11 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
     await page.getByRole('button', { name: 'Enviar código' }).click()
 
     const code = await latestCode(ACCOUNT.email, 'elegir otra contraseña')
+    // Primero el código, solo: la contraseña nueva aparece cuando el código se aceptó.
+    await expect(page.getByLabel(/^Contraseña nueva/)).toHaveCount(0)
     await page.getByRole('textbox', { name: /Código de verificación/ }).fill(code)
+    await page.getByRole('button', { name: 'Verificar código' }).click()
+    await expect(page.getByText('Código verificado')).toBeVisible()
     await page.getByLabel(/^Contraseña nueva/).fill(newPassword)
     await page.getByLabel('Repite la contraseña nueva').fill(newPassword)
     await page.getByRole('button', { name: 'Guardar contraseña' }).click()

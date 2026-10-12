@@ -1,27 +1,26 @@
 import type { FormEvent } from 'react'
-import { KeyRound, MailCheck } from 'lucide-react'
+import { MailCheck, ShieldCheck } from 'lucide-react'
 import CaptchaWidget from '@/components/CaptchaWidget'
-import PasswordField from '@/components/PasswordField'
 import StatusAlert from '@/components/StatusAlert'
 import SubmitButton from '@/components/SubmitButton'
 import { FieldGroup } from '@/components/ui/field'
 import CodeField from '@/features/auth/components/CodeField'
 import CodeFailureAlert from '@/features/auth/components/CodeFailureAlert'
 import ResendCode from '@/features/auth/components/ResendCode'
-import { usePasswordCodeForm } from '@/features/auth/hooks/usePasswordCodeForm'
-import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/credentialRules'
+import { useEmailCodeForm } from '@/features/auth/hooks/useEmailCodeForm'
 
 interface PasswordCodeFormProps {
   /** El correo al que se envió el código. */
   email: string
-  onSubmit: (reset: { code: string; password: string }, operationKey: string) => Promise<void>
+  /** Comprueba el código; se rechaza si no vale. */
+  onSubmit: (code: string) => Promise<void>
   /** Envía otro código al mismo correo. */
   onResend: () => Promise<void>
 }
 
-/** Con el código que llegó al correo, elige otra contraseña. */
+/** Primero el código que llegó al correo: solo si es correcto se deja elegir otra contraseña. */
 const PasswordCodeForm = ({ email, onSubmit, onResend }: PasswordCodeFormProps) => {
-  const { values, errors, status, change, submit } = usePasswordCodeForm({ onSubmit })
+  const { values, errors, status, change, submit } = useEmailCodeForm({ onSubmit })
   const isSubmitting = status === 'submitting'
 
   const handleSubmit = (event: FormEvent) => {
@@ -30,7 +29,7 @@ const PasswordCodeForm = ({ email, onSubmit, onResend }: PasswordCodeFormProps) 
   }
 
   return (
-    <form noValidate aria-label="Formulario para elegir otra contraseña" onSubmit={handleSubmit}>
+    <form noValidate aria-label="Formulario para verificar el código" onSubmit={handleSubmit}>
       <FieldGroup>
         {/* No dice si el correo tiene cuenta: quien pregunta por uno ajeno no debe poder averiguarlo. */}
         <StatusAlert
@@ -42,30 +41,8 @@ const PasswordCodeForm = ({ email, onSubmit, onResend }: PasswordCodeFormProps) 
 
         <CodeField value={values.code} error={errors.code} onChange={(value) => change('code', value)} readOnly={isSubmitting} />
 
-        <PasswordField
-          label="Contraseña nueva"
-          hint={`mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
-          error={errors.password}
-          name="password"
-          autoComplete="new-password"
-          minLength={MIN_PASSWORD_LENGTH}
-          value={values.password}
-          onChange={(value) => change('password', value)}
-          readOnly={isSubmitting}
-        />
-
-        <PasswordField
-          label="Repite la contraseña nueva"
-          error={errors.confirmation}
-          name="confirmation"
-          autoComplete="new-password"
-          value={values.confirmation}
-          onChange={(value) => change('confirmation', value)}
-          readOnly={isSubmitting}
-        />
-
-        <SubmitButton isSubmitting={isSubmitting} icon={KeyRound} submittingLabel="Guardando…">
-          Guardar contraseña
+        <SubmitButton isSubmitting={isSubmitting} icon={ShieldCheck} submittingLabel="Verificando…">
+          Verificar código
         </SubmitButton>
 
         <CodeFailureAlert status={status} />
