@@ -3,10 +3,10 @@ import ButtonLink from '@/components/ButtonLink'
 import Container from '@/components/layout/Container'
 import PropertyCollection from '@/features/properties/components/PropertyCollection'
 import { useFeaturedProperties } from '@/features/properties/hooks/useFeaturedProperties'
+import { FEATURED_COUNT } from '@/features/properties/utils/featuredListings'
 import type { PropertyService } from '@/features/properties/services/propertyService'
 import { ROUTES } from '@/shared/constants/routes'
 
-const FEATURED_COUNT = 6
 
 interface FeaturedPropertiesProps {
   service?: PropertyService

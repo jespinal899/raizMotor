@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { ownerOf, setPublicationLimit } from './database.ts'
 import { latestCode } from './mailpit.ts'
 
 /**
@@ -123,6 +124,28 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
     await expect(page.getByText('$ 145,000').first()).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Contacta al publicador en segundos' })).toBeVisible()
     await expect(page.getByText(`${ACCOUNT.firstName} ${ACCOUNT.lastName}`).first()).toBeVisible()
+  })
+
+  test('la portada destaca solo anuncios de planes de pago: el de una cuenta gratis no sale hasta que paga', async ({ page }) => {
+    await isolateFromExternalServices(page)
+    const featured = page.getByRole('region', { name: 'Propiedades destacadas' })
+    const owner = await ownerOf(TITLE)
+
+    await page.goto('/')
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(featured.getByRole('link', { name: TITLE })).toHaveCount(0)
+
+    // El equipo aprueba un plan de pago para la cuenta: su anuncio pasa a la portada, marcado como destacado.
+    await setPublicationLimit(owner, 25)
+    try {
+      await page.reload()
+      const card = featured.locator('[data-slot="card"]').filter({ has: page.getByRole('link', { name: TITLE }) })
+      await expect(card).toBeVisible()
+      await expect(card.getByText('Destacada')).toBeVisible()
+    } finally {
+      // Vuelve al plan gratis: en tu equipo, las cuentas de otras ejecuciones no deben ocupar la portada.
+      await setPublicationLimit(owner, 1)
+    }
   })
 
   test('un visitante sin cuenta no puede publicar: se le pide iniciar sesión', async ({ page }) => {

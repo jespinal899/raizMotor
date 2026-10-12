@@ -212,6 +212,55 @@ describe('createPublishedPropertyService', () => {
   })
 })
 
+describe('createPublishedPropertyService: destacadas de pago', () => {
+  /** Un almacén en el servidor, que elige los destacados entre los anuncios de quienes pagan un plan. */
+  const withFeatured = (featured: StoredPropertyPublication[] | Error): PublishedPropertyRepository => ({
+    ...repositoryFor([]),
+    getFeatured: vi.fn(async () => {
+      if (featured instanceof Error) throw featured
+
+      return featured
+    }),
+  })
+
+  it('destaca los anuncios que elige el servidor, marcados como destacados, y pide los que caben en la portada', async () => {
+    // Arrange
+    const repository = withFeatured([record('de-pago')])
+    const service = createPublishedPropertyService([], repository, { shared: true })
+
+    // Act
+    const result = await service.getFeatured()
+
+    // Assert
+    expect(result.map(({ id, featured, example }) => [id, featured, example ?? false])).toEqual([['de-pago', true, false]])
+    expect(repository.getFeatured).toHaveBeenCalledExactlyOnceWith(6)
+  })
+
+  it('con anuncios en el servidor, nunca destaca las propiedades de muestra', async () => {
+    // Arrange
+    const sample = buildProperty({ id: 'muestra', featured: true })
+    const service = createPublishedPropertyService([sample], withFeatured([]), { shared: true })
+
+    // Act
+    const result = await service.getFeatured()
+
+    // Assert
+    expect(result).toEqual([])
+  })
+
+  it('si el servidor falla, lo dice en lugar de mostrar la portada sin destacadas', async () => {
+    // Arrange
+    const failure = new Error('sin conexión')
+    const service = createPublishedPropertyService([], withFeatured(failure), { shared: true })
+
+    // Act
+    const result = service.getFeatured()
+
+    // Assert
+    await expect(result).rejects.toBe(failure)
+  })
+})
+
 describe('createPublishedPropertyService: ejemplos y anuncios propios', () => {
   it('marca como ejemplo las propiedades de muestra, y no los anuncios publicados', async () => {
     // Arrange

@@ -82,6 +82,10 @@ export const createSupabasePropertyGateway = (client: SupabaseClient): PropertyG
 
     listPublished: () => readAll((from, to) => newestFirst(properties().select('*').eq('status', 'published')).range(from, to)),
 
+    // La función la crea supabase/migrations/20261015000000_destacadas_de_pago.sql.
+    listFeatured: async (limit) =>
+      unwrap<PropertyRow[] | null>(await client.rpc('featured_properties', { max_count: limit })) ?? [],
+
     searchPublished: async (search) => {
       const { column, ascending } = ORDERS[search.sort ?? 'recent']
       // Los empates se desempatan siempre igual: si no, un anuncio podría salir en dos páginas, o en ninguna.
