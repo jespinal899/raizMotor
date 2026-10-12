@@ -99,7 +99,7 @@ Confirmar la cuenta y recuperar la contraseña funcionan con un **código de 6 d
 - «Email OTP Expiration» en `900` segundos (15 minutos) y «Email OTP Length» en `6`. El vencimiento vale para todos los códigos y enlaces de las cuentas.
 - Las plantillas «Confirm signup» y «Reset password» con el código (`{{ .Token }}`), las de `supabase/templates/` que se indican abajo.
 
-Quien intenta entrar sin haber confirmado su cuenta puede escribir el código ahí mismo o pedir otro, y se puede pedir otro código cada minuto. La página `/restablecer-contrasena` sigue atendiendo los enlaces de recuperación que se enviaron antes de los códigos.
+Para recuperar la contraseña, primero se escribe solo el código: el sitio lo comprueba con Supabase y, únicamente si es correcto, pide la contraseña nueva (dos veces). Quien intenta entrar sin haber confirmado su cuenta puede escribir el código ahí mismo o pedir otro, y se puede pedir otro código cada minuto. La página `/restablecer-contrasena` sigue atendiendo los enlaces de recuperación que se enviaron antes de los códigos.
 
 Los textos en español de los cuatro correos (el código para activar la cuenta, el código para elegir otra contraseña, confirmar el correo nuevo y el enlace para entrar) están en `supabase/templates/`. Cada archivo dice en qué plantilla del panel (Authentication > Emails > Templates) se pega y con qué asunto; se copia el archivo entero, comentario incluido. `supabase/config.toml` los usa también en el Supabase local, donde llegan al buzón de prueba (Mailpit, `http://127.0.0.1:54324`).
 

@@ -13,8 +13,9 @@ const setup = (onSubmit: Submit = vi.fn<Submit>(async () => {})) => {
   return { onSubmit, ...view }
 }
 
-const write = (result: ReturnType<typeof setup>['result'], password = 'otra-secreta-456') => {
+const write = (result: ReturnType<typeof setup>['result'], password = 'otra-secreta-456', confirmation = password) => {
   act(() => result.current.change('password', password))
+  act(() => result.current.change('confirmation', confirmation))
 }
 
 describe('useNewPasswordForm', () => {
@@ -25,7 +26,7 @@ describe('useNewPasswordForm', () => {
     const { result } = setup()
 
     // Assert
-    expect(result.current.values).toEqual({ password: '' })
+    expect(result.current.values).toEqual({ password: '', confirmation: '' })
     expect(result.current.errors).toEqual({})
     expect(result.current.status).toBe('idle')
   })
@@ -41,6 +42,19 @@ describe('useNewPasswordForm', () => {
     // Assert
     expect(onSubmit).not.toHaveBeenCalled()
     expect(result.current.errors.password).toBe(`Usa al menos ${MIN_PASSWORD_LENGTH} caracteres.`)
+  })
+
+  it('no guarda si la contraseña repetida no coincide, y lo dice', async () => {
+    // Arrange
+    const { result, onSubmit } = setup()
+    write(result, 'otra-secreta-456', 'otra-secreta-465')
+
+    // Act
+    await act(() => result.current.submit())
+
+    // Assert
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(result.current.errors.confirmation).toBe('Las contraseñas no coinciden.')
   })
 
   it('guarda la contraseña tal como se escribió, con sus espacios, junto a la clave de la operación', async () => {
@@ -69,7 +83,7 @@ describe('useNewPasswordForm', () => {
 
   it.each([
     { reason: new SamePasswordError(), status: 'unchanged', when: 'es la misma contraseña de antes' },
-    { reason: new RecoveryLinkExpiredError(), status: 'expired', when: 'el enlace ya no vale' },
+    { reason: new RecoveryLinkExpiredError(), status: 'expired', when: 'el código o el enlace ya no vale' },
     { reason: new Error('sin conexión'), status: 'failed', when: 'ocurre cualquier otro error' },
   ])('queda como "$status" cuando $when', async ({ reason, status }) => {
     // Arrange

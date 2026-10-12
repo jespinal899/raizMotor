@@ -10,12 +10,6 @@ const FAILURES: Record<CodeFailure, StatusAlertContent> = {
     description: 'Revisa que sea el del último correo que te enviamos. Vence a los 15 minutos: si pasó más tiempo, pide otro.',
     variant: 'destructive',
   },
-  unchanged: {
-    icon: CircleAlert,
-    title: 'Esa ya era tu contraseña',
-    description: 'Elige una distinta de la anterior.',
-    variant: 'destructive',
-  },
   failed: {
     icon: CircleAlert,
     title: 'Algo salió mal',

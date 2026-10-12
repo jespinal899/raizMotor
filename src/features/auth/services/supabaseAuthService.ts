@@ -153,13 +153,11 @@ export const createSupabaseAuthService = ({
   // Repetir un registro o un cambio de contraseña con la misma clave no lo pide otra vez a Supabase.
   const registerOnce = createOperationLog<RegistrationOutcome>()
   const changePasswordOnce = createOperationLog<void>()
-  const resetPasswordOnce = createOperationLog<void>()
   /**
-   * Correos cuyo código de recuperación ya se comprobó en esta página. El código solo sirve una vez: si después
-   * no se guardó la contraseña (por ejemplo, era la misma de antes), al reintentar con otra se usa la sesión
-   * que el código ya abrió, en lugar de volver a gastarlo.
+   * Si en esta página ya se comprobó un código de recuperación. El código solo sirve una vez y abre la sesión:
+   * desde ahí se puede elegir la contraseña, y reintentarlo (por ejemplo, si era la misma de antes) no lo gasta otra vez.
    */
-  const recovered = new Set<string>()
+  let recoveryCodeVerified = false
 
   /** El token de la verificación, si la hay. Sin él, cuando el sitio la exige, no se pregunta a Supabase. */
   const captchaOptions = async (): Promise<CaptchaOptions> => {
@@ -212,17 +210,12 @@ export const createSupabaseAuthService = ({
       if (error) throw toRejection(error, RESEND_REJECTIONS)
     },
 
-    resetPassword: ({ email, code, password }, operationKey) =>
-      resetPasswordOnce(operationKey, async () => {
-        if (!recovered.has(email)) {
-          const { error } = await accounts.verifyOtp({ email, token: code, type: 'recovery' })
-          if (error) throw toRejection(error, CODE_REJECTIONS)
-          recovered.add(email)
-        }
+    verifyRecoveryCode: async (email, code) => {
+      const { error } = await accounts.verifyOtp({ email, token: code, type: 'recovery' })
 
-        const { error } = await accounts.updateUser({ password })
-        if (error) throw toRejection(error, PASSWORD_REJECTIONS)
-      }),
+      if (error) throw toRejection(error, CODE_REJECTIONS)
+      recoveryCodeVerified = true
+    },
 
     confirmEmail: async (email, code) => {
       // Comprobar un código no lleva la verificación contra bots: Supabase la pide al enviarlo, no al usarlo.
@@ -245,8 +238,8 @@ export const createSupabaseAuthService = ({
 
     changePassword: (password, operationKey) =>
       changePasswordOnce(operationKey, async () => {
-        // Con la sesión abierta, Supabase aceptaría el cambio de cualquiera: aquí se exige haber llegado por el enlace.
-        if (!cameFromRecoveryLink) throw new RecoveryLinkExpiredError()
+        // Con la sesión abierta, Supabase aceptaría el cambio de cualquiera: aquí se exige el código o el enlace.
+        if (!cameFromRecoveryLink && !recoveryCodeVerified) throw new RecoveryLinkExpiredError()
         const { error } = await accounts.updateUser({ password })
 
         if (error) throw toRejection(error, PASSWORD_REJECTIONS)

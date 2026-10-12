@@ -35,8 +35,9 @@ const ForgotPasswordPage = () => {
     >
       <ForgotPasswordForm
         onSubmit={(email) => authService.requestPasswordReset(email)}
-        onReset={async (reset, operationKey) => {
-          await authService.resetPassword(reset, operationKey)
+        onVerify={(email, code) => authService.verifyRecoveryCode(email, code)}
+        onChangePassword={async (password, operationKey) => {
+          await authService.changePassword(password, operationKey)
           // La sesión ya quedó abierta con el código: se lleva a la portada, que avisa del cambio.
           await navigate(ROUTES.home, { replace: true, state: PASSWORD_UPDATED_NOTICE })
         }}

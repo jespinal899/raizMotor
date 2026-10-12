@@ -21,8 +21,8 @@ const FAILURES: Record<PasswordChangeFailure, StatusAlertContent> = {
   },
   expired: {
     icon: CircleAlert,
-    title: 'El enlace ya no es válido',
-    description: 'Pide otro desde «Olvidé mi contraseña» y vuelve a intentarlo.',
+    title: 'La verificación ya no es válida',
+    description: 'Pide otro código desde «Olvidé mi contraseña» y vuelve a intentarlo.',
     variant: 'destructive',
   },
   failed: {
@@ -37,7 +37,7 @@ interface NewPasswordFormProps {
   onSubmit: (password: string, operationKey: string) => Promise<void>
 }
 
-/** Con él elige otra contraseña quien llegó desde el enlace de su correo. */
+/** Con él elige otra contraseña quien comprobó el código de su correo o llegó desde el enlace. */
 const NewPasswordForm = ({ onSubmit }: NewPasswordFormProps) => {
   const { values, errors, status, change, submit } = useNewPasswordForm({ onSubmit })
   const isSubmitting = status === 'submitting'
@@ -67,7 +67,7 @@ const NewPasswordForm = ({ onSubmit }: NewPasswordFormProps) => {
     <form noValidate aria-label="Formulario para elegir otra contraseña" onSubmit={handleSubmit}>
       <FieldGroup>
         <PasswordField
-          label="Nueva contraseña"
+          label="Contraseña nueva"
           hint={`mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
           error={errors.password}
           name="password"
@@ -75,6 +75,16 @@ const NewPasswordForm = ({ onSubmit }: NewPasswordFormProps) => {
           minLength={MIN_PASSWORD_LENGTH}
           value={values.password}
           onChange={(value) => change('password', value)}
+          readOnly={isSubmitting}
+        />
+
+        <PasswordField
+          label="Repite la contraseña nueva"
+          error={errors.confirmation}
+          name="confirmation"
+          autoComplete="new-password"
+          value={values.confirmation}
+          onChange={(value) => change('confirmation', value)}
           readOnly={isSubmitting}
         />
 

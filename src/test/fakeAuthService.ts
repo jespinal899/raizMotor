@@ -16,7 +16,7 @@ export const fakeAuthService = (session?: SessionUser | null) => {
     loginWithGoogle: vi.fn<AuthService['loginWithGoogle']>(async () => {}),
     register: vi.fn<AuthService['register']>(async () => 'confirmationPending'),
     requestPasswordReset: vi.fn<AuthService['requestPasswordReset']>(async () => {}),
-    resetPassword: vi.fn<AuthService['resetPassword']>(async () => {}),
+    verifyRecoveryCode: vi.fn<AuthService['verifyRecoveryCode']>(async () => {}),
     confirmEmail: vi.fn<AuthService['confirmEmail']>(async () => {}),
     resendConfirmation: vi.fn<AuthService['resendConfirmation']>(async () => {}),
     isRecoveringPassword: vi.fn<AuthService['isRecoveringPassword']>(() => false),

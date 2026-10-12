@@ -10,13 +10,13 @@ interface EmailCode {
 }
 
 interface EmailCodeFormOptions {
-  /** Se resuelve cuando la cuenta quedó confirmada; se rechaza si el código no vale. */
+  /** Se resuelve cuando el código se aceptó; se rechaza si no vale. */
   onSubmit: (code: string) => Promise<void>
 }
 
 const toFailureStatus = toFailure<CodeFailure>([[InvalidCodeError, 'invalidCode']], 'failed')
 
-/** Formulario con el que se confirma la cuenta escribiendo el código que llegó al correo. */
+/** Formulario con el que se escribe el código que llegó al correo: para confirmar la cuenta o para elegir otra contraseña. */
 export const useEmailCodeForm = ({ onSubmit }: EmailCodeFormOptions) => {
   const { values, errors, status, change, validateFields, attempt } = useAttemptForm<EmailCode, 'submitting', CodeFailure>({
     initialValues: { code: '' },

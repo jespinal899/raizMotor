@@ -1,31 +1,50 @@
+import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { CircleAlert, Send, ShieldAlert, Timer } from 'lucide-react'
+import { CircleAlert, Send, ShieldAlert, ShieldCheck, Timer } from 'lucide-react'
 import CaptchaWidget from '@/components/CaptchaWidget'
 import EmailField from '@/components/EmailField'
 import StatusAlert from '@/components/StatusAlert'
 import SubmitButton from '@/components/SubmitButton'
 import { FieldGroup } from '@/components/ui/field'
+import NewPasswordForm from '@/features/auth/components/NewPasswordForm'
 import PasswordCodeForm from '@/features/auth/components/PasswordCodeForm'
 import { usePasswordResetRequestForm } from '@/features/auth/hooks/usePasswordResetRequestForm'
 
 interface ForgotPasswordFormProps {
   /** Envía el código al correo; se rechaza si no se pudo. */
   onSubmit: (email: string) => Promise<void>
-  /** Con el código, guarda la contraseña nueva; se rechaza si el código no vale. */
-  onReset: (reset: { email: string; code: string; password: string }, operationKey: string) => Promise<void>
+  /** Comprueba el código que llegó al correo; se rechaza si no vale. */
+  onVerify: (email: string, code: string) => Promise<void>
+  /** Guarda la contraseña nueva, una vez comprobado el código; se rechaza si no se pudo. */
+  onChangePassword: (password: string, operationKey: string) => Promise<void>
 }
 
 /**
- * Recuperar la contraseña en dos pasos: primero el correo, al que llega un código de 6 dígitos, y después el
- * código con la contraseña nueva.
+ * Recuperar la contraseña en tres pasos: primero el correo, al que llega un código de 6 dígitos; después el
+ * código, y solo si es correcto, la contraseña nueva.
  */
-const ForgotPasswordForm = ({ onSubmit, onReset }: ForgotPasswordFormProps) => {
+const ForgotPasswordForm = ({ onSubmit, onVerify, onChangePassword }: ForgotPasswordFormProps) => {
   const { values, errors, status, change, submit } = usePasswordResetRequestForm({ onSubmit })
+  const [codeVerified, setCodeVerified] = useState(false)
   const isSubmitting = status === 'submitting'
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     void submit()
+  }
+
+  if (codeVerified) {
+    return (
+      <>
+        <StatusAlert
+          role="status"
+          icon={ShieldCheck}
+          title="Código verificado"
+          description="Ahora elige tu contraseña nueva."
+        />
+        <NewPasswordForm onSubmit={onChangePassword} />
+      </>
+    )
   }
 
   if (status === 'sent') {
@@ -34,7 +53,10 @@ const ForgotPasswordForm = ({ onSubmit, onReset }: ForgotPasswordFormProps) => {
     return (
       <PasswordCodeForm
         email={email}
-        onSubmit={(reset, operationKey) => onReset({ email, ...reset }, operationKey)}
+        onSubmit={async (code) => {
+          await onVerify(email, code)
+          setCodeVerified(true)
+        }}
         onResend={() => onSubmit(email)}
       />
     )

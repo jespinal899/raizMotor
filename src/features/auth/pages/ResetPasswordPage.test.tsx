@@ -32,12 +32,13 @@ const arriveFromLink = (session: SessionUser | null = buildSessionUser()) => {
   return renderPage()
 }
 
-const passwordField = () => screen.getByLabelText(/^Nueva contraseña/)
+const passwordField = () => screen.getByLabelText(/^Contraseña nueva/)
 const saveButton = () => screen.getByRole('button', { name: /^Guardar contraseña$|Guardando/ })
 
 const save = async (password: string) => {
   const user = userEvent.setup()
   await user.type(passwordField(), password)
+  await user.type(screen.getByLabelText('Repite la contraseña nueva'), password)
   await user.click(saveButton())
 }
 
@@ -105,7 +106,7 @@ describe('ResetPasswordPage', () => {
 
     // Assert
     expect(screen.getByRole('heading', { level: 1, name: 'Elige otra contraseña' })).toBeInTheDocument()
-    expect(screen.getByLabelText(`Nueva contraseña (mínimo ${MIN_PASSWORD_LENGTH} caracteres)`)).toBeInTheDocument()
+    expect(screen.getByLabelText(`Contraseña nueva (mínimo ${MIN_PASSWORD_LENGTH} caracteres)`)).toBeInTheDocument()
     await waitFor(() => expect(document.title).toBe(expectedTitle))
   })
 

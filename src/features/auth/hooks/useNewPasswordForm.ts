@@ -1,12 +1,14 @@
 import { RecoveryLinkExpiredError, SamePasswordError } from '@/features/auth/services/authErrors'
 import type { PasswordChangeFailure } from '@/features/auth/types/auth.types'
 import { toFailure } from '@/features/auth/utils/accessFailure'
-import { NEW_PASSWORD_RULES } from '@/features/auth/utils/credentialRules'
+import { NEW_PASSWORD_RULES, matches } from '@/features/auth/utils/credentialRules'
 import { useAttemptForm } from '@/hooks/useAttemptForm'
-import { validate } from '@/shared/utils/validators'
+import { required, validate } from '@/shared/utils/validators'
 
 interface NewPassword {
   password: string
+  /** La misma contraseña, escrita otra vez para no guardar una con un error de tecleo. */
+  confirmation: string
 }
 
 interface NewPasswordFormOptions {
@@ -17,7 +19,7 @@ interface NewPasswordFormOptions {
   onSubmit: (password: string, operationKey: string) => Promise<void>
 }
 
-const EMPTY_PASSWORD: NewPassword = { password: '' }
+const EMPTY_PASSWORD: NewPassword = { password: '', confirmation: '' }
 
 const toFailureStatus = toFailure<PasswordChangeFailure>(
   [
@@ -27,7 +29,7 @@ const toFailureStatus = toFailure<PasswordChangeFailure>(
   'failed',
 )
 
-/** Formulario con el que elige otra contraseña quien llegó desde el enlace de su correo. */
+/** Formulario con el que elige otra contraseña quien comprobó el código de su correo o llegó desde el enlace. */
 export const useNewPasswordForm = ({ onSubmit }: NewPasswordFormOptions) => {
   const { values, errors, status, change, validateFields, attempt } = useAttemptForm<
     NewPassword,
@@ -36,7 +38,10 @@ export const useNewPasswordForm = ({ onSubmit }: NewPasswordFormOptions) => {
     'changed'
   >({
     initialValues: EMPTY_PASSWORD,
-    validate: ({ password }) => ({ password: validate(password, NEW_PASSWORD_RULES) }),
+    validate: ({ password, confirmation }) => ({
+      password: validate(password, NEW_PASSWORD_RULES),
+      confirmation: validate(confirmation, [required('Repite la contraseña nueva.'), matches(password)]),
+    }),
     toFailure: toFailureStatus,
     succeeded: 'changed',
   })
