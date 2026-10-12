@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CAPTCHA_SITE_KEY, TOKEN_WAIT_MS, createCaptchaSession, toCaptchaSiteKey } from '@/lib/captcha'
+import {
+  CAPTCHA_SITE_KEY,
+  TOKEN_WAIT_MS,
+  createCaptchaSession,
+  takeCaptchaToken,
+  toCaptchaSiteKey,
+} from '@/lib/captcha'
 
 describe('toCaptchaSiteKey', () => {
   it('toma la clave del sitio sin espacios sobrantes', () => {
@@ -110,5 +116,32 @@ describe('createCaptchaSession', () => {
 
     // Assert
     await expect(session.takeToken(0)).resolves.toBeNull()
+  })
+})
+
+describe('takeCaptchaToken', () => {
+  it('sin clave del sitio no espera un token: no hay verificación que lo entregue', async () => {
+    // Arrange
+    const session = createCaptchaSession()
+    const takeToken = vi.spyOn(session, 'takeToken')
+
+    // Act
+    const token = await takeCaptchaToken(null, session)
+
+    // Assert
+    expect(token).toBeNull()
+    expect(takeToken).not.toHaveBeenCalled()
+  })
+
+  it('con clave del sitio entrega el token de la verificación', async () => {
+    // Arrange
+    const session = createCaptchaSession()
+    session.setToken('token-1')
+
+    // Act
+    const token = await takeCaptchaToken('clave-del-sitio', session)
+
+    // Assert
+    expect(token).toBe('token-1')
   })
 })

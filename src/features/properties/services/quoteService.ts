@@ -1,7 +1,7 @@
 import { createPublisherContactService } from '@/features/properties/services/publisherContactService'
 import { QuoteUnavailableError } from '@/features/properties/services/quoteErrors'
 import type { QuoteRequest } from '@/features/properties/types/quote.types'
-import { CAPTCHA_SITE_KEY, captchaSession } from '@/lib/captcha'
+import { CAPTCHA_SITE_KEY, takeCaptchaToken } from '@/lib/captcha'
 import { supabase } from '@/lib/supabaseClient'
 
 export { QuoteCaptchaError, QuoteThrottledError, QuoteUnavailableError } from '@/features/properties/services/quoteErrors'
@@ -28,7 +28,7 @@ const client = supabase
 export const quoteService: QuoteService = client
   ? createPublisherContactService({
       invoke: (body) => client.functions.invoke('contact-publisher', { body }),
-      takeCaptchaToken: () => captchaSession.takeToken(),
+      takeCaptchaToken: () => takeCaptchaToken(),
       captchaRequired: CAPTCHA_SITE_KEY !== null,
     })
   : createPendingQuoteService()
