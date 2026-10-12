@@ -247,6 +247,24 @@ otp_expiry = 3600
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
+# Los correos de las cuentas, en español. En el proyecto publicado se pegan a mano en el panel (ver el README);
+# aquí los usa el Supabase local, para probarlos.
+[auth.email.template.confirmation]
+subject = "Confirma tu cuenta de DomusRaíz"
+content_path = "./supabase/templates/confirmar-cuenta.html"
+
+[auth.email.template.recovery]
+subject = "Elige otra contraseña para DomusRaíz"
+content_path = "./supabase/templates/elegir-otra-contrasena.html"
+
+[auth.email.template.email_change]
+subject = "Confirma tu correo nuevo en DomusRaíz"
+content_path = "./supabase/templates/confirmar-correo-nuevo.html"
+
+[auth.email.template.magic_link]
+subject = "Tu enlace para entrar a DomusRaíz"
+content_path = "./supabase/templates/enlace-para-entrar.html"
+
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
 # enabled = true

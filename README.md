@@ -88,7 +88,12 @@ El correo que trae Supabase solo escribe a los miembros de su organización, y m
 | Password | La clave de API de Resend. Va solo en el panel de Supabase: no es una variable del sitio ni se guarda en el repositorio. |
 | Sender email | Una dirección del dominio verificado, por ejemplo `no-reply@…` |
 
-Los textos en español de los dos correos están en `supabase/templates/`; cada archivo dice en qué plantilla del panel se pega y con qué asunto.
+Conviene crear en Resend una clave solo para esto (API Keys, con permiso «Sending access»), distinta de la del contacto al publicador: así se puede revocar una sin tocar la otra. Después:
+
+- En Authentication > Rate Limits, subir «Rate limit for sending emails», que con el correo de Supabase es de 2 por hora y solo se puede cambiar con un servicio propio. El tope real pasa a ser el del plan de Resend.
+- En Authentication > URL Configuration, poner en «Site URL» la dirección del sitio y en «Redirect URLs» sus dominios (por ejemplo `https://www.tudominio.hn/**`): si no, Supabase rechaza los enlaces de los correos.
+
+Los textos en español de los cuatro correos (confirmar la cuenta, elegir otra contraseña, confirmar el correo nuevo y el enlace para entrar) están en `supabase/templates/`. Cada archivo dice en qué plantilla del panel (Authentication > Emails > Templates) se pega y con qué asunto; se copia el archivo entero, comentario incluido. `supabase/config.toml` los usa también en el Supabase local, donde llegan al buzón de prueba (Mailpit, `http://127.0.0.1:54324`).
 
 #### Seguridad de las cuentas
 
