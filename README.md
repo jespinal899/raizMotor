@@ -182,6 +182,15 @@ select cron.schedule(
 
 Cada ejecución deja en los registros de la función (Edge Functions > cleanup-photos > Logs) cuántas fotos borró, nunca cuáles. Para dejar de ejecutarla: `select cron.unschedule('limpiar-fotos-huerfanas');`. Se vuelve a publicar cada vez que cambia algo en `supabase/functions/cleanup-photos`; su lógica está en `cleanup.ts` y la prueban las pruebas del proyecto (`cleanup.test.ts`).
 
+#### Mapas (Mapbox)
+
+Los mapas de la ficha y del formulario de publicar usan los cuadros de [Mapbox](https://www.mapbox.com/) si la compilación tiene su clave pública, y los de OpenStreetMap si no la tiene. Los de OpenStreetMap son gratuitos pero pensados para poco tráfico: para el sitio publicado conviene Mapbox, cuyo plan gratuito admite uso comercial.
+
+1. En Mapbox, Account > Tokens > Create a token: una clave **pública** (empieza por `pk.`), con solo los permisos públicos que trae marcados, y en «URL restrictions» las direcciones del sitio (por ejemplo `https://www.tudominio.hn`, `https://tudominio.hn` y `https://raiz-motor.vercel.app`). Así nadie puede usarla desde otro sitio.
+2. En Vercel, Settings > Environment Variables, en Production: `VITE_MAPBOX_TOKEN` con esa clave. Se aplica en la siguiente publicación.
+
+Nunca va aquí una clave secreta (`sk.`): todo lo que empieza por `VITE_` viaja dentro del sitio. El sitio no la usa y el pipeline no publica si la encuentra. Con los cuadros de Mapbox el mapa muestra su logo y su atribución, que sus condiciones exigen. El buscador de direcciones sigue siendo el de OpenStreetMap (Nominatim): solo se usa al publicar, una búsqueda por segundo como mucho, y guardar el punto que elige quien publica está permitido con él.
+
 #### Pruebas
 
 Las pruebas nunca hablan con el proyecto real, aunque exista `.env.local`: la configuración de Vitest (`vite.config.ts`) deja vacías las dos variables, y lo que necesita cuentas usa un servicio simulado.
@@ -269,7 +278,7 @@ npm test
 npm run build
 ```
 
-El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página, y fija las cabeceras de seguridad de cada respuesta. La más delicada es la política de contenido (`Content-Security-Policy`): solo deja cargar scripts del propio sitio, y datos e imágenes de Supabase (`*.supabase.co`), de OpenStreetMap (teselas y buscador de direcciones) de Unsplash (las fotos de la portada) y de Cloudflare Turnstile (la verificación contra bots). Si el sitio pasa a usar otro servicio, o Supabase con un dominio propio, hay que añadirlo ahí: si no, el navegador lo bloquea.
+El archivo `vercel.json` también hace que cualquier dirección del sitio entregue la aplicación, para que funcionen los enlaces directos y recargar una página, y fija las cabeceras de seguridad de cada respuesta. La más delicada es la política de contenido (`Content-Security-Policy`): solo deja cargar scripts del propio sitio, y datos e imágenes de Supabase (`*.supabase.co`), de Mapbox y OpenStreetMap (cuadros del mapa y buscador de direcciones) de Unsplash (las fotos de la portada) y de Cloudflare Turnstile (la verificación contra bots). Si el sitio pasa a usar otro servicio, o Supabase con un dominio propio, hay que añadirlo ahí: si no, el navegador lo bloquea.
 
 ### Buscadores y vista previa al compartir
 

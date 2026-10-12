@@ -91,6 +91,28 @@ describe('findProblems', () => {
     expect(problems).toEqual([PROBLEMS.privilegedKey])
   })
 
+  it('no publica con la clave secreta de Mapbox, que viajaría dentro del sitio', () => {
+    // Arrange
+    const env = { VITE_SUPABASE_URL: URL, VITE_SUPABASE_PUBLISHABLE_KEY: PUBLISHABLE_KEY, VITE_MAPBOX_TOKEN: 'sk.secreta.firma' }
+
+    // Act
+    const problems = findProblems(env)
+
+    // Assert
+    expect(problems).toEqual([PROBLEMS.secretMapboxToken])
+  })
+
+  it('la clave pública de Mapbox, o ninguna, no es un problema', () => {
+    // Arrange
+    const base = { VITE_SUPABASE_URL: URL, VITE_SUPABASE_PUBLISHABLE_KEY: PUBLISHABLE_KEY }
+
+    // Act
+    const problems = [findProblems(base), findProblems({ ...base, VITE_MAPBOX_TOKEN: 'pk.publica.firma' })]
+
+    // Assert
+    expect(problems).toEqual([[], []])
+  })
+
   it('ningún aviso muestra el valor de una variable', () => {
     // Arrange
     const secret = 'sb_secret_no_debe_verse'

@@ -10,7 +10,7 @@ import { ROUTES } from '@/shared/constants/routes'
 export const PRIVACY: LegalDocumentContent = {
   title: 'Política de privacidad',
   summary: `Qué pasa con tus datos cuando usas ${BRAND.name}.`,
-  updatedOn: '2026-10-11',
+  updatedOn: '2026-10-12',
   related: { label: 'Leer los términos y condiciones', to: ROUTES.terms },
   sections: [
     {
@@ -37,7 +37,8 @@ export const PRIVACY: LegalDocumentContent = {
         'Supabase, donde se guardan las cuentas, los anuncios, sus fotos y los reportes.',
         'Resend, que entrega los correos: los de tu cuenta y los datos que envías a quien publicó un anuncio.',
         'Cloudflare Turnstile, que comprueba que quien inicia sesión, se registra o contacta a un publicador no es un programa automático.',
-        'OpenStreetMap, que dibuja los mapas. Al buscar una dirección para publicar se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa.',
+        'Mapbox, que dibuja los mapas: recibe la zona del mapa que se está viendo.',
+        'OpenStreetMap, de donde salen los datos de los mapas. Al buscar una dirección para publicar se le envían la colonia, la ciudad y el departamento; nunca la calle ni el número de la casa.',
         'Unsplash, de donde vienen las fotos de la portada y de los anuncios de ejemplo.',
         'Google Maps, solo si pulsas «Cómo llegar»: recibe el punto de la propiedad para trazar la ruta.',
         'WhatsApp, solo si eliges escribir a quien publica o compartir una ficha por ese medio.',

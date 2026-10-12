@@ -16,4 +16,9 @@ interface ImportMetaEnv {
    * enlace de recuperación piden la verificación contra bots. La secreta va solo en el panel de Supabase.
    */
   readonly VITE_TURNSTILE_SITE_KEY?: string
+  /**
+   * Clave pública de Mapbox (empieza por `pk.`), limitada en Mapbox a los dominios del sitio. Con ella los mapas
+   * usan los cuadros de Mapbox; sin ella, los de OpenStreetMap. Nunca la secreta (`sk.`).
+   */
+  readonly VITE_MAPBOX_TOKEN?: string
 }
