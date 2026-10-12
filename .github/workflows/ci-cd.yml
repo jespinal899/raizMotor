@@ -68,8 +68,9 @@ jobs:
           version: 2.120.0
 
       - name: Levantar Supabase con las migraciones
-        # Solo lo que usan las pruebas: base de datos, cuentas, API y fotos.
-        run: supabase start -x studio,imgproxy,vector,logflare,edge-runtime,supavisor,mailpit,realtime,postgres-meta
+        # Solo lo que usan las pruebas: base de datos, cuentas, API, fotos y el buzón de prueba (Mailpit),
+        # donde llegan los códigos de verificación que las pruebas leen.
+        run: supabase start -x studio,imgproxy,vector,logflare,edge-runtime,supavisor,realtime,postgres-meta
 
       - name: Pruebas de la base de datos
         run: supabase test db
