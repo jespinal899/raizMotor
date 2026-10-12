@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { latestCode } from './mailpit.ts'
 
 /**
  * El recorrido principal del sitio, de punta a punta: una persona se registra y publica un anuncio con su foto,
@@ -39,6 +40,26 @@ const isolateFromExternalServices = async (page: Page) => {
   await page.route(/tile\.openstreetmap\.org|api\.mapbox\.com|images\.unsplash\.com/, (route) => route.abort())
 }
 
+/**
+ * Se registra y activa la cuenta con el código de 6 dígitos que llega al correo, leído del buzón de prueba.
+ * Al escribirlo, la persona queda dentro.
+ */
+const registerAndConfirm = async (page: Page, account: typeof ACCOUNT) => {
+  await page.goto('/registro')
+  await page.getByRole('textbox', { name: 'Nombre' }).fill(account.firstName)
+  await page.getByRole('textbox', { name: 'Apellido' }).fill(account.lastName)
+  await page.getByRole('textbox', { name: 'Correo' }).fill(account.email)
+  await page.getByRole('textbox', { name: 'Teléfono' }).fill(account.phone)
+  await page.getByLabel(/^Contraseña/).fill(account.password)
+  await page.getByRole('button', { name: 'Crear cuenta' }).click()
+
+  await expect(page.getByText(`Te enviamos un código de 6 dígitos a ${account.email}`)).toBeVisible()
+  const code = await latestCode(account.email, 'activar tu cuenta')
+  await page.getByRole('textbox', { name: /Código de verificación/ }).fill(code)
+  await page.getByRole('button', { name: 'Confirmar mi cuenta' }).click()
+  await expect(page).not.toHaveURL(/\/registro/)
+}
+
 const choose = async (page: Page, field: string, option: string) => {
   await page.getByRole('combobox', { name: field }).click()
   await page.getByRole('option', { name: option, exact: true }).click()
@@ -48,14 +69,7 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
   test('una persona se registra y publica un anuncio con su foto', async ({ page }) => {
     await isolateFromExternalServices(page)
 
-    await page.goto('/registro')
-    await page.getByRole('textbox', { name: 'Nombre' }).fill(ACCOUNT.firstName)
-    await page.getByRole('textbox', { name: 'Apellido' }).fill(ACCOUNT.lastName)
-    await page.getByRole('textbox', { name: 'Correo' }).fill(ACCOUNT.email)
-    await page.getByRole('textbox', { name: 'Teléfono' }).fill(ACCOUNT.phone)
-    await page.getByLabel(/^Contraseña/).fill(ACCOUNT.password)
-    await page.getByRole('button', { name: 'Crear cuenta' }).click()
-    await expect(page).not.toHaveURL(/\/registro/)
+    await registerAndConfirm(page, ACCOUNT)
 
     await page.goto('/publicar')
     await expect(page.getByRole('heading', { level: 1, name: 'Publica tu propiedad' })).toBeVisible()
@@ -131,16 +145,49 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
     const propertyId = page.url().split('/').pop()
 
     // Otra persona se registra e intenta abrir la edición de ese anuncio.
-    await page.goto('/registro')
-    await page.getByRole('textbox', { name: 'Nombre' }).fill('Beto')
-    await page.getByRole('textbox', { name: 'Apellido' }).fill('Ajeno')
-    await page.getByRole('textbox', { name: 'Correo' }).fill(`beto.${RUN}@prueba.hn`)
-    await page.getByRole('textbox', { name: 'Teléfono' }).fill('33337777')
-    await page.getByLabel(/^Contraseña/).fill(ACCOUNT.password)
-    await page.getByRole('button', { name: 'Crear cuenta' }).click()
-    await expect(page).not.toHaveURL(/\/registro/)
+    await registerAndConfirm(page, {
+      ...ACCOUNT,
+      firstName: 'Beto',
+      lastName: 'Ajeno',
+      email: `beto.${RUN}@prueba.hn`,
+      phone: '33337777',
+    })
 
     await page.goto(`/mis-publicaciones/${propertyId}/editar`)
     await expect(page.getByRole('heading', { name: 'No puedes editar ese anuncio' })).toBeVisible()
+  })
+
+  test('quien olvidó su contraseña elige otra con el código que llega al correo y entra con ella', async ({ page }) => {
+    const newPassword = `Otra-clave-${RUN}`
+
+    await page.goto('/recuperar-contrasena')
+    await expect(page.getByText('Te enviaremos un código de verificación para que puedas actualizar tu contraseña.')).toBeVisible()
+    await page.getByRole('textbox', { name: 'Correo' }).fill(ACCOUNT.email)
+    await page.getByRole('button', { name: 'Enviar código' }).click()
+
+    const code = await latestCode(ACCOUNT.email, 'elegir otra contraseña')
+    await page.getByRole('textbox', { name: /Código de verificación/ }).fill(code)
+    await page.getByLabel(/^Contraseña nueva/).fill(newPassword)
+    await page.getByLabel('Repite la contraseña nueva').fill(newPassword)
+    await page.getByRole('button', { name: 'Guardar contraseña' }).click()
+
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByText('Tu contraseña se actualizó')).toBeVisible()
+
+    // La contraseña nueva sirve para entrar, y la anterior ya no.
+    await page.context().clearCookies()
+    await page.evaluate(() => {
+      localStorage.clear()
+      sessionStorage.clear()
+    })
+    await page.goto('/iniciar-sesion')
+    await page.getByRole('textbox', { name: 'Correo' }).fill(ACCOUNT.email)
+    await page.getByLabel(/^Contraseña/).fill(ACCOUNT.password)
+    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click()
+    await expect(page.getByText('No pudimos iniciar tu sesión')).toBeVisible()
+
+    await page.getByLabel(/^Contraseña/).fill(newPassword)
+    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click()
+    await expect(page).not.toHaveURL(/\/iniciar-sesion/)
   })
 })

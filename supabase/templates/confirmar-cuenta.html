@@ -1,7 +1,8 @@
 <!--
-  Correo que recibe quien se registra. Se pega en el panel de Supabase:
+  Correo que recibe quien se registra, con el código para activar su cuenta. Se pega en el panel de Supabase:
   Authentication > Emails > Templates > «Confirm signup».
-  Asunto: Confirma tu cuenta de DomusRaíz
+  Asunto: Tu código para activar tu cuenta de DomusRaíz
+  Solo lleva el código, sin enlace: algunos correos abren los enlaces solos para revisarlos y los gastan.
 -->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f6f9; padding: 24px 12px; font-family: Arial, Helvetica, sans-serif; color: #1f2933">
   <tr>
@@ -12,21 +13,14 @@
         </tr>
         <tr>
           <td style="padding: 28px">
-            <h2 style="color: #0f4c81; margin: 0 0 16px; font-size: 20px">Confirma tu cuenta</h2>
+            <h2 style="color: #0f4c81; margin: 0 0 16px; font-size: 20px">Activa tu cuenta</h2>
             <p style="line-height: 1.5; margin: 0 0 12px">¡Hola! Gracias por registrarte en DomusRaíz.</p>
-            <p style="line-height: 1.5; margin: 0 0 12px">Para activar tu cuenta y empezar a publicar, confirma que este correo es tuyo:</p>
-            <p style="margin: 24px 0">
-              <a
-                href="{{ .ConfirmationURL }}"
-                style="background: #0f4c81; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold"
-                >Confirmar mi cuenta</a
-              >
+            <p style="line-height: 1.5; margin: 0 0 12px">Escribe este código en la página del registro para activar tu cuenta:</p>
+            <p style="margin: 24px 0; text-align: center">
+              <span style="display: inline-block; padding: 14px 24px; border-radius: 10px; background: #eef4fa; color: #0f4c81; font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace">{{ .Token }}</span>
             </p>
-            <p style="margin: 0 0 4px; color: #52606d; font-size: 13px">Si el botón no funciona, copia este enlace en tu navegador:</p>
-            <p style="margin: 0 0 16px; font-size: 13px; word-break: break-all">
-              <a href="{{ .ConfirmationURL }}" style="color: #0f4c81">{{ .ConfirmationURL }}</a>
-            </p>
-            <p style="margin: 0; line-height: 1.5; color: #52606d; font-size: 14px">Si no creaste una cuenta en DomusRaíz, ignora este correo: no se activará nada.</p>
+            <p style="margin: 0 0 12px; line-height: 1.5; text-align: center; font-weight: bold">Vence en 15 minutos.</p>
+            <p style="margin: 0; line-height: 1.5; color: #52606d; font-size: 14px">Nadie de DomusRaíz te pedirá este código. Si no creaste una cuenta, ignora este correo: no se activará nada.</p>
           </td>
         </tr>
         <tr>

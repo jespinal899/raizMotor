@@ -93,7 +93,15 @@ Conviene crear en Resend una clave solo para esto (API Keys, con permiso «Sendi
 - En Authentication > Rate Limits, subir «Rate limit for sending emails», que con el correo de Supabase es de 2 por hora y solo se puede cambiar con un servicio propio. El tope real pasa a ser el del plan de Resend.
 - En Authentication > URL Configuration, poner en «Site URL» la dirección del sitio y en «Redirect URLs» sus dominios (por ejemplo `https://www.tudominio.hn/**`): si no, Supabase rechaza los enlaces de los correos.
 
-Los textos en español de los cuatro correos (confirmar la cuenta, elegir otra contraseña, confirmar el correo nuevo y el enlace para entrar) están en `supabase/templates/`. Cada archivo dice en qué plantilla del panel (Authentication > Emails > Templates) se pega y con qué asunto; se copia el archivo entero, comentario incluido. `supabase/config.toml` los usa también en el Supabase local, donde llegan al buzón de prueba (Mailpit, `http://127.0.0.1:54324`).
+Confirmar la cuenta y recuperar la contraseña funcionan con un **código de 6 dígitos** que llega al correo y se escribe en el sitio, en lugar de un enlace: algunos correos abren los enlaces solos para revisarlos y los gastan antes de que la persona los use. Supabase genera los códigos, los vence y limita los intentos. Para que funcione en el proyecto publicado, en Authentication > Providers > Email (o Sign In / Providers):
+
+- «Confirm email» activado: la cuenta no entra hasta escribir el código.
+- «Email OTP Expiration» en `900` segundos (15 minutos) y «Email OTP Length» en `6`. El vencimiento vale para todos los códigos y enlaces de las cuentas.
+- Las plantillas «Confirm signup» y «Reset password» con el código (`{{ .Token }}`), las de `supabase/templates/` que se indican abajo.
+
+Quien intenta entrar sin haber confirmado su cuenta puede escribir el código ahí mismo o pedir otro, y se puede pedir otro código cada minuto. La página `/restablecer-contrasena` sigue atendiendo los enlaces de recuperación que se enviaron antes de los códigos.
+
+Los textos en español de los cuatro correos (el código para activar la cuenta, el código para elegir otra contraseña, confirmar el correo nuevo y el enlace para entrar) están en `supabase/templates/`. Cada archivo dice en qué plantilla del panel (Authentication > Emails > Templates) se pega y con qué asunto; se copia el archivo entero, comentario incluido. `supabase/config.toml` los usa también en el Supabase local, donde llegan al buzón de prueba (Mailpit, `http://127.0.0.1:54324`).
 
 #### Seguridad de las cuentas
 
