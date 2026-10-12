@@ -1,0 +1,40 @@
+<!--
+  Correo con un enlace para entrar sin contraseña. El sitio hoy no lo pide, pero Supabase puede enviarlo. Se pega en el panel de Supabase:
+  Authentication > Emails > Templates > «Magic link».
+  Asunto: Tu enlace para entrar a DomusRaíz
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f6f9; padding: 24px 12px; font-family: Arial, Helvetica, sans-serif; color: #1f2933">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background: #ffffff; border-radius: 12px">
+        <tr>
+          <td style="background: #0f4c81; padding: 18px 28px; border-radius: 12px 12px 0 0; color: #ffffff; font-size: 20px; font-weight: bold">DomusRaíz</td>
+        </tr>
+        <tr>
+          <td style="padding: 28px">
+            <h2 style="color: #0f4c81; margin: 0 0 16px; font-size: 20px">Tu enlace para entrar</h2>
+            <p style="line-height: 1.5; margin: 0 0 12px">Pediste entrar a tu cuenta de DomusRaíz sin escribir la contraseña.</p>
+            <p style="line-height: 1.5; margin: 0 0 12px">Pulsa el botón para entrar:</p>
+            <p style="margin: 24px 0">
+              <a
+                href="{{ .ConfirmationURL }}"
+                style="background: #0f4c81; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold"
+                >Entrar a DomusRaíz</a
+              >
+            </p>
+            <p style="margin: 0 0 4px; color: #52606d; font-size: 13px">Si el botón no funciona, copia este enlace en tu navegador:</p>
+            <p style="margin: 0 0 16px; font-size: 13px; word-break: break-all">
+              <a href="{{ .ConfirmationURL }}" style="color: #0f4c81">{{ .ConfirmationURL }}</a>
+            </p>
+            <p style="margin: 0; line-height: 1.5; color: #52606d; font-size: 14px">El enlace solo sirve una vez. Si no lo pediste tú, ignora este correo.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 14px 28px; border-top: 1px solid #e4e7eb; color: #7b8794; font-size: 12px">
+            Casas, apartamentos y terrenos en un solo lugar, sin comisiones ocultas.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

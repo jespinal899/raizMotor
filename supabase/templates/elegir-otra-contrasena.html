@@ -3,19 +3,38 @@
   Authentication > Emails > Templates > «Reset password».
   Asunto: Elige otra contraseña para DomusRaíz
 -->
-<div style="font-family: Arial, Helvetica, sans-serif; color: #1f2933; max-width: 480px; margin: 0 auto; padding: 24px">
-  <h2 style="color: #0f4c81; margin: 0 0 16px">Elige otra contraseña</h2>
-  <p style="line-height: 1.5">
-    Recibimos una solicitud para cambiar la contraseña de tu cuenta de DomusRaíz. Abre este enlace para elegir otra:
-  </p>
-  <p style="margin: 24px 0">
-    <a
-      href="{{ .ConfirmationURL }}"
-      style="background: #0f4c81; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold"
-      >Elegir otra contraseña</a
-    >
-  </p>
-  <p style="line-height: 1.5; color: #52606d; font-size: 14px">
-    Si no la pediste, ignora este correo: tu contraseña sigue siendo la misma.
-  </p>
-</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f6f9; padding: 24px 12px; font-family: Arial, Helvetica, sans-serif; color: #1f2933">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background: #ffffff; border-radius: 12px">
+        <tr>
+          <td style="background: #0f4c81; padding: 18px 28px; border-radius: 12px 12px 0 0; color: #ffffff; font-size: 20px; font-weight: bold">DomusRaíz</td>
+        </tr>
+        <tr>
+          <td style="padding: 28px">
+            <h2 style="color: #0f4c81; margin: 0 0 16px; font-size: 20px">Elige otra contraseña</h2>
+            <p style="line-height: 1.5; margin: 0 0 12px">Recibimos una solicitud para cambiar la contraseña de tu cuenta en DomusRaíz.</p>
+            <p style="line-height: 1.5; margin: 0 0 12px">Pulsa el botón para elegir una nueva:</p>
+            <p style="margin: 24px 0">
+              <a
+                href="{{ .ConfirmationURL }}"
+                style="background: #0f4c81; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold"
+                >Elegir otra contraseña</a
+              >
+            </p>
+            <p style="margin: 0 0 4px; color: #52606d; font-size: 13px">Si el botón no funciona, copia este enlace en tu navegador:</p>
+            <p style="margin: 0 0 16px; font-size: 13px; word-break: break-all">
+              <a href="{{ .ConfirmationURL }}" style="color: #0f4c81">{{ .ConfirmationURL }}</a>
+            </p>
+            <p style="margin: 0; line-height: 1.5; color: #52606d; font-size: 14px">El enlace solo sirve una vez. Si no lo pediste tú, ignora este correo: tu contraseña sigue igual.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 14px 28px; border-top: 1px solid #e4e7eb; color: #7b8794; font-size: 12px">
+            Casas, apartamentos y terrenos en un solo lugar, sin comisiones ocultas.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
