@@ -9,6 +9,8 @@ export const ROUTES = {
   properties: '/propiedades',
   propertiesByType: '/propiedades/:tipo',
   propertyDetail: '/propiedad/:id',
+  projects: '/proyectos',
+  projectDetail: '/proyectos/:id',
   contact: '/contacto',
   login: '/iniciar-sesion',
   register: '/registro',
@@ -48,6 +50,8 @@ export const CONTACT_PARAMS = {
 export const propertyTypePath = (tipo: string) => `${ROUTES.properties}/${tipo}`
 
 export const propertyDetailPath = (id: string) => `/propiedad/${id}`
+
+export const projectDetailPath = (id: string) => `${ROUTES.projects}/${encodeURIComponent(id)}`
 
 /** Abre el formulario para corregir un anuncio propio. */
 export const editPropertyPath = (id: string) => `${ROUTES.myProperties}/${encodeURIComponent(id)}/editar`

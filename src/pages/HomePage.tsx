@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import StatusAlert from '@/components/StatusAlert'
 import Container from '@/components/layout/Container'
 import AboutUs from '@/features/home/components/AboutUs'
+import FeaturedProjects from '@/features/home/components/FeaturedProjects'
 import FeaturedProperties from '@/features/home/components/FeaturedProperties'
 import HeroCarousel from '@/features/home/components/HeroCarousel'
 import HowItWorks from '@/features/home/components/HowItWorks'
@@ -31,6 +32,7 @@ const HomePage = () => {
         </Container>
       </div>
       <FeaturedProperties />
+      <FeaturedProjects />
       <AboutUs />
       <HowItWorks />
     </>

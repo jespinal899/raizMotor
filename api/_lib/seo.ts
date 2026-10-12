@@ -15,7 +15,7 @@ const TYPE_LABELS: Record<string, string> = { casa: 'Casa', apartamento: 'Aparta
 const OPERATION_LABELS: Record<string, string> = { venta: 'en venta', alquiler: 'en alquiler' }
 
 /** Las páginas públicas que no dependen de los anuncios. Las de cuenta, publicar o administrar no se indexan. */
-export const STATIC_PATHS = ['/', '/propiedades', '/planes', '/planes/agente-inmobiliario', '/contacto', '/terminos', '/privacidad']
+export const STATIC_PATHS = ['/', '/propiedades', '/proyectos', '/planes', '/planes/agente-inmobiliario', '/contacto', '/terminos', '/privacidad']
 
 /** Las que nunca deben aparecer en un buscador: son de cada cuenta o pasos intermedios. */
 const PRIVATE_PATHS = [

@@ -65,6 +65,10 @@ const MobileNav = ({ className }: MobileNavProps) => {
             ))}
           </ul>
 
+          <NavLink to={NAV.projects.to} onClick={close} className={linkStyle}>
+            <NavLabel>{NAV.projects.label}</NavLabel>
+          </NavLink>
+
           {/* Es una sección de la portada, no una página: por eso no usa `NavLink`. */}
           <Link to={NAV.about.to} onClick={close} className={linkStyle}>
             <NavLabel>{NAV.about.label}</NavLabel>
