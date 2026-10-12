@@ -1,7 +1,7 @@
 import { fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createLeafletLocationMap } from '@/features/properties/services/locationMap'
+import { chooseMapTiles, createLeafletLocationMap } from '@/features/properties/services/locationMap'
 
 const TEGUCIGALPA = { center: { lat: 14.0723, lng: -87.1921 }, zoom: 13 }
 const SAN_PEDRO_SULA = { center: { lat: 15.5042, lng: -88.025 }, zoom: 13 }
@@ -124,6 +124,30 @@ describe('createLeafletLocationMap', () => {
     expect(container.querySelector('.leaflet-control-attribution')).toHaveTextContent(expectedCredit)
   })
 
+  it('sin clave de Mapbox no muestra su logo', () => {
+    // Arrange: mapa con los cuadros de OpenStreetMap
+
+    // Act
+    const { container } = setup()
+
+    // Assert
+    expect(container.querySelector('img[alt="Mapbox"]')).toBeNull()
+  })
+
+  it('con los cuadros de Mapbox muestra su atribución y su logo, que sus condiciones exigen', () => {
+    // Arrange
+    const container = document.body.appendChild(document.createElement('div'))
+
+    // Act
+    const map = createLeafletLocationMap(container, { markerLabel: MARKER_LABEL, tiles: chooseMapTiles('pk.publica.firma') })
+    map.showPoint(TEGUCIGALPA)
+
+    // Assert
+    expect(container.querySelector('.leaflet-control-attribution')).toHaveTextContent('Mapbox')
+    expect(container.querySelector('.leaflet-control-attribution')).toHaveTextContent('OpenStreetMap')
+    expect(container.querySelector('img[alt="Mapbox"]')?.closest('a')).toHaveAttribute('href', 'https://www.mapbox.com/')
+  })
+
   it('al destruirlo retira del contenedor todo lo que había pintado', () => {
     // Arrange
     const { container, map } = setup()
@@ -219,5 +243,36 @@ describe('createLeafletLocationMap: mapa de solo consulta', () => {
 
     // Assert
     expect(marker()?.style.transform).toBe(positionBefore)
+  })
+})
+
+describe('chooseMapTiles', () => {
+  it('con la clave pública de Mapbox usa sus cuadros, con la clave en la dirección', () => {
+    // Arrange
+    const token = 'pk.eyJ1IjoiZG9tdXMifQ.firma-123'
+
+    // Act
+    const tiles = chooseMapTiles(token)
+
+    // Assert
+    expect(tiles.url).toMatch(/^https:\/\/api\.mapbox\.com\/styles\/v1\/mapbox\/streets-v12\/tiles\/512\//)
+    expect(tiles.url).toContain(`access_token=${token}`)
+    expect(tiles).toMatchObject({ tileSize: 512, zoomOffset: -1, showMapboxLogo: true })
+  })
+
+  it.each([
+    ['sin clave', undefined],
+    ['con una clave vacía', '  '],
+    ['con la clave secreta, que nunca debe viajar en el sitio', 'sk.eyJ1IjoiZG9tdXMifQ.firma'],
+    ['con algo que no es una clave', 'cualquier-cosa'],
+  ])('%s usa OpenStreetMap', (_case, token) => {
+    // Arrange: la clave del caso
+
+    // Act
+    const tiles = chooseMapTiles(token)
+
+    // Assert
+    expect(tiles.url).toBe('https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+    expect(tiles.showMapboxLogo).toBe(false)
   })
 })

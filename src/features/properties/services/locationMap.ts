@@ -1,6 +1,7 @@
-import { Browser, control, divIcon, map as createMap, marker as createMarker, tileLayer } from 'leaflet'
+import { Browser, Control, control, divIcon, map as createMap, marker as createMarker, tileLayer } from 'leaflet'
 import type { LatLngExpression, Marker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import mapboxLogoUrl from '@/assets/mapbox-logo.svg'
 import type { Coordinates, MapView } from '@/features/properties/types/publication.types'
 
 export interface LocationMap {
@@ -17,13 +18,55 @@ interface LocationMapOptions {
    * recorrer y acercar para conocer la zona, pero el marcador queda fijo en el punto mostrado.
    */
   onMarkerMove?: (point: Coordinates) => void
+  /** De dónde salen los cuadros del mapa. Sin indicarlo, los que elige la compilación (`MAP_TILES`). */
+  tiles?: MapTiles
 }
 
 export type CreateLocationMap = (container: HTMLElement, options: LocationMapOptions) => LocationMap
 
-const TILES_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-const TILES_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-const MAX_ZOOM = 19
+/** De dónde salen los cuadros del mapa y cómo se reconoce a quien los da. */
+export interface MapTiles {
+  url: string
+  attribution: string
+  maxZoom: number
+  /** Mapbox entrega cuadros de 512 px: Leaflet los coloca un nivel de zoom por debajo. */
+  tileSize: number
+  zoomOffset: number
+  /** Mapbox pide mostrar su logo, además de la atribución, cuando sus mapas se usan con otra librería. */
+  showMapboxLogo: boolean
+}
+
+const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+
+const OPEN_STREET_MAP: MapTiles = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution: OSM_ATTRIBUTION,
+  maxZoom: 19,
+  tileSize: 256,
+  zoomOffset: 0,
+  showMapboxLogo: false,
+}
+
+/**
+ * Los cuadros del mapa: los de Mapbox si la compilación tiene su clave pública (`pk.`), o los de OpenStreetMap,
+ * gratuitos pero pensados para poco tráfico. Una clave secreta (`sk.`) nunca se usa: viajaría dentro del sitio.
+ */
+export const chooseMapTiles = (token: string | undefined): MapTiles => {
+  const publicToken = token?.trim() ?? ''
+  if (!/^pk\.[\w-]+\.[\w-]+$/.test(publicToken)) return OPEN_STREET_MAP
+
+  return {
+    url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/512/{z}/{x}/{y}@2x?access_token=${encodeURIComponent(publicToken)}`,
+    attribution: `&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ${OSM_ATTRIBUTION} <a href="https://www.mapbox.com/map-feedback/">Mejorar este mapa</a>`,
+    maxZoom: 20,
+    tileSize: 512,
+    zoomOffset: -1,
+    showMapboxLogo: true,
+  }
+}
+
+export const MAP_TILES = chooseMapTiles(import.meta.env.VITE_MAPBOX_TOKEN)
+
 const ARROW_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 
 const MARKER_SIZE = 36
@@ -38,8 +81,33 @@ const MARKER_ICON = divIcon({
   iconAnchor: [MARKER_SIZE / 2, MARKER_TIP],
 })
 
-/** Mapa de OpenStreetMap con Leaflet. Es el único archivo que conoce la librería del mapa. */
-export const createLeafletLocationMap: CreateLocationMap = (container, { markerLabel, onMarkerMove }) => {
+/** El logo de Mapbox, abajo a la izquierda, con enlace a su sitio. */
+const mapboxLogo = () => {
+  const logo = new Control({ position: 'bottomleft' })
+  logo.onAdd = () => {
+    const link = document.createElement('a')
+    link.href = 'https://www.mapbox.com/'
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    link.className = 'block'
+    const image = document.createElement('img')
+    image.src = mapboxLogoUrl
+    image.alt = 'Mapbox'
+    image.width = 88
+    image.height = 23
+    link.append(image)
+
+    return link
+  }
+
+  return logo
+}
+
+/** Mapa con Leaflet, con los cuadros de Mapbox o de OpenStreetMap. Es el único archivo que conoce la librería del mapa. */
+export const createLeafletLocationMap: CreateLocationMap = (
+  container,
+  { markerLabel, onMarkerMove, tiles = MAP_TILES },
+) => {
   const canMoveMarker = onMarkerMove !== undefined
 
   const leafletMap = createMap(container, {
@@ -52,7 +120,13 @@ export const createLeafletLocationMap: CreateLocationMap = (container, { markerL
   })
   // Los botones de zoom se añaden aparte para darles nombre en español: Leaflet los trae en inglés.
   control.zoom({ zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(leafletMap)
-  tileLayer(TILES_URL, { attribution: TILES_ATTRIBUTION, maxZoom: MAX_ZOOM }).addTo(leafletMap)
+  tileLayer(tiles.url, {
+    attribution: tiles.attribution,
+    maxZoom: tiles.maxZoom,
+    tileSize: tiles.tileSize,
+    zoomOffset: tiles.zoomOffset,
+  }).addTo(leafletMap)
+  if (tiles.showMapboxLogo) mapboxLogo().addTo(leafletMap)
 
   let pin: Marker | undefined
   let isPannedByKeyboard = false

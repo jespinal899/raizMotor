@@ -11,6 +11,8 @@ export const PROBLEMS = {
     'Falta VITE_SUPABASE_PUBLISHABLE_KEY en las variables de producción de Vercel (Settings > Environment Variables). Es la clave «publishable» o la antigua «anon» del proyecto.',
   privilegedKey:
     'VITE_SUPABASE_PUBLISHABLE_KEY contiene una clave privilegiada («secret» o «service_role»). Todo lo que empieza por VITE_ viaja dentro del sitio: cámbiala por la clave «publishable» y revoca la otra en el panel de Supabase.',
+  secretMapboxToken:
+    'VITE_MAPBOX_TOKEN contiene una clave secreta de Mapbox (empieza por sk.). Todo lo que empieza por VITE_ viaja dentro del sitio: cámbiala por una clave pública (pk.) y revoca la otra en Mapbox.',
 }
 
 /** Las variables de un archivo `.env`: `CLAVE=valor`, con o sin comillas. Las líneas con `#` se ignoran. */
@@ -56,6 +58,9 @@ export const findProblems = (env) => {
 
   if (!key) problems.push(PROBLEMS.missingKey)
   else if (isPrivilegedKey(key)) problems.push(PROBLEMS.privilegedKey)
+
+  // Mapbox es opcional: sin su clave los mapas usan OpenStreetMap. Lo que nunca puede ir es la secreta.
+  if ((env.VITE_MAPBOX_TOKEN?.trim() ?? '').startsWith('sk.')) problems.push(PROBLEMS.secretMapboxToken)
 
   return problems
 }

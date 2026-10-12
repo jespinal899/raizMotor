@@ -107,6 +107,7 @@ describe('PrivacyPage', () => {
       'Supabase',
       'Resend',
       'Cloudflare Turnstile',
+      'Mapbox',
       'OpenStreetMap',
       'Unsplash',
       'Google Maps',
