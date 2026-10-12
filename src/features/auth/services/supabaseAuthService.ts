@@ -1,8 +1,10 @@
 import {
   CaptchaFailedError,
+  CodeRequestTooSoonError,
   EmailNotConfirmedError,
   EmailTakenError,
   GoogleAccessUnavailableError,
+  InvalidCodeError,
   InvalidCredentialsError,
   RecoveryLinkExpiredError,
   SamePasswordError,
@@ -56,6 +58,18 @@ export interface AccountsClient {
     email: string,
     options: { redirectTo: string } & CaptchaOptions,
   ): Promise<{ error: AccountsError | null }>
+  /** Comprueba un código enviado al correo: `email` confirma la cuenta y `recovery` abre la sesión para cambiar la contraseña. */
+  verifyOtp(params: {
+    email: string
+    token: string
+    type: 'email' | 'recovery'
+  }): Promise<{ error: AccountsError | null }>
+  /** Envía otra vez el código para confirmar la cuenta. */
+  resend(params: {
+    type: 'signup'
+    email: string
+    options: { emailRedirectTo: string } & CaptchaOptions
+  }): Promise<{ error: AccountsError | null }>
   updateUser(attributes: { password?: string; data?: Record<string, string> }): Promise<{ error: AccountsError | null }>
   onAuthStateChange(listener: (event: string, session: AccountsSession | null) => void): {
     data: { subscription: { unsubscribe(): void } }
@@ -97,6 +111,18 @@ const PASSWORD_REJECTIONS: Rejections = {
   same_password: () => new SamePasswordError(),
 }
 
+/** Supabase usa el mismo motivo para un código equivocado, ya usado o vencido. */
+const CODE_REJECTIONS: Rejections = {
+  ...CAPTCHA_REJECTIONS,
+  otp_expired: () => new InvalidCodeError(),
+}
+
+const RESEND_REJECTIONS: Rejections = {
+  ...CAPTCHA_REJECTIONS,
+  over_email_send_rate_limit: () => new CodeRequestTooSoonError(),
+  over_request_rate_limit: () => new CodeRequestTooSoonError(),
+}
+
 const toRejection = (error: AccountsError, known: Rejections): Error => {
   const code = error.code ?? ''
 
@@ -113,8 +139,9 @@ const toSessionUser = ({ email, user_metadata: profile }: AccountsUser): Session
 })
 
 /**
- * Cuentas con Supabase: sesiones con correo y contraseña, registro con confirmación por correo y un enlace
- * para elegir otra contraseña.
+ * Cuentas con Supabase: sesiones con correo y contraseña, y un código de 6 dígitos enviado al correo para
+ * confirmar la cuenta al registrarse y para elegir otra contraseña. Supabase genera los códigos, los vence y
+ * limita los intentos.
  */
 export const createSupabaseAuthService = ({
   accounts,
@@ -126,6 +153,13 @@ export const createSupabaseAuthService = ({
   // Repetir un registro o un cambio de contraseña con la misma clave no lo pide otra vez a Supabase.
   const registerOnce = createOperationLog<RegistrationOutcome>()
   const changePasswordOnce = createOperationLog<void>()
+  const resetPasswordOnce = createOperationLog<void>()
+  /**
+   * Correos cuyo código de recuperación ya se comprobó en esta página. El código solo sirve una vez: si después
+   * no se guardó la contraseña (por ejemplo, era la misma de antes), al reintentar con otra se usa la sesión
+   * que el código ya abrió, en lugar de volver a gastarlo.
+   */
+  const recovered = new Set<string>()
 
   /** El token de la verificación, si la hay. Sin él, cuando el sitio la exige, no se pregunta a Supabase. */
   const captchaOptions = async (): Promise<CaptchaOptions> => {
@@ -175,7 +209,36 @@ export const createSupabaseAuthService = ({
     requestPasswordReset: async (email) => {
       const { error } = await accounts.resetPasswordForEmail(email, { redirectTo: returnUrl, ...(await captchaOptions()) })
 
-      if (error) throw toRejection(error, CAPTCHA_REJECTIONS)
+      if (error) throw toRejection(error, RESEND_REJECTIONS)
+    },
+
+    resetPassword: ({ email, code, password }, operationKey) =>
+      resetPasswordOnce(operationKey, async () => {
+        if (!recovered.has(email)) {
+          const { error } = await accounts.verifyOtp({ email, token: code, type: 'recovery' })
+          if (error) throw toRejection(error, CODE_REJECTIONS)
+          recovered.add(email)
+        }
+
+        const { error } = await accounts.updateUser({ password })
+        if (error) throw toRejection(error, PASSWORD_REJECTIONS)
+      }),
+
+    confirmEmail: async (email, code) => {
+      // Comprobar un código no lleva la verificación contra bots: Supabase la pide al enviarlo, no al usarlo.
+      const { error } = await accounts.verifyOtp({ email, token: code, type: 'email' })
+
+      if (error) throw toRejection(error, CODE_REJECTIONS)
+    },
+
+    resendConfirmation: async (email) => {
+      const { error } = await accounts.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: returnUrl, ...(await captchaOptions()) },
+      })
+
+      if (error) throw toRejection(error, RESEND_REJECTIONS)
     },
 
     isRecoveringPassword: () => cameFromRecoveryLink,
