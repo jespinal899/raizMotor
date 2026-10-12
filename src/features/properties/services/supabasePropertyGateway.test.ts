@@ -36,10 +36,45 @@ const fakeClient = (...answers: Answer[]) => {
     return builder
   }
 
-  return { client: { from } as unknown as SupabaseClient, queries }
+  /** Las funciones de la base de datos responden lo mismo que las tablas, en el orden de las respuestas. */
+  const rpc = (name: string, args: unknown) => {
+    queries.push([['rpc', name, args]])
+    const answer = answers[queries.length - 1] ?? {}
+
+    return Promise.resolve({ data: answer.data ?? null, error: answer.error ?? null })
+  }
+
+  return { client: { from, rpc } as unknown as SupabaseClient, queries }
 }
 
 const SEARCH: CatalogSearch = { offset: 0, limit: 6 }
+
+describe('createSupabasePropertyGateway: listFeatured', () => {
+  it('pide los destacados a la función de la base de datos, con la cantidad que caben en la portada', async () => {
+    // Arrange
+    const rows = [{ id: 'destacado' }]
+    const { client, queries } = fakeClient({ data: rows })
+
+    // Act
+    const featured = await createSupabasePropertyGateway(client).listFeatured(6)
+
+    // Assert
+    expect(queries).toEqual([[['rpc', 'featured_properties', { max_count: 6 }]]])
+    expect(featured).toEqual(rows)
+  })
+
+  it('si la base de datos falla, lo entrega tal cual', async () => {
+    // Arrange
+    const failure = { code: 'PGRST202', message: 'no existe la función' }
+    const { client } = fakeClient({ error: failure })
+
+    // Act
+    const featured = createSupabasePropertyGateway(client).listFeatured(6)
+
+    // Assert
+    await expect(featured).rejects.toBe(failure)
+  })
+})
 
 describe('createSupabasePropertyGateway: searchPublished', () => {
   it('sin filtros pide los publicados, del más reciente al más antiguo, solo el tramo pedido y cuántos son', async () => {

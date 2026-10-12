@@ -83,6 +83,11 @@ export interface PropertyGateway {
   currentUserId(): Promise<string | null>
   /** Los anuncios que ve cualquiera, del más reciente al más antiguo. */
   listPublished(): Promise<PropertyRow[]>
+  /**
+   * Los destacados de la portada, como mucho `limit`: los elige la base de datos entre los publicados de
+   * cuentas con un plan de pago, como mucho 2 por cuenta, en un orden que rota cada hora.
+   */
+  listFeatured(limit: number): Promise<PropertyRow[]>
   /** El tramo pedido de los anuncios publicados que cumplen la búsqueda, y cuántos la cumplen en total. */
   searchPublished(search: CatalogSearch): Promise<{ rows: PropertyRow[]; total: number }>
   findById(id: string): Promise<PropertyRow | undefined>
@@ -315,6 +320,8 @@ export const createSupabasePropertyRepository = ({
     },
 
     getAll: async () => (await gateway.listPublished()).map(toStored),
+
+    getFeatured: async (limit) => (await gateway.listFeatured(limit)).map(toStored),
 
     search: async ({ filters, offset, limit }) => {
       const { rows, total } = await gateway.searchPublished(toCatalogSearch(filters, offset, limit))

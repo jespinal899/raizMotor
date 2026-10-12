@@ -84,7 +84,11 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Pruebas de punta a punta
-        run: npx playwright test
+        # La clave secreta del Supabase local la usan solo las pruebas, para hacer lo que haría el equipo
+        # (aprobar un plan de pago). El sitio compilado no la tiene.
+        run: |
+          eval "$(supabase status -o env | grep -E '^SECRET_KEY=')"
+          SUPABASE_SECRET_KEY="$SECRET_KEY" npx playwright test
 
       - name: Guardar el rastro de las pruebas que fallaron
         if: failure()

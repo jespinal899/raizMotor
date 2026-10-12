@@ -6,6 +6,7 @@ import type {
 } from '@/features/properties/services/publishedPropertyRepository'
 import type { Property, PropertyFilters } from '@/features/properties/types/property.types'
 import { getDepartmentName } from '@/features/properties/utils/departments'
+import { FEATURED_COUNT } from '@/features/properties/utils/featuredListings'
 import { matchesFilters } from '@/features/properties/utils/matchesFilters'
 import { sortProperties } from '@/features/properties/utils/sortProperties'
 import type { PageRequest, Paginated } from '@/shared/types/common.types'
@@ -14,6 +15,8 @@ import { toPositiveInteger } from '@/shared/utils/pagination'
 interface CatalogOptions {
   /** Los anuncios del repositorio los ve cualquiera, no solo quien los guardó en este navegador. */
   shared?: boolean
+  /** Sale entre los destacados de la portada. */
+  featured?: boolean
 }
 
 /**
@@ -23,7 +26,7 @@ interface CatalogOptions {
  */
 export const toPublishedProperty = (
   { id, publication, advertiser, withdrawn }: StoredPropertyPublication,
-  { shared = false }: CatalogOptions = {},
+  { shared = false, featured = false }: CatalogOptions = {},
 ): Property => {
   const { location, type, operation, builtArea, landArea, bedrooms, bathrooms, parking, title, description, price } =
     publication
@@ -55,7 +58,7 @@ export const toPublishedProperty = (
       coordinates: location.coordinates,
     },
     advertiser,
-    featured: false,
+    featured,
     localOnly: !shared,
     withdrawn,
   }
@@ -136,8 +139,14 @@ export const createPublishedPropertyService = (
   }
 
   return {
-    // Un anuncio publicado nunca es destacado, así que la portada no necesita leer el almacén.
-    getFeatured: () => samples.getFeatured(),
+    // Con anuncios en el servidor, la portada destaca solo los de quienes pagan un plan, y nunca las muestras:
+    // son inventadas. Sin servidor no hay planes, y se destacan las muestras para enseñar el sitio.
+    getFeatured: async () => {
+      if (!repository.getFeatured) return samples.getFeatured()
+      const records = await readOr(() => repository.getFeatured!(FEATURED_COUNT), [])
+
+      return records.map((record) => toPublishedProperty(record, { ...options, featured: true }))
+    },
     search: async (filters, pageRequest) =>
       repository.search
         ? searchStored(repository.search, filters, pageRequest)

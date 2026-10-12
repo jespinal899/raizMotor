@@ -60,6 +60,7 @@ const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
   const gateway = {
     currentUserId: vi.fn<PropertyGateway['currentUserId']>(async () => userId),
     listPublished: vi.fn<PropertyGateway['listPublished']>(async () => stored),
+    listFeatured: vi.fn<PropertyGateway['listFeatured']>(async (limit) => stored.slice(0, limit)),
     searchPublished: vi.fn<PropertyGateway['searchPublished']>(async ({ offset, limit }) => ({
       rows: stored.slice(offset, offset + limit),
       total: stored.length,
@@ -213,6 +214,19 @@ describe('createSupabasePropertyRepository: publicar', () => {
 })
 
 describe('createSupabasePropertyRepository: leer', () => {
+  it('pide los destacados a la base de datos, que elige los de pago, y los entrega como los demás anuncios', async () => {
+    // Arrange
+    const { repository, gateway } = setup({ rows: [row()] })
+
+    // Act
+    const [featured] = await repository.getFeatured!(6)
+
+    // Assert
+    expect(gateway.listFeatured).toHaveBeenCalledExactlyOnceWith(6)
+    expect(featured).toMatchObject({ id: SAVED_ID, advertiser: { name: 'Ana Mejía' } })
+    expect(featured.publication.images).toEqual(expect.arrayContaining([expect.stringMatching(/^https:\/\/fotos\.example\//)]))
+  })
+
   it('entrega los anuncios publicados con sus fotos como direcciones y con quién los publica', async () => {
     // Arrange
     const { repository } = setup({ rows: [row()] })

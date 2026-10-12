@@ -14,7 +14,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 
 | Función | Estado |
 | --- | --- |
-| Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona. Hoy solo las propiedades de ejemplo son destacadas: sin ellas, la sección no se muestra |
+| Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona. Las destacadas son anuncios publicados de cuentas con un plan de pago (más de 1 anuncio a la vez): como mucho 2 por cuenta, en un orden que rota cada hora, con la marca «Destacada». Las propiedades de ejemplo nunca se destacan con Supabase; sin destacadas, la sección no se muestra |
 | Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y, si se muestran, los de ejemplo, que van detrás de los reales. Con Supabase, la base de datos filtra, ordena y pagina: solo viaja la página pedida. Si Supabase no responde, lo dice en lugar de mostrar un catálogo vacío |
 | Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
 | Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
@@ -336,7 +336,7 @@ Para comprobarlo después de publicar: pegar el enlace de una ficha en WhatsApp 
 - Definir el plan para inmobiliarias.
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
 - Anuncios: decidir si la ficha muestra la dirección exacta o solo la zona.
-- Destacar anuncios reales: hoy solo las propiedades de ejemplo son destacadas.
+- Que quien paga elija qué anuncios destacar, con un tope por plan: hoy se destacan todos, por turnos.
 - Activar el plan de una cuenta al confirmarse su pago: hoy el equipo le sube el límite de anuncios desde el panel de administración.
 - Pagos en línea: cobrar con tarjeta dentro del sitio, activar el plan al confirmarse el pago, renovarlo cada mes y emitir la factura. Hoy la solicitud sale por WhatsApp y el plan se activa a mano.
 - Cupones de descuento: definir los códigos y validarlos en un servidor, para que rebajen el total.

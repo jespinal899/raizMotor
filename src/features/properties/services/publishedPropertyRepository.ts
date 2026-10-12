@@ -51,6 +51,11 @@ export interface PublishedPropertyRepository {
    * entrega el catálogo entero con `getAll` y se filtra en el navegador.
    */
   search?(query: CatalogQuery): Promise<CatalogSlice>
+  /**
+   * Los destacados de la portada, como mucho `limit`: los publicados de cuentas con un plan de pago, que elige
+   * el servidor. Quien no lo tiene no destaca ningún anuncio.
+   */
+  getFeatured?(limit: number): Promise<StoredPropertyPublication[]>
   /** Los de quien usa el sitio, también los que no están en el catálogo, del más reciente al más antiguo. */
   getOwn(): Promise<StoredPropertyPublication[]>
   /** Cuántos anuncios puede tener publicados a la vez quien usa el sitio. */
