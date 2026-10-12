@@ -85,3 +85,10 @@ export const createCaptchaSession = (): CaptchaSession => {
 
 /** La sesión de verificación del sitio: hay un solo formulario de acceso a la vista. */
 export const captchaSession = createCaptchaSession()
+
+/**
+ * El token para enviar con un formulario. Sin clave del sitio no hay verificación ni widget que lo entregue:
+ * responde `null` en el acto, en lugar de esperar un token que nunca llegará.
+ */
+export const takeCaptchaToken = (siteKey: string | null = CAPTCHA_SITE_KEY, session: CaptchaSession = captchaSession) =>
+  siteKey ? session.takeToken() : Promise.resolve(null)

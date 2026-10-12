@@ -34,5 +34,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: false,
     restoreMocks: true,
+    // Las de punta a punta las ejecuta Playwright, contra el sitio compilado (ver playwright.config.ts).
+    exclude: ['**/node_modules/**', 'e2e/**'],
   },
 })
