@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import FormSection from '@/components/FormSection'
 import DetailRows from '@/features/shop/components/DetailRows'
-import type { AgentPlan } from '@/features/shop/types/plan.types'
+import type { PaidPlan } from '@/features/shop/types/plan.types'
 import { formatPriceBeforeTax, toPlanTotal } from '@/features/shop/utils/planTotal'
 import { ISV_RATE } from '@/shared/constants/tax'
 import { formatLempirasExact } from '@/shared/utils/format'
@@ -9,7 +9,7 @@ import { formatLempirasExact } from '@/shared/utils/format'
 const TAX_LABEL = `ISV (${Math.round(ISV_RATE * 100)} %)`
 
 interface PlanCostSummaryProps {
-  plan: AgentPlan
+  plan: PaidPlan
   /** Lo que el paso necesite debajo del total, como las casillas del resumen. */
   children?: ReactNode
 }

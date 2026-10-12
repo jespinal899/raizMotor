@@ -24,6 +24,9 @@ export interface ProjectRow {
   /** Rutas dentro del depósito `project-photos`, o direcciones https completas; la primera es la portada. */
   photos: string[]
   video_url: string | null
+  /** Solo los que publica una inmobiliaria desde el sitio; los que carga el equipo no la tienen. */
+  operation_key?: string | null
+  status?: 'published' | 'draft' | 'hidden'
 }
 
 /** Un modelo de unidad tal como está en la tabla `project_models`. */

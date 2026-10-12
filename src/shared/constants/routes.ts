@@ -20,12 +20,17 @@ export const ROUTES = {
   publish: '/publicar',
   myProperties: '/mis-publicaciones',
   editProperty: '/mis-publicaciones/:id/editar',
+  myProjects: '/mis-publicaciones/proyectos',
+  newProject: '/mis-publicaciones/proyectos/nuevo',
+  editProject: '/mis-publicaciones/proyectos/:id/editar',
   account: '/mi-cuenta',
   /** El panel del equipo del sitio. */
   admin: '/admin',
   pricing: '/planes',
   agentPlans: '/planes/agente-inmobiliario',
   agentPlanCheckout: '/planes/agente-inmobiliario/contratar/:plan',
+  agencyPlans: '/planes/inmobiliarias',
+  agencyPlanCheckout: '/planes/inmobiliarias/contratar/:plan',
   terms: '/terminos',
   privacy: '/privacidad',
   about: `/#${SECTION_IDS.about}`,
@@ -56,12 +61,18 @@ export const projectDetailPath = (id: string) => `${ROUTES.projects}/${encodeURI
 /** Abre el formulario para corregir un anuncio propio. */
 export const editPropertyPath = (id: string) => `${ROUTES.myProperties}/${encodeURIComponent(id)}/editar`
 
+/** Abre el formulario para corregir un proyecto propio. */
+export const editProjectPath = (id: string) => `${ROUTES.myProjects}/${encodeURIComponent(id)}/editar`
+
 /** Abre el contacto indicando por qué propiedad se consulta. */
 export const propertyContactPath = (id: string) =>
   `${ROUTES.contact}?${CONTACT_PARAMS.property}=${encodeURIComponent(id)}`
 
 /** Abre la página para contratar un plan de agente. */
 export const agentPlanCheckoutPath = (id: string) => `${ROUTES.agentPlans}/contratar/${encodeURIComponent(id)}`
+
+/** Abre la página para contratar un plan de inmobiliaria. */
+export const agencyPlanCheckoutPath = (id: string) => `${ROUTES.agencyPlans}/contratar/${encodeURIComponent(id)}`
 
 /** Abre el contacto indicando qué plan interesa. */
 export const planContactPath = (id: string) => `${ROUTES.contact}?${CONTACT_PARAMS.plan}=${encodeURIComponent(id)}`

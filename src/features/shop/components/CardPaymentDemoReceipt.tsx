@@ -1,11 +1,12 @@
 import { CircleCheck } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
 import DetailRows from '@/features/shop/components/DetailRows'
-import type { AgentPlan } from '@/features/shop/types/plan.types'
+import type { PaidPlan } from '@/features/shop/types/plan.types'
+import { AGENCY_PLANS } from '@/features/shop/data/plans.data'
 import { ROUTES } from '@/shared/constants/routes'
 
 interface CardPaymentDemoReceiptProps {
-  plan: AgentPlan
+  plan: PaidPlan
   /** El importe, ya escrito: "L 688.85". */
   total: string
   /** Los cuatro últimos dígitos de la tarjeta de muestra. */
@@ -36,9 +37,15 @@ const CardPaymentDemoReceipt = ({ plan, total, lastDigits }: CardPaymentDemoRece
         ]}
       />
 
-      <ButtonLink to={ROUTES.agentPlans} variant="outline">
-        Ver los planes para agentes
-      </ButtonLink>
+      {AGENCY_PLANS.some(({ id }) => id === plan.id) ? (
+        <ButtonLink to={ROUTES.agencyPlans} variant="outline">
+          Ver los planes para inmobiliarias
+        </ButtonLink>
+      ) : (
+        <ButtonLink to={ROUTES.agentPlans} variant="outline">
+          Ver los planes para agentes
+        </ButtonLink>
+      )}
     </div>
   )
 }

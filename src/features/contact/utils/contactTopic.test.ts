@@ -37,7 +37,7 @@ describe('buildPlanTopic', () => {
       id: 'plan:inmobiliaria',
       label: 'Consulta sobre el plan',
       title: 'Inmobiliarias',
-      detail: 'Para empresas con un equipo que gestiona varias propiedades.',
+      detail: 'Para desarrolladoras y empresas con varias propiedades. Publica tus proyectos en preventa o en construcción, con sus modelos y renders, junto a tu cartera de propiedades.',
       defaultDescription: 'Me interesa el plan Inmobiliarias. ¿Me pueden dar más información?',
     })
     expect(topic.reference).toBeUndefined()

@@ -76,3 +76,8 @@ export const createProject = async (owner: string, name: string): Promise<string
 export const deleteProject = async (id: string) => {
   await request(`projects?id=eq.${id}`, { method: 'DELETE' })
 }
+
+/** Cuántos proyectos puede tener publicados la cuenta: más de 0 es un plan de inmobiliaria. */
+export const setProjectLimit = async (account: string, limit: number) => {
+  await request(`profiles?id=eq.${account}`, { method: 'PATCH', body: JSON.stringify({ max_projects: limit }) })
+}

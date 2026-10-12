@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { createProject, deleteProject, ownerOf, setPublicationLimit } from './database.ts'
+import { createProject, deleteProject, ownerOf, setProjectLimit, setPublicationLimit } from './database.ts'
 import { latestCode } from './mailpit.ts'
 
 /**
@@ -171,6 +171,73 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
     } finally {
       await deleteProject(project)
       await setPublicationLimit(owner, 1)
+    }
+  })
+
+  test('una inmobiliaria con su plan publica un proyecto con su modelo y su foto, y sale en el catálogo', async ({ page }) => {
+    await isolateFromExternalServices(page)
+    const owner = await ownerOf(TITLE)
+    const name = `Residencial de ${RUN}`
+
+    // El equipo le activa un plan de inmobiliaria con un proyecto.
+    await setProjectLimit(owner, 1)
+    let created: string | undefined
+    try {
+      await page.goto('/iniciar-sesion')
+      await page.getByRole('textbox', { name: 'Correo' }).fill(ACCOUNT.email)
+      await page.getByLabel(/^Contraseña/).fill(ACCOUNT.password)
+      await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click()
+      await expect(page).not.toHaveURL(/\/iniciar-sesion/)
+
+      await page.goto('/mis-publicaciones/proyectos')
+      await expect(page.getByText('0 de 1')).toBeVisible()
+      await page.getByRole('link', { name: 'Publicar un proyecto' }).click()
+
+      // Ubicación, confirmada en el mapa.
+      await choose(page, 'Departamento', 'Cortés')
+      await choose(page, 'Ciudad', 'San Pedro Sula')
+      await page.getByRole('textbox', { name: 'Colonia, barrio o aldea' }).fill('Colonia Trejo')
+      await page.getByRole('textbox', { name: 'Dirección' }).fill('Bulevar del norte, frente al parque')
+      await page.getByRole('button', { name: 'Buscar dirección' }).click()
+      await page.getByRole('dialog', { name: '¿La dirección es correcta?' }).waitFor()
+      await page.getByRole('button', { name: 'Confirmar ubicación' }).click()
+
+      // El proyecto.
+      await page.getByRole('textbox', { name: 'Nombre del proyecto' }).fill(name)
+      await page.getByRole('textbox', { name: /^Desarrolladora/ }).fill('Constructora de prueba')
+      await choose(page, 'Tipo de proyecto', 'Residencial')
+      await choose(page, 'Etapa', 'En construcción')
+      await page.getByRole('spinbutton', { name: /^Precio desde/ }).fill('82000')
+      await page
+        .getByRole('textbox', { name: 'Descripción' })
+        .fill('Residencial cerrada de casas de una planta, con parque, áreas verdes y caseta de vigilancia.')
+      await page.getByRole('button', { name: 'Siguiente' }).click()
+
+      // Un modelo.
+      await page.getByRole('textbox', { name: 'Nombre del modelo 1' }).fill('Casa Roble')
+      await page.getByRole('spinbutton', { name: 'Habitaciones' }).fill('3')
+      await page.getByRole('spinbutton', { name: 'Área (m²)' }).fill('96')
+      await page.getByRole('spinbutton', { name: 'Desde (USD)' }).fill('82000')
+      await page.getByRole('button', { name: 'Siguiente' }).click()
+
+      // Amenidades, foto y publicar.
+      await page.getByRole('textbox', { name: /^Amenidades/ }).fill('Parque\nSeguridad 24 horas')
+      await page.getByLabel('Agregar fotos').setInputFiles(PHOTO)
+      await page.getByRole('button', { name: 'Publicar proyecto' }).click()
+
+      // Al publicar se abre su ficha, con el modelo.
+      await expect(page).toHaveURL(/\/proyectos\/[0-9a-f-]{36}$/)
+      created = page.url().split('/').pop()
+      await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+      await expect(page.getByRole('table')).toContainText('Casa Roble')
+      await expect(page.getByText('Seguridad 24 horas')).toBeVisible()
+
+      // Y la encuentra cualquiera en el catálogo de proyectos.
+      await page.goto('/proyectos?etapa=construccion')
+      await expect(page.getByRole('link', { name })).toBeVisible()
+    } finally {
+      if (created) await deleteProject(created)
+      await setProjectLimit(owner, 0)
     }
   })
 

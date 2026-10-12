@@ -1,5 +1,5 @@
 import type { PlanRequest } from '@/features/shop/types/checkout.types'
-import type { AgentPlan } from '@/features/shop/types/plan.types'
+import type { PaidPlan } from '@/features/shop/types/plan.types'
 import { planRequestChatUrl } from '@/features/shop/utils/planRequest'
 
 export interface PlanRequestService {
@@ -7,7 +7,7 @@ export interface PlanRequestService {
    * Abre el chat con la solicitud ya escrita y devuelve su dirección, por si no llega a abrirse. No envía
    * nada: el mensaje sale cuando la persona lo envía, y eso no se puede saber desde aquí.
    */
-  open(plan: AgentPlan, request: PlanRequest): string
+  open(plan: PaidPlan, request: PlanRequest): string
 }
 
 export const createWhatsAppPlanRequestService = (openUrl: (url: string) => void): PlanRequestService => ({

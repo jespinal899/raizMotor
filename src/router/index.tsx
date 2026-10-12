@@ -76,6 +76,27 @@ export const routes: RouteObject[] = [
         }),
       },
       {
+        path: ROUTES.myProjects,
+        ...page(() => import('@/features/projects/pages/MyProjectsPage'), {
+          title: 'Inicia sesión para ver tus proyectos',
+          description: 'Tus proyectos están guardados en tu cuenta.',
+        }),
+      },
+      {
+        path: ROUTES.newProject,
+        ...page(() => import('@/features/projects/pages/ProjectEditorPage'), {
+          title: 'Inicia sesión para publicar un proyecto',
+          description: 'Tu proyecto queda a nombre de tu cuenta de inmobiliaria.',
+        }),
+      },
+      {
+        path: ROUTES.editProject,
+        ...page(() => import('@/features/projects/pages/ProjectEditorPage'), {
+          title: 'Inicia sesión para editar tu proyecto',
+          description: 'Solo la inmobiliaria que publicó un proyecto puede corregirlo.',
+        }),
+      },
+      {
         path: ROUTES.editProperty,
         element: (
           <ProtectedRoute
@@ -103,6 +124,8 @@ export const routes: RouteObject[] = [
       { path: ROUTES.pricing, ...page(() => import('@/features/shop/pages/PricingPage')) },
       { path: ROUTES.agentPlans, ...page(() => import('@/features/shop/pages/AgentPlansPage')) },
       { path: ROUTES.agentPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
+      { path: ROUTES.agencyPlans, ...page(() => import('@/features/shop/pages/AgencyPlansPage')) },
+      { path: ROUTES.agencyPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
       { path: ROUTES.terms, ...page(() => import('@/features/legal/pages/TermsPage')) },
       { path: ROUTES.privacy, ...page(() => import('@/features/legal/pages/PrivacyPage')) },
       { path: '*', element: <NotFoundPage /> },

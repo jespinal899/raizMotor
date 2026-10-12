@@ -54,6 +54,8 @@ export interface Project {
   featured: boolean
   /** De muestra: no corresponde a ningún proyecto real. */
   example?: boolean
+  /** Solo en «Mis publicaciones»: si está publicado, en borrador o lo ocultó el equipo. */
+  status?: 'published' | 'draft' | 'hidden'
 }
 
 /** Lo que se pide en el catálogo de proyectos. */

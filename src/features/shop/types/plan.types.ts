@@ -24,16 +24,22 @@ export interface Plan extends ListedPlan {
 
 export type AgentPlanId = 'agente-plan-1' | 'agente-plan-2'
 
+export type AgencyPlanId = 'inmobiliaria-inicial' | 'inmobiliaria-plus' | 'inmobiliaria-corporativa'
+
+export type PaidPlanId = AgentPlanId | AgencyPlanId
+
 export interface AgentPlanFeature {
   text: string
   emphasized?: string
 }
 
-/** Un plan de pago para agentes inmobiliarios. */
-export interface AgentPlan extends ListedPlan {
-  id: AgentPlanId
+/** Un plan de pago: para agentes inmobiliarios o para inmobiliarias. */
+export interface PaidPlan extends ListedPlan {
+  id: PaidPlanId
   /** Propiedades que la cuenta puede tener publicadas a la vez. */
   maxPublications: number
+  /** Proyectos que la cuenta puede tener publicados a la vez: solo los planes de inmobiliaria admiten alguno. */
+  maxProjects: number
   features: AgentPlanFeature[]
   /** En lempiras, sin el impuesto sobre ventas. */
   monthlyPrice: number

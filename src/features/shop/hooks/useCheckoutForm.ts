@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { planRequestService } from '@/features/shop/services/planRequestService'
 import type { PlanRequestService } from '@/features/shop/services/planRequestService'
 import type { CheckoutFormValues } from '@/features/shop/types/checkout.types'
-import type { AgentPlan } from '@/features/shop/types/plan.types'
+import type { PaidPlan } from '@/features/shop/types/plan.types'
 import { validateCheckout } from '@/features/shop/utils/checkoutValidation'
 import { toPlanRequest } from '@/features/shop/utils/planRequest'
 import { useFormFields } from '@/hooks/useFormFields'
@@ -23,7 +23,7 @@ type CheckoutForm = ReturnType<typeof useCheckoutForm>
 export type CheckoutFieldsProps = Pick<CheckoutForm, 'values' | 'errors' | 'change'>
 
 /** El formulario con el que se pide un plan: valida los datos y abre el chat con la solicitud escrita. */
-export const useCheckoutForm = (plan: AgentPlan, service: PlanRequestService = planRequestService) => {
+export const useCheckoutForm = (plan: PaidPlan, service: PlanRequestService = planRequestService) => {
   const {
     values,
     errors,

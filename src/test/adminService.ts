@@ -45,8 +45,10 @@ export const buildAccount = (overrides: Partial<AdminAccount> = {}): AdminAccoun
   lastName: 'Mejía',
   phone: '+50499999999',
   maxPublications: 1,
+  maxProjects: 0,
   role: 'user',
   publishedCount: 1,
+  projectCount: 0,
   createdAt: '2026-10-01T09:00:00.000Z',
   ...overrides,
 })
@@ -59,6 +61,6 @@ export const buildAdminService = (overrides: Partial<AdminService> = {}): AdminS
   listListings: vi.fn(async () => pageOf<AdminListing>([])),
   setListingStatus: vi.fn(async () => {}),
   listAccounts: vi.fn(async () => pageOf<AdminAccount>([])),
-  setPublicationLimit: vi.fn(async () => {}),
+  setAccountLimits: vi.fn(async () => {}),
   ...overrides,
 })

@@ -1,5 +1,6 @@
 import { CircleAlert } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
+import MyPublicationsNav from '@/components/MyPublicationsNav'
 import PageHeader from '@/components/PageHeader'
 import PageLoading from '@/components/PageLoading'
 import PageMessage from '@/components/PageMessage'
@@ -52,6 +53,8 @@ const MyPropertiesPage = () => {
         title="Mis publicaciones"
         description="Las que están en el catálogo y las que retiraste de él. Puedes corregirlas, despublicarlas o eliminarlas."
       />
+
+      <MyPublicationsNav />
 
       {/* Solo las publicadas ocupan el plan: despublicar una deja libre su lugar. */}
       <PlanUsageBanner published={published.length} limit={limit} />
