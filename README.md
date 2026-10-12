@@ -193,15 +193,36 @@ Nunca va aquí una clave secreta (`sk.`): todo lo que empieza por `VITE_` viaja 
 
 #### Pruebas
 
-Las pruebas nunca hablan con el proyecto real, aunque exista `.env.local`: la configuración de Vitest (`vite.config.ts`) deja vacías las dos variables, y lo que necesita cuentas usa un servicio simulado.
+Hay tres tipos de pruebas, y ninguna habla con el proyecto real:
+
+- **Unitarias** (`npm test`, Vitest): el código del sitio y la lógica de las funciones. No necesitan nada más, aunque exista `.env.local`: la configuración de Vitest (`vite.config.ts`) deja vacías las dos variables, y lo que necesita cuentas usa un servicio simulado.
+- **De la base de datos** (`supabase/tests/database`, pgTAP): aplican todas las migraciones a un Supabase local y comprueban sus permisos: que nadie vea, corrija ni borre anuncios ajenos, que nadie se dé el papel del equipo, que solo el equipo modere, el límite de reportes sin sesión, qué fotos cuenta como huérfanas la limpieza y que lo privado no salga por la API pública.
+- **De punta a punta** (`e2e/`, Playwright): recorren el sitio compilado en un navegador de verdad contra ese Supabase local: registrarse, publicar un anuncio con su foto, encontrarlo como visitante, y que otra cuenta no pueda editarlo. El buscador de direcciones y los cuadros del mapa se simulan.
+
+El CI ejecuta las tres en cada pull request; las dos últimas, en el trabajo «Base de datos y punta a punta», y no publica si falla alguna. Para ejecutarlas en tu equipo hace falta Docker (Docker Desktop en Windows) y la herramienta de Supabase:
+
+```bash
+supabase start            # levanta Supabase en tu equipo con todas las migraciones
+npm run test:db           # pruebas de la base de datos
+supabase status -o env    # muestra API_URL y PUBLISHABLE_KEY del Supabase local
+# compila el sitio contra el Supabase local, con esos dos valores
+VITE_SUPABASE_URL=http://127.0.0.1:54321 VITE_SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY> npx vite build
+npx playwright install chromium   # la primera vez
+npm run test:e2e          # pruebas de punta a punta
+supabase stop             # apaga el Supabase local
+```
+
+En PowerShell, la compilación se escribe así: `$env:VITE_SUPABASE_URL="http://127.0.0.1:54321"; $env:VITE_SUPABASE_PUBLISHABLE_KEY="<PUBLISHABLE_KEY>"; npx vite build`. No uses `npm run build` para esto, ni `.env.local` con el proyecto real: las pruebas crean cuentas y anuncios.
 
 ## Comandos
 
 | Comando | Qué hace |
 | --- | --- |
 | `npm run dev` | Arranca el servidor de desarrollo. |
-| `npm test` | Ejecuta todas las pruebas una vez. |
+| `npm test` | Ejecuta las pruebas unitarias una vez. |
 | `npm run test:watch` | Ejecuta las pruebas y las repite al guardar. |
+| `npm run test:db` | Ejecuta las pruebas de la base de datos contra el Supabase local (ver [Pruebas](#pruebas)). |
+| `npm run test:e2e` | Ejecuta las pruebas de punta a punta contra el sitio compilado (ver [Pruebas](#pruebas)). |
 | `npm run lint` | Revisa el código con Oxlint. |
 | `npm run build` | Comprueba los tipos y compila el sitio en `dist/`. |
 | `npm run preview` | Sirve el sitio compilado para revisarlo. |

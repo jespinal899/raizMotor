@@ -43,11 +43,61 @@ jobs:
       - name: Compilar
         run: npm run build
 
+  # Contra un Supabase local con todas las migraciones: comprueba que se aplican sin errores, los permisos de la
+  # base de datos (supabase/tests) y el recorrido del sitio en un navegador de verdad (e2e/).
+  integration:
+    name: Base de datos y punta a punta
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar la herramienta de Supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
+      - name: Levantar Supabase con las migraciones
+        # Solo lo que usan las pruebas: base de datos, cuentas, API y fotos.
+        run: supabase start -x studio,imgproxy,vector,logflare,edge-runtime,supavisor,mailpit,realtime,postgres-meta
+
+      - name: Pruebas de la base de datos
+        run: supabase test db
+
+      - name: Compilar el sitio contra el Supabase local
+        run: |
+          eval "$(supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY)=')"
+          VITE_SUPABASE_URL="$API_URL" VITE_SUPABASE_PUBLISHABLE_KEY="$PUBLISHABLE_KEY" npx vite build
+
+      - name: Instalar el navegador de las pruebas
+        run: npx playwright install --with-deps chromium
+
+      - name: Pruebas de punta a punta
+        run: npx playwright test
+
+      - name: Guardar el rastro de las pruebas que fallaron
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+
   # Solo publica lo que pasó el linter y las pruebas. Vercel ya no despliega por su cuenta: `vercel.json`
   # desactiva su despliegue automático, para que este sea el único camino al sitio publicado.
   deploy:
     name: Publicar en Vercel
-    needs: verify
+    needs: [verify, integration]
     if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     timeout-minutes: 10
