@@ -35,3 +35,44 @@ export const ownerOf = async (title: string): Promise<string> => {
 export const setPublicationLimit = async (account: string, limit: number) => {
   await request(`profiles?id=eq.${account}`, { method: 'PATCH', body: JSON.stringify({ max_publications: limit }) })
 }
+
+/** Un proyecto cargado por el equipo para la cuenta `owner`, ya publicado, con un modelo. Devuelve su identificador. */
+export const createProject = async (owner: string, name: string): Promise<string> => {
+  const response = await request('projects?select=id', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({
+      owner_id: owner,
+      status: 'published',
+      name,
+      developer_name: 'Constructora de prueba',
+      developer_phone: '+50499998888',
+      description: 'Torre de apartamentos de prueba con piscina, gimnasio y seguridad las 24 horas.',
+      kind: 'torre',
+      stage: 'preventa',
+      delivery_date: '2027-12-01',
+      price_from: 95000,
+      units_total: 40,
+      department: 'cortes',
+      city: 'San Pedro Sula',
+      neighborhood: 'Colonia Trejo',
+      address: '10 calle, frente al parque',
+      latitude: 15.5042,
+      longitude: -88.025,
+      amenities: ['Piscina', 'Gimnasio'],
+      photos: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80'],
+    }),
+  })
+  const [{ id }] = (await response.json()) as { id: string }[]
+  await request('project_models', {
+    method: 'POST',
+    body: JSON.stringify({ project_id: id, name: 'Modelo Prueba', bedrooms: 2, bathrooms: 2, area: 85, price_from: 95000 }),
+  })
+
+  return id
+}
+
+/** Borra un proyecto, con sus modelos. */
+export const deleteProject = async (id: string) => {
+  await request(`projects?id=eq.${id}`, { method: 'DELETE' })
+}

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { ownerOf, setPublicationLimit } from './database.ts'
+import { createProject, deleteProject, ownerOf, setPublicationLimit } from './database.ts'
 import { latestCode } from './mailpit.ts'
 
 /**
@@ -144,6 +144,32 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
       await expect(card.getByText('Destacada')).toBeVisible()
     } finally {
       // Vuelve al plan gratis: en tu equipo, las cuentas de otras ejecuciones no deben ocupar la portada.
+      await setPublicationLimit(owner, 1)
+    }
+  })
+
+  test('un proyecto de una inmobiliaria de pago sale en el catálogo de proyectos, con su ficha, y destacado en la portada', async ({
+    page,
+  }) => {
+    await isolateFromExternalServices(page)
+    const owner = await ownerOf(TITLE)
+    const name = `Torre de prueba ${RUN}`
+
+    // El equipo carga el proyecto de una cuenta con plan de pago.
+    await setPublicationLimit(owner, 25)
+    const project = await createProject(owner, name)
+    try {
+      await page.goto('/proyectos')
+      await page.getByRole('link', { name }).click()
+      await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+      await expect(page.getByRole('table')).toContainText('Modelo Prueba')
+      await expect(page.getByText('Preventa').first()).toBeVisible()
+
+      await page.goto('/')
+      const featured = page.getByRole('region', { name: 'Proyectos en preventa' })
+      await expect(featured.getByRole('link', { name })).toBeVisible()
+    } finally {
+      await deleteProject(project)
       await setPublicationLimit(owner, 1)
     }
   })

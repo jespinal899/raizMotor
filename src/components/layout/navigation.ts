@@ -21,6 +21,7 @@ export interface FooterSection {
 export const NAV = {
   home: { label: 'Inicio', to: ROUTES.home },
   properties: { label: 'Propiedades', to: ROUTES.properties },
+  projects: { label: 'Proyectos', to: ROUTES.projects },
   contact: { label: 'Contáctenos', to: ROUTES.contact },
   login: { label: 'Iniciar sesión', to: ROUTES.login },
   // Publicar empieza por elegir plan: el formulario se abre desde el plan Propietario.
@@ -53,6 +54,7 @@ export const FOOTER_SECTIONS: FooterSection[] = [
     links: [
       { label: 'Todas las propiedades', to: ROUTES.properties },
       ...PROPERTY_CATEGORIES.map(({ label, to }) => ({ label, to })),
+      { label: 'Proyectos en preventa', to: ROUTES.projects },
     ],
   },
   { title: 'Plataforma', links: [NAV.about, NAV.howItWorks, NAV.pricing] },

@@ -22,7 +22,7 @@ describe('Footer', () => {
     expect(within(footer).getByText(BRAND.tagline)).toBeInTheDocument()
   })
 
-  it('enlaza a todas las propiedades y a cada tipo', () => {
+  it('enlaza a todas las propiedades, a cada tipo y a los proyectos', () => {
     // Arrange: footer sin estado previo
 
     // Act
@@ -34,6 +34,7 @@ describe('Footer', () => {
       'Terrenos → /propiedades/terrenos',
       'Casas → /propiedades/casas',
       'Apartamentos → /propiedades/apartamentos',
+      'Proyectos en preventa → /proyectos',
     ])
   })
 

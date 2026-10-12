@@ -17,9 +17,9 @@ describe('DesktopNav', () => {
     expect(within(menu()).getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute('href', sectionLink)
   })
 
-  it('ofrece "Quiénes somos" entre las propiedades y el contacto', () => {
+  it('ofrece los proyectos junto a las propiedades, y "Quiénes somos" antes del contacto', () => {
     // Arrange
-    const expectedOrder = ['Inicio', 'Quiénes somos', 'Contáctenos']
+    const expectedOrder = ['Inicio', 'Proyectos', 'Quiénes somos', 'Contáctenos']
 
     // Act
     renderWithRouter(<DesktopNav />)

@@ -52,6 +52,8 @@ export const routes: RouteObject[] = [
       { path: ROUTES.properties, ...page(searchPage) },
       { path: ROUTES.propertiesByType, ...page(searchPage) },
       { path: ROUTES.propertyDetail, ...page(() => import('@/features/properties/pages/PropertyDetailPage')) },
+      { path: ROUTES.projects, ...page(() => import('@/features/projects/pages/ProjectsPage')) },
+      { path: ROUTES.projectDetail, ...page(() => import('@/features/projects/pages/ProjectDetailPage')) },
       { path: ROUTES.contact, ...page(() => import('@/features/contact/pages/ContactPage')) },
       { path: ROUTES.forgotPassword, ...page(() => import('@/features/auth/pages/ForgotPasswordPage')) },
       { path: ROUTES.resetPassword, ...page(() => import('@/features/auth/pages/ResetPasswordPage')) },

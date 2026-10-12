@@ -16,6 +16,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | --- | --- |
 | Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona. Las destacadas son anuncios publicados de cuentas con un plan de pago (más de 1 anuncio a la vez): como mucho 2 por cuenta, en un orden que rota cada hora, con la marca «Destacada». Las propiedades de ejemplo nunca se destacan con Supabase; sin destacadas, la sección no se muestra |
 | Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y, si se muestran, los de ejemplo, que van detrás de los reales. Con Supabase, la base de datos filtra, ordena y pagina: solo viaja la página pedida. Si Supabase no responde, lo dice en lugar de mostrar un catálogo vacío |
+| Proyectos en preventa, en construcción o de entrega inmediata (`/proyectos`) | Catálogo con filtros por zona, tipo, etapa y precio, ficha con modelos, amenidades, mapa y contacto con la desarrolladora por WhatsApp, y sección «Proyectos en preventa» en la portada, con la misma regla de destacados que las propiedades. Por ahora los carga el equipo (ver [Proyectos](#proyectos)); los de ejemplo salen donde salen las propiedades de ejemplo |
 | Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
 | Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Contactar a quien publica | La ficha de un anuncio publicado dice quién lo publica y abre WhatsApp con el teléfono de su cuenta y el anuncio ya citado. Los de ejemplo llevan al contacto del sitio |
@@ -102,6 +103,23 @@ Confirmar la cuenta y recuperar la contraseña funcionan con un **código de 6 d
 Para recuperar la contraseña, primero se escribe solo el código: el sitio lo comprueba con Supabase y, únicamente si es correcto, pide la contraseña nueva (dos veces). Quien intenta entrar sin haber confirmado su cuenta puede escribir el código ahí mismo o pedir otro, y se puede pedir otro código cada minuto. La página `/restablecer-contrasena` sigue atendiendo los enlaces de recuperación que se enviaron antes de los códigos.
 
 Los textos en español de los cuatro correos (el código para activar la cuenta, el código para elegir otra contraseña, confirmar el correo nuevo y el enlace para entrar) están en `supabase/templates/`. Cada archivo dice en qué plantilla del panel (Authentication > Emails > Templates) se pega y con qué asunto; se copia el archivo entero, comentario incluido. `supabase/config.toml` los usa también en el Supabase local, donde llegan al buzón de prueba (Mailpit, `http://127.0.0.1:54324`).
+
+### Proyectos
+
+Los proyectos los carga el equipo del sitio desde el panel de Supabase; las inmobiliarias aún no los publican solas. Para cargar uno:
+
+1. Storage > `project-photos`: sube los renders y las fotos de la obra (JPG, PNG o WebP de hasta 5 MB), en una carpeta con el nombre del proyecto.
+2. Table Editor > `projects` > Insert row:
+   - `owner_id`: el identificador de la cuenta de la inmobiliaria (Authentication > Users). Si la cuenta tiene un plan de pago (más de 1 anuncio a la vez), el proyecto se destaca en la portada.
+   - `status`: `draft` mientras se prepara; `published` para mostrarlo; `hidden` para retirarlo sin borrarlo.
+   - `kind`: `residencial`, `torre`, `condominio` o `lotificacion`. `stage`: `preventa`, `construccion` o `entrega_inmediata`.
+   - `price_from` en dólares; `delivery_date` (opcional) con el primer día del mes de entrega, p. ej. `2027-12-01`.
+   - `department`: el identificador del departamento, como en los anuncios (`francisco-morazan`, `cortes`…), y `latitude`/`longitude` del punto en el mapa.
+   - `photos`: las rutas dentro del depósito (`torre-vista/portada.webp`), la portada primero. Una dirección https completa también vale, pero el sitio solo carga imágenes de Supabase y de Unsplash.
+   - `developer_phone` (opcional), completo: `+50499999999`. Con él, la ficha ofrece escribir a la desarrolladora por WhatsApp; sin él, lleva a la página de contacto.
+3. Table Editor > `project_models`: una fila por modelo de unidad, con el `project_id` del proyecto, su nombre, habitaciones, baños, área en m² y precio desde.
+
+La base de datos revisa cada campo al guardarlo, y solo las cuentas del equipo pueden crear o cambiar proyectos.
 
 #### Seguridad de las cuentas
 
@@ -334,6 +352,7 @@ Para comprobarlo después de publicar: pegar el enlace de una ficha en WhatsApp 
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
+- Proyectos, fase B: que las inmobiliarias con plan de pago publiquen y editen sus proyectos desde «Mis publicaciones», y que la ficha de un proyecto se vea al compartirla y esté en el mapa del sitio.
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
 - Anuncios: decidir si la ficha muestra la dirección exacta o solo la zona.
 - Que quien paga elija qué anuncios destacar, con un tope por plan: hoy se destacan todos, por turnos.
