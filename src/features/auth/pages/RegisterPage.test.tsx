@@ -17,10 +17,11 @@ vi.mock('@/features/auth/services/authService', () => ({
   get ACCOUNTS_AVAILABLE() {
     return accounts.available
   },
-  authService: { register: vi.fn(), loginWithGoogle: vi.fn() },
+  authService: { register: vi.fn(), loginWithGoogle: vi.fn(), confirmEmail: vi.fn(), resendConfirmation: vi.fn() },
 }))
 
 const register = vi.mocked(authService.register)
+const confirmEmail = vi.mocked(authService.confirmEmail)
 const loginWithGoogle = vi.mocked(authService.loginWithGoogle)
 
 const REGISTER_PATH = '/registro'
@@ -34,6 +35,7 @@ describe('RegisterPage', { timeout: 20_000 }, () => {
     accounts.available = true
     register.mockReset()
     loginWithGoogle.mockReset()
+    confirmEmail.mockReset()
   })
 
   it('presenta el registro con su formulario y pone su título en la pestaña', async () => {
@@ -84,7 +86,7 @@ describe('RegisterPage', { timeout: 20_000 }, () => {
     expect(screen.getByRole('link', { name: 'Inicia sesión' })).toHaveAttribute('href', loginPath)
   })
 
-  it('crea la cuenta con los datos escritos y dice a qué correo se envió el enlace para confirmarla', async () => {
+  it('crea la cuenta con los datos escritos y dice a qué correo se envió el código para confirmarla', async () => {
     // Arrange
     const user = userEvent.setup()
     const registration = buildRegistration()
@@ -99,8 +101,42 @@ describe('RegisterPage', { timeout: 20_000 }, () => {
     const notice = await screen.findByRole('status')
     expect(register).toHaveBeenCalledExactlyOnceWith(registration, anyOperationKey())
     expect(notice).toHaveTextContent('Revisa tu correo')
-    expect(notice).toHaveTextContent(`Te enviamos un enlace a ${registration.email} para confirmar tu cuenta.`)
+    expect(notice).toHaveTextContent(`Te enviamos un código de 6 dígitos a ${registration.email}.`)
+    expect(notice).toHaveTextContent('vence en 15 minutos')
     expect(currentPath()).toBe(REGISTER_PATH)
+  })
+
+  it('con el código que llegó al correo activa la cuenta y lleva al inicio', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const registration = buildRegistration()
+    register.mockResolvedValue('confirmationPending')
+    confirmEmail.mockResolvedValue(undefined)
+    const { currentPath } = renderPage()
+    await fillRegistrationForm(user, registration)
+    await user.click(submitButton())
+
+    // Act
+    await user.type(await screen.findByRole('textbox', { name: /Código de verificación/ }), '123456')
+    await user.click(screen.getByRole('button', { name: 'Confirmar mi cuenta' }))
+
+    // Assert
+    await waitFor(() => expect(currentPath()).toBe('/'))
+    expect(confirmEmail).toHaveBeenCalledExactlyOnceWith(registration.email, '123456')
+  })
+
+  it('el botón para pedir otro código espera un minuto: el primero acaba de enviarse', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    register.mockResolvedValue('confirmationPending')
+    renderPage()
+    await fillRegistrationForm(user)
+
+    // Act
+    await user.click(submitButton())
+
+    // Assert
+    expect(await screen.findByRole('button', { name: /Reenviar código en \d+ s/ })).toBeDisabled()
   })
 
   it('mientras falta confirmar el correo ya no muestra el formulario, para que no se envíe otra vez', async () => {

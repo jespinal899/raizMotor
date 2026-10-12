@@ -3,6 +3,7 @@ import { createSupabaseAuthService } from '@/features/auth/services/supabaseAuth
 import type {
   AccountProfile,
   LoginCredentials,
+  PasswordReset,
   RegistrationCredentials,
   RegistrationOutcome,
   SessionUser,
@@ -23,11 +24,24 @@ export interface AuthService {
    */
   register(credentials: RegistrationCredentials, operationKey: string): Promise<RegistrationOutcome>
   /**
-   * Envía al correo un enlace para elegir otra contraseña. Se resuelve igual exista o no una cuenta con ese
-   * correo, para no delatar quién está registrado. Repetirlo envía otro enlace.
+   * Envía al correo un código de 6 dígitos para elegir otra contraseña, que vence a los 15 minutos. Se
+   * resuelve igual exista o no una cuenta con ese correo, para no delatar quién está registrado. Repetirlo
+   * envía otro código; si es demasiado pronto, se rechaza para que se espere un momento.
    */
   requestPasswordReset(email: string): Promise<void>
-  /** Dice si la persona llegó desde ese enlace: solo entonces puede elegir otra contraseña sin escribir la anterior. */
+  /**
+   * Con el código que llegó al correo, guarda la contraseña nueva y deja la sesión abierta. Se rechaza si el
+   * código no es el enviado, ya se usó o venció. Es idempotente: con la misma clave se guarda una sola vez.
+   */
+  resetPassword(reset: PasswordReset, operationKey: string): Promise<void>
+  /** Confirma la cuenta recién creada con el código que llegó al correo y deja la sesión abierta. */
+  confirmEmail(email: string, code: string): Promise<void>
+  /** Envía otra vez el código para confirmar la cuenta; si es demasiado pronto, se rechaza. */
+  resendConfirmation(email: string): Promise<void>
+  /**
+   * Dice si la persona llegó desde un enlace de recuperación, como los que se enviaban antes de los códigos:
+   * solo entonces puede elegir otra contraseña sin escribir la anterior.
+   */
   isRecoveringPassword(): boolean
   /**
    * Guarda la contraseña nueva de quien llegó desde el enlace y se rechaza si no se pudo. Es idempotente:
@@ -62,6 +76,9 @@ export const createPendingAuthService = (): AuthService => {
     loginWithGoogle: rejectLoginAsUnavailable,
     register: rejectRegistrationAsUnavailable,
     requestPasswordReset: rejectLoginAsUnavailable,
+    resetPassword: rejectLoginAsUnavailable,
+    confirmEmail: rejectLoginAsUnavailable,
+    resendConfirmation: rejectLoginAsUnavailable,
     isRecoveringPassword: () => false,
     changePassword: rejectLoginAsUnavailable,
     updateProfile: rejectLoginAsUnavailable,

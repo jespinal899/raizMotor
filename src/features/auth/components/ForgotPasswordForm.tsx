@@ -1,18 +1,25 @@
 import type { FormEvent } from 'react'
-import { CircleAlert, MailCheck, Send, ShieldAlert } from 'lucide-react'
+import { CircleAlert, Send, ShieldAlert, Timer } from 'lucide-react'
 import CaptchaWidget from '@/components/CaptchaWidget'
 import EmailField from '@/components/EmailField'
 import StatusAlert from '@/components/StatusAlert'
 import SubmitButton from '@/components/SubmitButton'
 import { FieldGroup } from '@/components/ui/field'
+import PasswordCodeForm from '@/features/auth/components/PasswordCodeForm'
 import { usePasswordResetRequestForm } from '@/features/auth/hooks/usePasswordResetRequestForm'
 
 interface ForgotPasswordFormProps {
+  /** Envía el código al correo; se rechaza si no se pudo. */
   onSubmit: (email: string) => Promise<void>
+  /** Con el código, guarda la contraseña nueva; se rechaza si el código no vale. */
+  onReset: (reset: { email: string; code: string; password: string }, operationKey: string) => Promise<void>
 }
 
-/** Pide el correo de la cuenta para enviarle el enlace con el que elegir otra contraseña. */
-const ForgotPasswordForm = ({ onSubmit }: ForgotPasswordFormProps) => {
+/**
+ * Recuperar la contraseña en dos pasos: primero el correo, al que llega un código de 6 dígitos, y después el
+ * código con la contraseña nueva.
+ */
+const ForgotPasswordForm = ({ onSubmit, onReset }: ForgotPasswordFormProps) => {
   const { values, errors, status, change, submit } = usePasswordResetRequestForm({ onSubmit })
   const isSubmitting = status === 'submitting'
 
@@ -21,14 +28,14 @@ const ForgotPasswordForm = ({ onSubmit }: ForgotPasswordFormProps) => {
     void submit()
   }
 
-  // No dice si el correo tiene cuenta: quien pregunta por uno ajeno no debe poder averiguarlo.
   if (status === 'sent') {
+    const email = values.email.trim()
+
     return (
-      <StatusAlert
-        role="status"
-        icon={MailCheck}
-        title="Revisa tu correo"
-        description={`Si hay una cuenta con ${values.email.trim()}, te enviamos un enlace para elegir otra contraseña. Si no lo ves en unos minutos, revisa el correo no deseado.`}
+      <PasswordCodeForm
+        email={email}
+        onSubmit={(reset, operationKey) => onReset({ email, ...reset }, operationKey)}
+        onResend={() => onSubmit(email)}
       />
     )
   }
@@ -46,7 +53,7 @@ const ForgotPasswordForm = ({ onSubmit }: ForgotPasswordFormProps) => {
         <CaptchaWidget />
 
         <SubmitButton isSubmitting={isSubmitting} icon={Send} submittingLabel="Enviando…">
-          Enviar enlace
+          Enviar código
         </SubmitButton>
 
         {status === 'captcha' && (
@@ -58,11 +65,19 @@ const ForgotPasswordForm = ({ onSubmit }: ForgotPasswordFormProps) => {
           />
         )}
 
+        {status === 'tooSoon' && (
+          <StatusAlert
+            icon={Timer}
+            title="Espera un momento"
+            description="Acabamos de enviarte un código. Podrás pedir otro en un minuto."
+          />
+        )}
+
         {status === 'failed' && (
           <StatusAlert
             icon={CircleAlert}
             title="Algo salió mal"
-            description="No pudimos enviar el enlace. Inténtalo de nuevo en unos minutos."
+            description="No pudimos enviar el código. Inténtalo de nuevo en unos minutos."
             variant="destructive"
           />
         )}

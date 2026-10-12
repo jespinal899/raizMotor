@@ -26,7 +26,7 @@ export interface SessionUser extends AccountProfile {
 /** Estado del formulario de los datos de la cuenta: `saved` cuando ya se guardaron. */
 export type ProfileStatus = 'idle' | 'submitting' | 'saved' | 'failed'
 
-/** Cómo queda quien acaba de registrarse: ya dentro, o a la espera de abrir el enlace enviado a su correo. */
+/** Cómo queda quien acaba de registrarse: ya dentro, o a la espera del código enviado a su correo. */
 export type RegistrationOutcome = 'signedIn' | 'confirmationPending'
 
 /** Vía por la que se está intentando acceder: `submitting` con el formulario, `connecting` con Google. */
@@ -49,8 +49,25 @@ export type RegistrationFailure = 'unavailable' | 'taken' | 'googleUnavailable' 
 
 export type RegistrationStatus = 'idle' | AccessInProgress | RegistrationFailure
 
-/** Estado del formulario que pide el enlace para elegir otra contraseña: `sent` cuando ya se pidió. */
-export type PasswordResetRequestStatus = 'idle' | 'submitting' | 'sent' | 'captcha' | 'failed'
+/** Estado del formulario que pide el código para elegir otra contraseña: `sent` cuando ya se pidió. */
+export type PasswordResetRequestStatus = 'idle' | 'submitting' | 'sent' | 'captcha' | 'tooSoon' | 'failed'
+
+/** Lo que escribe quien recibió el código para elegir otra contraseña. */
+export interface PasswordReset {
+  email: string
+  /** Los 6 dígitos que llegaron al correo. */
+  code: string
+  password: string
+}
+
+/**
+ * Por qué no se pudo usar un código: `invalidCode` significa que no es el enviado, ya se usó o venció, y
+ * `unchanged`, que la contraseña nueva es la misma de antes.
+ */
+export type CodeFailure = 'invalidCode' | 'unchanged' | 'failed'
+
+/** Por qué no se pudo enviar otro código: `tooSoon` significa que hay que esperar un momento. */
+export type CodeResendFailure = 'tooSoon' | 'captcha' | 'failed'
 
 /**
  * Por qué no se guardó la contraseña nueva: `unchanged` significa que es la misma de antes y `expired`,

@@ -80,9 +80,10 @@ select throws_ok($$
     180, 300, 3, 2, 2, array['11111111-1111-4111-8111-111111111111/clave-ana-1/0.webp'])
 $$, 'RZ002', null, 'un anuncio no puede usar las fotos de la carpeta de otra cuenta');
 
--- Lo que ve cada quien.
+-- Lo que ve cada quien. Se cuentan solo los anuncios de Ana: la base local puede tener otros de las pruebas
+-- de punta a punta.
 select pg_temp.as_visitor();
-select is((select count(*)::int from public.properties), 1, 'un visitante ve los anuncios publicados');
+select is((select count(*)::int from public.properties where owner_id = '11111111-1111-4111-8111-111111111111'), 1, 'un visitante ve los anuncios publicados');
 
 select pg_temp.as_user('11111111-1111-4111-8111-111111111111');
 update public.properties set status = 'unpublished' where operation_key = 'clave-ana-1';
@@ -90,13 +91,13 @@ select is((select status from public.properties where operation_key = 'clave-ana
   'quien publicó puede despublicar su anuncio');
 
 select pg_temp.as_visitor();
-select is((select count(*)::int from public.properties), 0, 'un visitante no ve un anuncio despublicado');
+select is((select count(*)::int from public.properties where owner_id = '11111111-1111-4111-8111-111111111111'), 0, 'un visitante no ve un anuncio despublicado');
 
 select pg_temp.as_user('22222222-2222-4222-8222-222222222222');
-select is((select count(*)::int from public.properties), 0, 'otra cuenta no ve un anuncio despublicado ajeno');
+select is((select count(*)::int from public.properties where owner_id = '11111111-1111-4111-8111-111111111111'), 0, 'otra cuenta no ve un anuncio despublicado ajeno');
 
 select pg_temp.as_user('11111111-1111-4111-8111-111111111111');
-select is((select count(*)::int from public.properties), 1, 'quien lo publicó sigue viendo su anuncio despublicado');
+select is((select count(*)::int from public.properties where owner_id = '11111111-1111-4111-8111-111111111111'), 1, 'quien lo publicó sigue viendo su anuncio despublicado');
 
 update public.properties set status = 'published' where operation_key = 'clave-ana-1';
 

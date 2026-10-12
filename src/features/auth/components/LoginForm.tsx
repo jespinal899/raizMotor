@@ -8,6 +8,7 @@ import SubmitButton from '@/components/SubmitButton'
 import TextLink from '@/components/TextLink'
 import { FieldGroup } from '@/components/ui/field'
 import AccessSeparator from '@/features/auth/components/AccessSeparator'
+import EmailCodeForm from '@/features/auth/components/EmailCodeForm'
 import GoogleButton from '@/features/auth/components/GoogleButton'
 import LoginAlert from '@/features/auth/components/LoginAlert'
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm'
@@ -17,9 +18,13 @@ import { ROUTES } from '@/shared/constants/routes'
 interface LoginFormProps {
   onSubmit: (credentials: LoginCredentials) => Promise<void>
   onGoogleSignIn: () => Promise<void>
+  /** Confirma con el código la cuenta que aún no estaba activa; la persona queda dentro. */
+  onConfirmEmail: (email: string, code: string) => Promise<void>
+  /** Envía otro código para confirmar la cuenta. */
+  onResendConfirmation: (email: string) => Promise<void>
 }
 
-const LoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormProps) => {
+const LoginForm = ({ onSubmit, onGoogleSignIn, onConfirmEmail, onResendConfirmation }: LoginFormProps) => {
   const { values, errors, status, change, submit, signInWithGoogle } = useLoginForm({ onSubmit, onGoogleSignIn })
   const isSubmitting = status === 'submitting'
   const isConnecting = status === 'connecting'
@@ -29,6 +34,20 @@ const LoginForm = ({ onSubmit, onGoogleSignIn }: LoginFormProps) => {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     void submit()
+  }
+
+  // La contraseña era correcta, pero la cuenta no está activa: en lugar de un error, el código para activarla.
+  if (status === 'unconfirmed') {
+    const email = values.email.trim()
+
+    return (
+      <EmailCodeForm
+        email={email}
+        justSent={false}
+        onSubmit={(code) => onConfirmEmail(email, code)}
+        onResend={() => onResendConfirmation(email)}
+      />
+    )
   }
 
   return (

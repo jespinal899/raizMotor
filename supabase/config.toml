@@ -222,7 +222,8 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+# Como en el proyecto publicado: la cuenta se activa con el código de 6 dígitos que llega al correo.
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -230,7 +231,8 @@ max_frequency = "1s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# Los códigos de confirmar la cuenta y de elegir otra contraseña vencen a los 15 minutos, como en el proyecto publicado.
+otp_expiry = 900
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -250,11 +252,11 @@ otp_expiry = 3600
 # Los correos de las cuentas, en español. En el proyecto publicado se pegan a mano en el panel (ver el README);
 # aquí los usa el Supabase local, para probarlos.
 [auth.email.template.confirmation]
-subject = "Confirma tu cuenta de DomusRaíz"
+subject = "Tu código para activar tu cuenta de DomusRaíz"
 content_path = "./supabase/templates/confirmar-cuenta.html"
 
 [auth.email.template.recovery]
-subject = "Elige otra contraseña para DomusRaíz"
+subject = "Tu código para elegir otra contraseña en DomusRaíz"
 content_path = "./supabase/templates/elegir-otra-contrasena.html"
 
 [auth.email.template.email_change]

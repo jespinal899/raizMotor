@@ -69,3 +69,19 @@ export class RecoveryLinkExpiredError extends Error {
     this.name = 'RecoveryLinkExpiredError'
   }
 }
+
+/** El código de verificación no es el que se envió, ya se usó o pasaron sus 15 minutos. */
+export class InvalidCodeError extends Error {
+  constructor() {
+    super('El código no es correcto o ya venció.')
+    this.name = 'InvalidCodeError'
+  }
+}
+
+/** Se pidió otro código demasiado pronto: Supabase espera un momento entre un envío y el siguiente. */
+export class CodeRequestTooSoonError extends Error {
+  constructor() {
+    super('Espera un momento antes de pedir otro código.')
+    this.name = 'CodeRequestTooSoonError'
+  }
+}

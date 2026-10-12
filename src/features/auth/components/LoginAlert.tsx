@@ -20,7 +20,7 @@ const ALERTS: Partial<Record<LoginStatus, StatusAlertContent>> = {
   unconfirmed: {
     icon: MailWarning,
     title: 'Confirma tu correo para entrar',
-    description: 'Abre el enlace que te enviamos al registrarte. Si no lo ves, revisa el correo no deseado.',
+    description: 'Escribe el código que te enviamos al registrarte. Si no lo ves, revisa el correo no deseado.',
   },
   googleUnavailable: {
     icon: Info,

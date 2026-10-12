@@ -2,25 +2,42 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import LoginForm from '@/features/auth/components/LoginForm'
-import { AuthUnavailableError, InvalidCredentialsError } from '@/features/auth/services/authErrors'
+import {
+  AuthUnavailableError,
+  EmailNotConfirmedError,
+  InvalidCodeError,
+  InvalidCredentialsError,
+} from '@/features/auth/services/authErrors'
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
 type Submit = (credentials: LoginCredentials) => Promise<void>
 type GoogleSignIn = () => Promise<void>
+type ConfirmEmail = (email: string, code: string) => Promise<void>
+type Resend = (email: string) => Promise<void>
 
 interface Handlers {
   onSubmit?: Submit
   onGoogleSignIn?: GoogleSignIn
+  onConfirmEmail?: ConfirmEmail
 }
 
 const setup = ({
   onSubmit = vi.fn<Submit>(async () => {}),
   onGoogleSignIn = vi.fn<GoogleSignIn>(async () => {}),
+  onConfirmEmail = vi.fn<ConfirmEmail>(async () => {}),
 }: Handlers = {}) => {
-  renderWithRouter(<LoginForm onSubmit={onSubmit} onGoogleSignIn={onGoogleSignIn} />)
+  const onResendConfirmation = vi.fn<Resend>(async () => {})
+  renderWithRouter(
+    <LoginForm
+      onSubmit={onSubmit}
+      onGoogleSignIn={onGoogleSignIn}
+      onConfirmEmail={onConfirmEmail}
+      onResendConfirmation={onResendConfirmation}
+    />,
+  )
 
-  return { onSubmit, onGoogleSignIn, user: userEvent.setup() }
+  return { onSubmit, onGoogleSignIn, onConfirmEmail, onResendConfirmation, user: userEvent.setup() }
 }
 
 const emailField = () => screen.getByRole('textbox', { name: 'Correo' })
@@ -288,5 +305,53 @@ describe('LoginForm: entrar con Google', () => {
     // Assert
     expect(googleButton()).toHaveAccessibleName('Iniciar sesión con Google')
     expect(googleButton().querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  it('si la cuenta no está activa, ofrece activarla con el código que llegó al correo', async () => {
+    // Arrange
+    const { user, onConfirmEmail } = setup({ onSubmit: vi.fn<Submit>(async () => Promise.reject(new EmailNotConfirmedError())) })
+    await fillCredentials(user)
+    await user.click(submitButton())
+
+    // Act
+    await user.type(await screen.findByRole('textbox', { name: /Código de verificación/ }), '123 456')
+    await user.click(screen.getByRole('button', { name: 'Confirmar mi cuenta' }))
+
+    // Assert
+    expect(screen.getByText('Confirma tu correo para entrar')).toBeInTheDocument()
+    expect(onConfirmEmail).toHaveBeenCalledExactlyOnceWith('ana@gmail.com', '123456')
+  })
+
+  it('a quien vuelve sin haber activado su cuenta le deja pedir otro código en el acto', async () => {
+    // Arrange
+    const { user, onResendConfirmation } = setup({
+      onSubmit: vi.fn<Submit>(async () => Promise.reject(new EmailNotConfirmedError())),
+    })
+    await fillCredentials(user)
+    await user.click(submitButton())
+
+    // Act
+    await user.click(await screen.findByRole('button', { name: 'Reenviar código' }))
+
+    // Assert
+    expect(onResendConfirmation).toHaveBeenCalledExactlyOnceWith('ana@gmail.com')
+    expect(await screen.findByText('Te enviamos otro código')).toBeInTheDocument()
+  })
+
+  it('un código que no vale se explica', async () => {
+    // Arrange
+    const { user } = setup({
+      onSubmit: vi.fn<Submit>(async () => Promise.reject(new EmailNotConfirmedError())),
+      onConfirmEmail: vi.fn<ConfirmEmail>(async () => Promise.reject(new InvalidCodeError())),
+    })
+    await fillCredentials(user)
+    await user.click(submitButton())
+
+    // Act
+    await user.type(await screen.findByRole('textbox', { name: /Código de verificación/ }), '000000')
+    await user.click(screen.getByRole('button', { name: 'Confirmar mi cuenta' }))
+
+    // Assert
+    expect(await screen.findByText('El código no es correcto o ya venció')).toBeInTheDocument()
   })
 })

@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   CaptchaFailedError,
+  CodeRequestTooSoonError,
   EmailNotConfirmedError,
   EmailTakenError,
   GoogleAccessUnavailableError,
+  InvalidCodeError,
   InvalidCredentialsError,
   RecoveryLinkExpiredError,
   SamePasswordError,
@@ -34,6 +36,8 @@ const fakeAccounts = () => {
     signUp: vi.fn<AccountsClient['signUp']>(async () => ({ data: { user: USER, session: null }, error: null })),
     signOut: vi.fn<AccountsClient['signOut']>(async () => ({ error: null })),
     resetPasswordForEmail: vi.fn<AccountsClient['resetPasswordForEmail']>(async () => ({ error: null })),
+    verifyOtp: vi.fn<AccountsClient['verifyOtp']>(async () => ({ error: null })),
+    resend: vi.fn<AccountsClient['resend']>(async () => ({ error: null })),
     updateUser: vi.fn<AccountsClient['updateUser']>(async () => ({ error: null })),
     onAuthStateChange: vi.fn<AccountsClient['onAuthStateChange']>((listener) => {
       notify = listener
@@ -246,10 +250,10 @@ describe('createSupabaseAuthService: recuperar la contraseña', () => {
     expect(accounts.resetPasswordForEmail).toHaveBeenCalledExactlyOnceWith('ana@gmail.com', { redirectTo: RETURN_URL })
   })
 
-  it('si el enlace no se pudo enviar, lo rechaza con ese fallo', async () => {
+  it('si el código no se pudo enviar por otro motivo, lo rechaza con ese fallo', async () => {
     // Arrange
     const { service, accounts } = setup()
-    const failure = supabaseError('over_email_send_rate_limit')
+    const failure = supabaseError('unexpected_failure')
     accounts.resetPasswordForEmail.mockResolvedValue({ error: failure })
 
     // Act
@@ -328,6 +332,133 @@ describe('createSupabaseAuthService: recuperar la contraseña', () => {
 
     // Assert
     expect(accounts.updateUser).toHaveBeenCalledOnce()
+  })
+})
+
+describe('createSupabaseAuthService: códigos de verificación', () => {
+  const RESET = { email: 'ana@gmail.com', code: '123456', password: 'nueva-secreta' }
+
+  it('con el código de recuperación abre la sesión y guarda la contraseña nueva', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+
+    // Act
+    await service.resetPassword(RESET, TEST_OPERATION_KEY)
+
+    // Assert
+    expect(accounts.verifyOtp).toHaveBeenCalledExactlyOnceWith({ email: 'ana@gmail.com', token: '123456', type: 'recovery' })
+    expect(accounts.updateUser).toHaveBeenCalledExactlyOnceWith({ password: 'nueva-secreta' })
+    expect(accounts.verifyOtp.mock.invocationCallOrder[0]).toBeLessThan(accounts.updateUser.mock.invocationCallOrder[0])
+  })
+
+  it('un código equivocado, usado o vencido se rechaza sin tocar la contraseña', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+    accounts.verifyOtp.mockResolvedValueOnce({ error: supabaseError('otp_expired') })
+
+    // Act
+    const reset = service.resetPassword(RESET, TEST_OPERATION_KEY)
+
+    // Assert
+    await expect(reset).rejects.toBeInstanceOf(InvalidCodeError)
+    expect(accounts.updateUser).not.toHaveBeenCalled()
+  })
+
+  it('si la contraseña nueva era la de antes, al reintentar con otra no vuelve a gastar el código', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+    accounts.updateUser.mockResolvedValueOnce({ error: supabaseError('same_password') })
+
+    // Act
+    const first = service.resetPassword(RESET, 'primer-intento')
+    await expect(first).rejects.toBeInstanceOf(SamePasswordError)
+    await service.resetPassword({ ...RESET, password: 'otra-distinta' }, 'segundo-intento')
+
+    // Assert
+    expect(accounts.verifyOtp).toHaveBeenCalledOnce()
+    expect(accounts.updateUser).toHaveBeenLastCalledWith({ password: 'otra-distinta' })
+  })
+
+  it('con la misma clave guarda la contraseña una sola vez', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+
+    // Act
+    await Promise.all([service.resetPassword(RESET, TEST_OPERATION_KEY), service.resetPassword(RESET, TEST_OPERATION_KEY)])
+
+    // Assert
+    expect(accounts.updateUser).toHaveBeenCalledOnce()
+  })
+
+  it('confirma la cuenta con el código del registro', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+
+    // Act
+    await service.confirmEmail('ana@gmail.com', '654321')
+
+    // Assert
+    expect(accounts.verifyOtp).toHaveBeenCalledExactlyOnceWith({ email: 'ana@gmail.com', token: '654321', type: 'email' })
+  })
+
+  it('un código de registro que no vale se explica', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+    accounts.verifyOtp.mockResolvedValueOnce({ error: supabaseError('otp_expired') })
+
+    // Act
+    const confirmation = service.confirmEmail('ana@gmail.com', '000000')
+
+    // Assert
+    await expect(confirmation).rejects.toBeInstanceOf(InvalidCodeError)
+  })
+
+  it('reenvía el código de confirmación al mismo correo', async () => {
+    // Arrange
+    const { service, accounts } = setup()
+
+    // Act
+    await service.resendConfirmation('ana@gmail.com')
+
+    // Assert
+    expect(accounts.resend).toHaveBeenCalledExactlyOnceWith({
+      type: 'signup',
+      email: 'ana@gmail.com',
+      options: { emailRedirectTo: RETURN_URL },
+    })
+  })
+
+  it.each(['over_email_send_rate_limit', 'over_request_rate_limit'])(
+    'pedir otro código demasiado pronto (%s) pide esperar',
+    async (code) => {
+      // Arrange
+      const { service, accounts } = setup()
+      accounts.resend.mockResolvedValueOnce({ error: supabaseError(code) })
+      accounts.resetPasswordForEmail.mockResolvedValueOnce({ error: supabaseError(code) })
+
+      // Act
+      const resend = service.resendConfirmation('ana@gmail.com')
+      const request = service.requestPasswordReset('ana@gmail.com')
+
+      // Assert
+      await expect(resend).rejects.toBeInstanceOf(CodeRequestTooSoonError)
+      await expect(request).rejects.toBeInstanceOf(CodeRequestTooSoonError)
+    },
+  )
+
+  it('con la verificación contra bots, reenviar el código la lleva y comprobarlo no la espera', async () => {
+    // Arrange
+    const takeToken = vi.fn(async () => 'token-1')
+    const { service, accounts } = setup({ captcha: { required: true, takeToken } })
+
+    // Act
+    await service.resendConfirmation('ana@gmail.com')
+    await service.confirmEmail('ana@gmail.com', '654321')
+
+    // Assert
+    expect(accounts.resend).toHaveBeenCalledWith(expect.objectContaining({ options: expect.objectContaining({ captchaToken: 'token-1' }) }))
+    expect(accounts.verifyOtp).toHaveBeenCalledExactlyOnceWith({ email: 'ana@gmail.com', token: '654321', type: 'email' })
+    expect(takeToken).toHaveBeenCalledOnce()
   })
 })
 
