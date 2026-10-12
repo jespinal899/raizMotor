@@ -22,6 +22,8 @@ const LoginPage = () => {
       <LoginForm
         onSubmit={(credentials) => enter(() => authService.login(credentials))}
         onGoogleSignIn={() => enter(() => authService.loginWithGoogle())}
+        onConfirmEmail={(email, code) => enter(() => authService.confirmEmail(email, code))}
+        onResendConfirmation={(email) => authService.resendConfirmation(email)}
       />
     </AuthCard>
   )

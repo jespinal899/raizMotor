@@ -1,4 +1,4 @@
-import { CaptchaFailedError } from '@/features/auth/services/authErrors'
+import { CaptchaFailedError, CodeRequestTooSoonError } from '@/features/auth/services/authErrors'
 import { useAttemptForm } from '@/hooks/useAttemptForm'
 import { EMAIL_RULES } from '@/shared/utils/fieldRules'
 import { validate } from '@/shared/utils/validators'
@@ -8,23 +8,24 @@ interface PasswordResetRequest {
 }
 
 interface PasswordResetRequestFormOptions {
-  /** Se resuelve cuando el enlace quedó pedido; se rechaza si no se pudo. */
+  /** Se resuelve cuando el código quedó pedido; se rechaza si no se pudo. */
   onSubmit: (email: string) => Promise<void>
 }
 
 const EMPTY_REQUEST: PasswordResetRequest = { email: '' }
 
-/** Formulario que pide, para un correo, el enlace con el que elegir otra contraseña. */
+/** Formulario que pide, para un correo, el código con el que elegir otra contraseña. */
 export const usePasswordResetRequestForm = ({ onSubmit }: PasswordResetRequestFormOptions) => {
   const { values, errors, status, change, validateFields, attempt } = useAttemptForm<
     PasswordResetRequest,
     'submitting',
-    'captcha' | 'failed',
+    'captcha' | 'tooSoon' | 'failed',
     'sent'
   >({
     initialValues: EMPTY_REQUEST,
     validate: ({ email }) => ({ email: validate(email, EMAIL_RULES) }),
-    toFailure: (reason) => (reason instanceof CaptchaFailedError ? 'captcha' : 'failed'),
+    toFailure: (reason) =>
+      reason instanceof CaptchaFailedError ? 'captcha' : reason instanceof CodeRequestTooSoonError ? 'tooSoon' : 'failed',
     succeeded: 'sent',
   })
 

@@ -15,3 +15,18 @@ export const NEW_PASSWORD_RULES: Validator[] = [
   PASSWORD_REQUIRED,
   minCharacters(MIN_PASSWORD_LENGTH, `Usa al menos ${MIN_PASSWORD_LENGTH} caracteres.`),
 ]
+
+/** Los códigos que llegan al correo para confirmar la cuenta o elegir otra contraseña. */
+export const CODE_LENGTH = 6
+
+/** Solo los dígitos de lo que se escribió o pegó: el código puede llegar con espacios o guiones. */
+export const toCode = (value: string) => value.replace(/\D/g, '').slice(0, CODE_LENGTH)
+
+export const CODE_RULES: Validator[] = [
+  required('Escribe el código que te enviamos.'),
+  (value) => (toCode(value).length === CODE_LENGTH ? undefined : `El código tiene ${CODE_LENGTH} dígitos.`),
+]
+
+/** Las dos contraseñas que escribe quien elige una nueva deben coincidir. */
+export const matches = (other: string): Validator => (value) =>
+  value === other ? undefined : 'Las contraseñas no coinciden.'

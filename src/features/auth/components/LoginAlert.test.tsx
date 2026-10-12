@@ -51,7 +51,7 @@ describe('LoginAlert', () => {
     // Assert
     const alert = screen.getByRole('alert')
     expect(alert).toHaveTextContent('Confirma tu correo para entrar')
-    expect(alert).toHaveTextContent('Abre el enlace que te enviamos al registrarte')
+    expect(alert).toHaveTextContent('Escribe el código que te enviamos al registrarte')
     expect(alert).not.toHaveTextContent('no son correctos')
   })
 

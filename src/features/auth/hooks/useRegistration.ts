@@ -5,8 +5,8 @@ import type { AuthService } from '@/features/auth/services/authService'
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 
 /**
- * Crear una cuenta deja a la persona dentro o, si antes debe confirmar su correo, a la espera del enlace
- * que se le envió: `confirmationEmail` dice a qué dirección.
+ * Crear una cuenta deja a la persona dentro o, si antes debe confirmar su correo, a la espera del código
+ * que se le envió: `confirmationEmail` dice a qué dirección. Con el código, entra.
  */
 export const useRegistration = (service: AuthService = authService) => {
   const enter = useEnter()
@@ -23,5 +23,10 @@ export const useRegistration = (service: AuthService = authService) => {
   // Con Google, registrarse e iniciar sesión son la misma operación: la cuenta se crea al entrar por primera vez.
   const registerWithGoogle = () => enter(() => service.loginWithGoogle())
 
-  return { confirmationEmail, register, registerWithGoogle }
+  /** Confirma la cuenta con el código que llegó al correo; la persona queda dentro. */
+  const confirm = (code: string) => enter(() => service.confirmEmail(confirmationEmail ?? '', code))
+
+  const resendCode = () => service.resendConfirmation(confirmationEmail ?? '')
+
+  return { confirmationEmail, register, registerWithGoogle, confirm, resendCode }
 }
