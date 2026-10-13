@@ -18,7 +18,7 @@ import { PAYMENT_MODE } from '@/features/shop/data/paymentMode'
 import type { PaymentMode } from '@/features/shop/data/paymentMode'
 import { useCardPaymentDemo } from '@/features/shop/hooks/useCardPaymentDemo'
 import { useCheckoutForm } from '@/features/shop/hooks/useCheckoutForm'
-import type { AgentPlan } from '@/features/shop/types/plan.types'
+import type { PaidPlan } from '@/features/shop/types/plan.types'
 import { lastCardDigits } from '@/features/shop/utils/cardDemo'
 import { CHECKOUT_STEP, CHECKOUT_STEPS, CHECKOUT_STEP_FIELDS } from '@/features/shop/utils/checkoutSteps'
 import { toPlanTotal } from '@/features/shop/utils/planTotal'
@@ -27,7 +27,7 @@ import { useSteps } from '@/hooks/useSteps'
 import { formatLempirasExact } from '@/shared/utils/format'
 
 interface CheckoutStepsProps {
-  plan: AgentPlan
+  plan: PaidPlan
   /** Cómo termina la contratación. Por defecto, la del sitio: por WhatsApp salvo al desarrollar. */
   paymentMode?: PaymentMode
 }

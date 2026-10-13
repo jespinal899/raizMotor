@@ -16,7 +16,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | --- | --- |
 | Portada: carrusel, propiedades destacadas, Quiénes somos y Cómo funciona | Funciona. Las destacadas son anuncios publicados de cuentas con un plan de pago (más de 1 anuncio a la vez): como mucho 2 por cuenta, en un orden que rota cada hora, con la marca «Destacada». Las propiedades de ejemplo nunca se destacan con Supabase; sin destacadas, la sección no se muestra |
 | Búsqueda por tipo, operación, zona, precio, dormitorios y baños, con orden y paginación | Funciona sobre los anuncios publicados y, si se muestran, los de ejemplo, que van detrás de los reales. Con Supabase, la base de datos filtra, ordena y pagina: solo viaja la página pedida. Si Supabase no responde, lo dice en lugar de mostrar un catálogo vacío |
-| Proyectos en preventa, en construcción o de entrega inmediata (`/proyectos`) | Catálogo con filtros por zona, tipo, etapa y precio, ficha con modelos, amenidades, mapa y contacto con la desarrolladora por WhatsApp, y sección «Proyectos en preventa» en la portada, con la misma regla de destacados que las propiedades. Por ahora los carga el equipo (ver [Proyectos](#proyectos)); los de ejemplo salen donde salen las propiedades de ejemplo |
+| Proyectos en preventa, en construcción o de entrega inmediata (`/proyectos`) | Catálogo con filtros por zona, tipo, etapa y precio, ficha con modelos, amenidades, mapa y contacto con la desarrolladora por WhatsApp, y sección «Proyectos en preventa» en la portada, con la misma regla de destacados que las propiedades. Los publican las inmobiliarias con su plan desde «Mis publicaciones» > Proyectos, y el equipo también puede cargarlos (ver [Proyectos](#proyectos)); los de ejemplo salen donde salen las propiedades de ejemplo |
 | Precios en dólares y en lempiras | Funciona; los lempiras se calculan con un tipo de cambio de referencia fijo |
 | Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Contactar a quien publica | La ficha de un anuncio publicado dice quién lo publica y abre WhatsApp con el teléfono de su cuenta y el anuncio ya citado. Los de ejemplo llevan al contacto del sitio |
@@ -106,7 +106,19 @@ Los textos en español de los cuatro correos (el código para activar la cuenta,
 
 ### Proyectos
 
-Los proyectos los carga el equipo del sitio desde el panel de Supabase; las inmobiliarias aún no los publican solas. Para cargar uno:
+Las inmobiliarias publican sus proyectos solas, desde «Mis publicaciones» > Proyectos, con un formulario por pasos: ubicación en el mapa, datos del proyecto, modelos de unidad y amenidades con fotos y video. Se publican directo, como los anuncios: el equipo revisó la cuenta al activarle el plan, y si algo está mal se reporta y se oculta. Pueden corregirlos, despublicarlos (quedan en borrador) y eliminarlos.
+
+Para que una cuenta publique proyectos, el equipo le activa un plan de inmobiliaria en el panel de administración > Cuentas > «Cambiar límite». Cada plan pone sus dos límites:
+
+| Plan | Proyectos publicados a la vez | Propiedades publicadas a la vez | Precio |
+| --- | --- | --- | --- |
+| Inmobiliaria Inicial | 1 | 50 | L 1,999/mes + ISV |
+| Inmobiliaria Plus | 3 | 150 | L 3,999/mes + ISV |
+| Inmobiliaria Corporativa | 10 | 500 | L 6,999/mes + ISV |
+
+Los planes se definen en `src/features/shop/data/plans.data.ts` (la página `/planes/inmobiliarias` y los botones del panel salen de ahí); la base de datos hace cumplir el límite de proyectos (`profiles.max_projects`). Una cuenta con un plan de agente o de inmobiliaria cuenta como de pago para los destacados de la portada.
+
+El equipo también puede cargar un proyecto a nombre de una cuenta desde el panel de Supabase:
 
 1. Storage > `project-photos`: sube los renders y las fotos de la obra (JPG, PNG o WebP de hasta 5 MB), en una carpeta con el nombre del proyecto.
 2. Table Editor > `projects` > Insert row:
@@ -352,7 +364,7 @@ Para comprobarlo después de publicar: pegar el enlace de una ficha en WhatsApp 
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
-- Proyectos, fase B: que las inmobiliarias con plan de pago publiquen y editen sus proyectos desde «Mis publicaciones», y que la ficha de un proyecto se vea al compartirla y esté en el mapa del sitio.
+- Proyectos: que la ficha de un proyecto se vea al compartirla y esté en el mapa del sitio, que se pueda reportar como los anuncios, y que la limpieza diaria de fotos incluya las de `project-photos`.
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
 - Anuncios: decidir si la ficha muestra la dirección exacta o solo la zona.
 - Que quien paga elija qué anuncios destacar, con un tope por plan: hoy se destacan todos, por turnos.

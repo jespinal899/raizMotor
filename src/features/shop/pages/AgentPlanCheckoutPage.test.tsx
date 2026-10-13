@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AgentPlanCheckoutPage from '@/features/shop/pages/AgentPlanCheckoutPage'
 import { planRequestService } from '@/features/shop/services/planRequestService'
 import { BRAND } from '@/shared/constants/brand'
-import { ROUTES, agentPlanCheckoutPath } from '@/shared/constants/routes'
+import { ROUTES, agencyPlanCheckoutPath, agentPlanCheckoutPath } from '@/shared/constants/routes'
 import { TRANSFER, checkoutForm, reachPayment } from '@/test/checkoutForm'
 import { renderWithRouter } from '@/test/renderWithRouter'
 
@@ -88,5 +88,33 @@ describe('AgentPlanCheckoutPage', { timeout: 20_000 }, () => {
       expect.objectContaining({ id: 'agente-plan-2', name: 'Agente Élite' }),
       expect.objectContaining({ firstName: 'Ana', lastName: 'Mejía', paymentMethod: 'transferencia' }),
     )
+  })
+})
+
+describe('AgentPlanCheckoutPage con un plan de inmobiliaria', () => {
+  const openAgencyPage = (planId: string) =>
+    renderWithRouter(<AgentPlanCheckoutPage />, { route: agencyPlanCheckoutPath(planId), path: ROUTES.agencyPlanCheckout })
+
+  it('contrata el plan de inmobiliaria de la dirección y vuelve a los planes de inmobiliaria', () => {
+    // Arrange
+    const planId = 'inmobiliaria-plus'
+
+    // Act
+    openAgencyPage(planId)
+
+    // Assert
+    expect(screen.getByRole('heading', { level: 1, name: 'Contratar Inmobiliaria Plus' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Ver los planes para inmobiliarias/ })).toHaveAttribute('href', ROUTES.agencyPlans)
+  })
+
+  it('un plan de agente no se contrata desde la página de inmobiliarias', () => {
+    // Arrange
+    const planId = 'agente-plan-1'
+
+    // Act
+    openAgencyPage(planId)
+
+    // Assert
+    expect(screen.getByRole('heading', { name: 'Ese plan no existe' })).toBeInTheDocument()
   })
 })

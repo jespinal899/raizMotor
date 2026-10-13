@@ -13,7 +13,7 @@ describe('findPlanInquiry', () => {
     expect(inquiry).toEqual({
       id: 'inmobiliaria',
       name: 'Inmobiliarias',
-      detail: 'Para empresas con un equipo que gestiona varias propiedades.',
+      detail: 'Para desarrolladoras y empresas con varias propiedades. Publica tus proyectos en preventa o en construcción, con sus modelos y renders, junto a tu cartera de propiedades.',
     })
   })
 

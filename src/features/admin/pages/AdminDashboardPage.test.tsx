@@ -137,7 +137,26 @@ describe('AdminDashboardPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Cambiar límite' }))
 
     // Assert
-    await waitFor(() => expect(service.setPublicationLimit).toHaveBeenCalledExactlyOnceWith('cuenta-1', 25, ''))
+    await waitFor(() => expect(service.setAccountLimits).toHaveBeenCalledExactlyOnceWith('cuenta-1', { publications: 25, projects: 0 }, ''))
+  })
+
+  it('en Cuentas activa un plan de inmobiliaria con sus dos límites: proyectos y anuncios', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const service = buildAdminService({ listAccounts: vi.fn(async () => pageOf([buildAccount()])) })
+    renderPage(service)
+    await user.click(await screen.findByRole('tab', { name: 'Cuentas' }))
+    await user.click(await screen.findByRole('button', { name: 'Cambiar límite' }))
+    const dialog = await screen.findByRole('dialog')
+
+    // Act
+    await user.click(within(dialog).getByRole('button', { name: 'Inmobiliaria Plus (3 + 150)' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Cambiar límite' }))
+
+    // Assert
+    await waitFor(() =>
+      expect(service.setAccountLimits).toHaveBeenCalledExactlyOnceWith('cuenta-1', { publications: 150, projects: 3 }, ''),
+    )
   })
 
   it('no deja guardar un límite que no es un número entero de 0 a 1000', async () => {

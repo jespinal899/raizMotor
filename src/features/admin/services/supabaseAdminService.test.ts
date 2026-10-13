@@ -152,10 +152,12 @@ describe('createSupabaseAdminService: listas', () => {
       first_name: 'Ana',
       last_name: 'Mejía',
       phone: '+50499999999',
-      max_publications: 25,
+      max_publications: 150,
+      max_projects: 3,
       role: 'user',
       created_at: '2026-10-01T09:00:00Z',
       published_count: '3',
+      project_count: '2',
       total_count: '41',
     }
     const { client, rpc } = fakeClient({ rpc: { data: [row] } })
@@ -165,7 +167,13 @@ describe('createSupabaseAdminService: listas', () => {
 
     // Assert
     expect(rpc).toHaveBeenCalledExactlyOnceWith('admin_list_accounts', { search: 'ana', page_offset: 20, page_limit: 20 })
-    expect(result.items[0]).toMatchObject({ email: 'ana@ejemplo.hn', maxPublications: 25, publishedCount: 3 })
+    expect(result.items[0]).toMatchObject({
+      email: 'ana@ejemplo.hn',
+      maxPublications: 150,
+      maxProjects: 3,
+      publishedCount: 3,
+      projectCount: 2,
+    })
     expect(result).toMatchObject({ total: 41, totalPages: 3 })
   })
 })
@@ -174,7 +182,11 @@ describe('createSupabaseAdminService: decisiones', () => {
   it.each([
     ['revisar un reporte', 'admin_review_report', { target_report: 'r', decision: 'dismiss', review_note: 'n' }],
     ['ocultar un anuncio', 'admin_set_property_status', { target_property: 'p', new_status: 'hidden', review_note: 'n' }],
-    ['cambiar el límite', 'admin_set_publication_limit', { target_account: 'c', new_limit: 25, review_note: 'n' }],
+    [
+      'cambiar los límites',
+      'admin_set_account_limits',
+      { target_account: 'c', new_publications: 150, new_projects: 3, review_note: 'n' },
+    ],
   ])('para %s llama a la función de la base que comprueba el papel', async (_case, fn, args) => {
     // Arrange
     const { client, rpc } = fakeClient()
@@ -182,7 +194,7 @@ describe('createSupabaseAdminService: decisiones', () => {
     const actions: Record<string, () => Promise<void>> = {
       admin_review_report: () => service.reviewReport('r', 'dismiss', 'n'),
       admin_set_property_status: () => service.setListingStatus('p', 'hidden', 'n'),
-      admin_set_publication_limit: () => service.setPublicationLimit('c', 25, 'n'),
+      admin_set_account_limits: () => service.setAccountLimits('c', { publications: 150, projects: 3 }, 'n'),
     }
 
     // Act

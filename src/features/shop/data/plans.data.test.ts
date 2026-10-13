@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
-import { AGENT_PLANS, PLANS } from '@/features/shop/data/plans.data'
-import { ROUTES, agentPlanCheckoutPath } from '@/shared/constants/routes'
+import { AGENCY_PLANS, AGENT_PLANS, PLANS } from '@/features/shop/data/plans.data'
+import { ROUTES, agencyPlanCheckoutPath, agentPlanCheckoutPath } from '@/shared/constants/routes'
 
 describe('PLANS', () => {
   it('ofrece publicar como propietario, agente inmobiliario o inmobiliaria, en ese orden', () => {
@@ -21,7 +21,7 @@ describe('PLANS', () => {
     const expectedDescriptions = [
       'Vende o arrienda rápido. Publica 1 propiedad gratis y aprovecha nuestra alta visualización para llegar a miles de interesados sin comisiones.',
       'Impulsa tu carrera. Publica tu cartera de propiedades y accede a un panel exclusivo para administrar, dar seguimiento y ver reportes de tus anuncios. La herramienta definitiva para cerrar más ventas.',
-      'Para empresas con un equipo que gestiona varias propiedades.',
+      'Para desarrolladoras y empresas con varias propiedades. Publica tus proyectos en preventa o en construcción, con sus modelos y renders, junto a tu cartera de propiedades.',
     ]
 
     // Act
@@ -48,7 +48,7 @@ describe('PLANS', () => {
     const expectedActions = [
       { label: 'Publicar como propietario', to: ROUTES.publish },
       { label: 'Publicar como inmobiliario', to: ROUTES.agentPlans },
-      { label: 'Publicar como inmobiliaria', to: '/contacto?plan=inmobiliaria' },
+      { label: 'Publicar como inmobiliaria', to: '/planes/inmobiliarias' },
     ]
 
     // Act
@@ -131,7 +131,7 @@ describe('AGENT_PLANS', () => {
 })
 
 describe('todos los planes', () => {
-  const allPlans = [...PLANS, ...AGENT_PLANS]
+  const allPlans = [...PLANS, ...AGENT_PLANS, ...AGENCY_PLANS]
 
   it('ningún identificador se repite: el contacto distingue por él sobre qué plan se consulta', () => {
     // Arrange
@@ -149,8 +149,10 @@ describe('todos los planes', () => {
     const knownPages: string[] = [
       ROUTES.publish,
       ROUTES.agentPlans,
+      ROUTES.agencyPlans,
       ROUTES.contact,
       ...AGENT_PLANS.map((plan) => agentPlanCheckoutPath(plan.id)),
+      ...AGENCY_PLANS.map((plan) => agencyPlanCheckoutPath(plan.id)),
     ]
 
     // Act
@@ -158,5 +160,51 @@ describe('todos los planes', () => {
 
     // Assert
     expect(knownPages).toEqual(expect.arrayContaining(destinations))
+  })
+})
+
+describe('AGENCY_PLANS', () => {
+  it('ofrece tres planes de inmobiliaria, de menos a más proyectos y propiedades', () => {
+    // Arrange
+    const expected = [
+      ['Inmobiliaria Inicial', 1, 50, 1999],
+      ['Inmobiliaria Plus', 3, 150, 3999],
+      ['Inmobiliaria Corporativa', 10, 500, 6999],
+    ]
+
+    // Act
+    const plans = AGENCY_PLANS.map(({ name, maxProjects, maxPublications, monthlyPrice }) => [
+      name,
+      maxProjects,
+      maxPublications,
+      monthlyPrice,
+    ])
+
+    // Assert
+    expect(plans).toEqual(expected)
+  })
+
+  it('cada tarjeta promete los proyectos y las propiedades que el plan da a la cuenta', () => {
+    // Arrange: los planes de inmobiliaria
+
+    // Act
+    const promises = AGENCY_PLANS.map(({ features }) => features.map(({ text }) => text).join(' · '))
+
+    // Assert
+    expect(promises).toEqual([
+      expect.stringContaining('1 proyecto activo · Hasta 50 propiedades activas'),
+      expect.stringContaining('Hasta 3 proyectos activos · Hasta 150 propiedades activas'),
+      expect.stringContaining('Hasta 10 proyectos activos · Hasta 500 propiedades activas'),
+    ])
+  })
+
+  it('los planes de agente no admiten proyectos', () => {
+    // Arrange: los planes de agente
+
+    // Act
+    const projects = AGENT_PLANS.map(({ maxProjects }) => maxProjects)
+
+    // Assert
+    expect(projects).toEqual([0, 0])
   })
 })

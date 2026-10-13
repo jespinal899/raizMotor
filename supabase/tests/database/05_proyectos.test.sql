@@ -58,7 +58,7 @@ update public.projects set name = 'Cambiado' where name = 'Torre de pago 1';
 select is((select count(*)::int from public.projects where name = 'Cambiado'), 0, 'una cuenta que no es del equipo no cambia proyectos');
 select throws_ok(
   $$ select pg_temp.project('53333333-3333-4333-8333-333333333333', 'Torre ajena', 'published') $$,
-  '42501', null, 'ni los crea');
+  'RZ001', null, 'ni los crea: sin plan de inmobiliaria no admite ningún proyecto');
 select set_config('role', 'postgres', true), set_config('request.jwt.claims', '', true);
 
 -- El equipo.

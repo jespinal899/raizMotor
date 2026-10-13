@@ -1,9 +1,9 @@
 import FormSection from '@/components/FormSection'
-import type { AgentPlan } from '@/features/shop/types/plan.types'
+import type { PaidPlan } from '@/features/shop/types/plan.types'
 import { formatPriceBeforeTax } from '@/features/shop/utils/planTotal'
 
 interface CheckoutPurchaseDetailProps {
-  plan: AgentPlan
+  plan: PaidPlan
 }
 
 /** Segundo paso: cómo se paga la suscripción. Hoy hay un solo plan de pago, el mensual. */

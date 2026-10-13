@@ -6,7 +6,7 @@ import type {
   PlanApplicant,
   PlanRequest,
 } from '@/features/shop/types/checkout.types'
-import type { AgentPlan } from '@/features/shop/types/plan.types'
+import type { PaidPlan } from '@/features/shop/types/plan.types'
 import { toPlanTotal } from '@/features/shop/utils/planTotal'
 import { BRAND } from '@/shared/constants/brand'
 import { CONTACT } from '@/shared/constants/contact'
@@ -15,7 +15,7 @@ import { describeDocument, toDocumentDigits } from '@/shared/utils/honduranDocum
 import { formatInternationalPhone, toInternationalPhone } from '@/shared/utils/honduranPhone'
 import { whatsAppUrl } from '@/shared/utils/whatsApp'
 
-type RequestedPlan = Pick<AgentPlan, 'name' | 'monthlyPrice'>
+type RequestedPlan = Pick<PaidPlan, 'name' | 'monthlyPrice'>
 
 const withoutExtraSpaces = (text: string) => text.trim().replace(/\s+/g, ' ')
 

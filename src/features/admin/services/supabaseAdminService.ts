@@ -81,9 +81,11 @@ interface AccountRow {
   last_name: string
   phone: string
   max_publications: number
+  max_projects: number
   role: AdminAccount['role']
   created_at: string
   published_count: number
+  project_count: number
   total_count: number
 }
 
@@ -192,8 +194,10 @@ export const createSupabaseAdminService = (client: SupabaseClient): AdminService
           lastName: row.last_name,
           phone: row.phone,
           maxPublications: row.max_publications,
+          maxProjects: row.max_projects,
           role: row.role,
           publishedCount: Number(row.published_count),
+          projectCount: Number(row.project_count),
           createdAt: row.created_at,
         }),
       )
@@ -202,7 +206,13 @@ export const createSupabaseAdminService = (client: SupabaseClient): AdminService
       return toPage(accounts, rows.length > 0 ? Number(rows[0].total_count) : 0, page)
     },
 
-    setPublicationLimit: (accountId, limit, note) =>
-      call('admin_set_publication_limit', { target_account: accountId, new_limit: limit, review_note: note }),
+    // La función la crea supabase/migrations/20261017000000_proyectos_de_inmobiliarias.sql.
+    setAccountLimits: (accountId, { publications, projects }, note) =>
+      call('admin_set_account_limits', {
+        target_account: accountId,
+        new_publications: publications,
+        new_projects: projects,
+        review_note: note,
+      }),
   }
 }

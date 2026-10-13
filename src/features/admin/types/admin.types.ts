@@ -42,9 +42,18 @@ export interface AdminAccount {
   phone: string
   /** Cuántos anuncios puede tener publicados a la vez. */
   maxPublications: number
+  /** Cuántos proyectos puede tener publicados a la vez: más de 0 solo con un plan de inmobiliaria. */
+  maxProjects: number
   role: 'user' | 'admin'
   publishedCount: number
+  projectCount: number
   createdAt: string
+}
+
+/** Lo que una cuenta puede tener publicado a la vez, según su plan. */
+export interface AccountLimits {
+  publications: number
+  projects: number
 }
 
 export interface ListingFilter {
@@ -65,5 +74,6 @@ export interface AdminService {
   setListingStatus(propertyId: string, status: 'published' | 'hidden', note: string): Promise<void>
   /** Busca en el correo y en el nombre. */
   listAccounts(search: string, page: PageRequest): Promise<Paginated<AdminAccount>>
-  setPublicationLimit(accountId: string, limit: number, note: string): Promise<void>
+/** Los dos límites de la cuenta, en un paso: lo que se hace al activar un plan contratado. */
+  setAccountLimits(accountId: string, limits: AccountLimits, note: string): Promise<void>
 }

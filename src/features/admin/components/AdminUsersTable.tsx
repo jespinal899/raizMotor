@@ -68,6 +68,15 @@ const AdminUsersTable = ({ service }: AdminUsersTableProps) => {
                   {account.publishedCount} de {account.maxPublications}
                 </span>{' '}
                 anuncios publicados
+                {(account.maxProjects > 0 || account.projectCount > 0) && (
+                  <>
+                    {' · '}
+                    <span className="font-medium">
+                      {account.projectCount} de {account.maxProjects}
+                    </span>{' '}
+                    proyectos
+                  </>
+                )}
               </p>
               <div>
                 <AccountLimitAction account={account} service={service} onDone={list.reload} />

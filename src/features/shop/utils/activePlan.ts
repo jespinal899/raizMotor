@@ -1,5 +1,5 @@
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
-import { AGENT_PLANS, PLANS } from '@/features/shop/data/plans.data'
+import { PAID_PLANS, PLANS } from '@/features/shop/data/plans.data'
 
 export interface ActivePlan {
   name: string
@@ -18,5 +18,5 @@ const CUSTOM_PLAN = 'Plan a medida'
 export const toActivePlan = (limit: number): ActivePlan => {
   if (limit === MAX_FREE_PUBLICATIONS) return { name: FREE_PLAN.name, isFree: true }
 
-  return { name: AGENT_PLANS.find((plan) => plan.maxPublications === limit)?.name ?? CUSTOM_PLAN, isFree: false }
+  return { name: PAID_PLANS.find((plan) => plan.maxPublications === limit)?.name ?? CUSTOM_PLAN, isFree: false }
 }

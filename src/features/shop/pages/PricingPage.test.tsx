@@ -48,7 +48,7 @@ describe('PricingPage', () => {
 
   it('cada plan explica para quién es', () => {
     // Arrange
-    const expectedTexts = [/^Vende o arrienda rápido\./, /^Impulsa tu carrera\./, /^Para empresas con un equipo/]
+    const expectedTexts = [/^Vende o arrienda rápido\./, /^Impulsa tu carrera\./, /^Para desarrolladoras y empresas/]
 
     // Act
     renderWithRouter(<PricingPage />, { route: '/planes' })
@@ -64,7 +64,7 @@ describe('PricingPage', () => {
     const expectedActions = [
       'Publicar como propietario → /publicar',
       'Publicar como inmobiliario → /planes/agente-inmobiliario',
-      'Publicar como inmobiliaria → /contacto?plan=inmobiliaria',
+      'Publicar como inmobiliaria → /planes/inmobiliarias',
     ]
 
     // Act
