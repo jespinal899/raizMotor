@@ -106,7 +106,7 @@ Los textos en español de los cuatro correos (el código para activar la cuenta,
 
 ### Proyectos
 
-Las inmobiliarias publican sus proyectos solas, desde «Mis publicaciones» > Proyectos, con un formulario por pasos: ubicación en el mapa, datos del proyecto, modelos de unidad y amenidades con fotos y video. Se publican directo, como los anuncios: el equipo revisó la cuenta al activarle el plan, y si algo está mal se reporta y se oculta. Pueden corregirlos, despublicarlos (quedan en borrador) y eliminarlos.
+Las inmobiliarias publican sus proyectos solas, desde «Mis publicaciones» > Proyectos, con un formulario por pasos: ubicación en el mapa, datos del proyecto, modelos de unidad y amenidades con fotos y video. Se publican directo, como los anuncios: el equipo revisó la cuenta al activarle el plan, y si algo está mal se reporta y se oculta. Cualquiera reporta un proyecto desde su ficha («Reportar»), con los mismos motivos y límites que los anuncios; el reporte llega a la pestaña Reportes del panel, marcado como «Proyecto», donde el equipo lo oculta, lo resuelve o lo descarta. La pestaña Proyectos del panel lista todos (también los borradores) para ocultarlos o devolverlos al catálogo; un borrador solo lo publica su inmobiliaria. Pueden corregirlos, despublicarlos (quedan en borrador) y eliminarlos.
 
 Para que una cuenta publique proyectos, el equipo le activa un plan de inmobiliaria en el panel de administración > Cuentas > «Cambiar límite». Cada plan pone sus dos límites:
 
@@ -364,7 +364,7 @@ Para comprobarlo después de publicar: pegar el enlace de una ficha en WhatsApp 
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
-- Proyectos: que la ficha de un proyecto se vea al compartirla y esté en el mapa del sitio, que se pueda reportar como los anuncios, y que la limpieza diaria de fotos incluya las de `project-photos`.
+- Proyectos: que la ficha de un proyecto se vea al compartirla y esté en el mapa del sitio, que la limpieza diaria de fotos incluya las de `project-photos`, y subir hasta 20 fotos por proyecto (el formulario admite 10).
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
 - Anuncios: decidir si la ficha muestra la dirección exacta o solo la zona.
 - Que quien paga elija qué anuncios destacar, con un tope por plan: hoy se destacan todos, por turnos.

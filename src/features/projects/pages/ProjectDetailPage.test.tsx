@@ -33,6 +33,7 @@ describe('ProjectDetailPage', () => {
       'href',
       expect.stringContaining('wa.me/50499998888'),
     )
+    expect(screen.getByRole('button', { name: 'Reportar' })).toBeInTheDocument()
   })
 
   it('sin teléfono de la desarrolladora, ofrece consultar al sitio', async () => {
@@ -45,6 +46,8 @@ describe('ProjectDetailPage', () => {
     // Assert
     expect(await screen.findByRole('link', { name: /Pedir información/ })).toHaveAttribute('href', '/contacto')
     expect(screen.getByText('Ejemplo')).toBeInTheDocument()
+    // Un proyecto de ejemplo no es de nadie: no hay a quién reportarlo.
+    expect(screen.queryByRole('button', { name: 'Reportar' })).not.toBeInTheDocument()
   })
 
   it('si el proyecto no existe, lo dice y lleva al catálogo', async () => {

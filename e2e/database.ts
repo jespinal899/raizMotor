@@ -81,3 +81,10 @@ export const deleteProject = async (id: string) => {
 export const setProjectLimit = async (account: string, limit: number) => {
   await request(`profiles?id=eq.${account}`, { method: 'PATCH', body: JSON.stringify({ max_projects: limit }) })
 }
+
+/** Los reportes que recibió un proyecto, con su estado. */
+export const reportsOfProject = async (project: string): Promise<{ reason: string; status: string }[]> => {
+  const response = await request(`property_reports?select=reason,status&project_id=eq.${project}`)
+
+  return (await response.json()) as { reason: string; status: string }[]
+}

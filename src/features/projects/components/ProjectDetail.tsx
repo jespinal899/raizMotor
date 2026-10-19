@@ -10,12 +10,14 @@ import PropertyDetailSection from '@/features/properties/components/PropertyDeta
 import PropertyGallery from '@/features/properties/components/PropertyGallery'
 import PropertyLocationSection from '@/features/properties/components/PropertyLocationSection'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
+import ReportPropertyDialog from '@/features/properties/components/ReportPropertyDialog'
+import { projectReportService } from '@/features/projects/services/projectReportService'
 import { ROUTES } from '@/shared/constants/routes'
 import { toParagraphs } from '@/shared/utils/text'
 
 /** La ficha de un proyecto: renders, datos de la obra, modelos, amenidades y dónde está. */
 const ProjectDetail = ({ project }: { project: Project }) => {
-  const { name, description, district, city, department, address, coordinates, gallery, amenities, models, priceFrom, example } =
+  const { id, name, description, district, city, department, address, coordinates, gallery, amenities, models, priceFrom, example } =
     project
 
   return (
@@ -25,6 +27,8 @@ const ProjectDetail = ({ project }: { project: Project }) => {
           items={[{ label: 'Inicio', to: ROUTES.home }, { label: 'Proyectos', to: ROUTES.projects }, { label: name }]}
         />
       }
+      // Un proyecto de ejemplo no es de nadie: no hay a quién reportarlo.
+      actions={!example && <ReportPropertyDialog propertyId={id} service={projectReportService} subject="este proyecto" />}
       header={
         <header className="grid gap-3">
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-balance md:text-4xl">{name}</h1>

@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button'
 import AdminListState from '@/features/admin/components/AdminListState'
 import AdminPager from '@/features/admin/components/AdminPager'
 import ModerationActionButton from '@/features/admin/components/ModerationActionButton'
-import { LISTING_STATUS_LABELS, REPORT_STATUS_LABELS } from '@/features/admin/data/adminLabels.data'
+import { LISTING_STATUS_LABELS, PROJECT_STATUS_LABELS, REPORT_STATUS_LABELS } from '@/features/admin/data/adminLabels.data'
 import { useAdminList } from '@/features/admin/hooks/useAdminList'
 import type { AdminReport, AdminService, ReportStatus } from '@/features/admin/types/admin.types'
 import { REPORT_REASONS } from '@/features/properties/data/reportReasons.data'
-import { propertyDetailPath } from '@/shared/constants/routes'
+import { projectDetailPath, propertyDetailPath } from '@/shared/constants/routes'
 import { formatLongDate } from '@/shared/utils/format'
 
 const STATUSES = Object.keys(REPORT_STATUS_LABELS) as ReportStatus[]
@@ -19,12 +19,15 @@ interface AdminReportsTableProps {
   service: AdminService
 }
 
-/** Los reportes de anuncios, de los pendientes a los ya revisados, con lo que se puede decidir sobre cada uno. */
+/**
+ * Los reportes de anuncios y de proyectos, de los pendientes a los ya revisados, con lo que se puede decidir
+ * sobre cada uno.
+ */
 const AdminReportsTable = ({ service }: AdminReportsTableProps) => {
   const [status, setStatus] = useState<ReportStatus>('open')
   const list = useAdminList((page) => service.listReports(status, page), `reports:${status}`)
 
-  const renderActions = ({ id, property }: AdminReport) => (
+  const renderActions = ({ id, property, project }: AdminReport) => (
     <div className="flex flex-wrap gap-2">
       {property && property.status !== 'hidden' && (
         <ModerationActionButton
@@ -33,6 +36,18 @@ const AdminReportsTable = ({ service }: AdminReportsTableProps) => {
           variant="destructive"
           title="¿Ocultar este anuncio?"
           description={`«${property.title}» sale del catálogo y su dueño no podrá volver a publicarlo. Todos sus reportes pendientes quedan resueltos.`}
+          busyLabel="Ocultando…"
+          onConfirm={(note) => service.reviewReport(id, 'hide_property', note)}
+          onDone={list.reload}
+        />
+      )}
+      {project && project.status !== 'hidden' && (
+        <ModerationActionButton
+          label="Ocultar proyecto"
+          icon={EyeOff}
+          variant="destructive"
+          title="¿Ocultar este proyecto?"
+          description={`«${project.name}» sale del catálogo de proyectos y su inmobiliaria no podrá volver a publicarlo. Todos sus reportes pendientes quedan resueltos.`}
           busyLabel="Ocultando…"
           onConfirm={(note) => service.reviewReport(id, 'hide_property', note)}
           onDone={list.reload}
@@ -89,15 +104,26 @@ const AdminReportsTable = ({ service }: AdminReportsTableProps) => {
                 <p className="text-sm text-muted-foreground">{formatLongDate(report.createdAt.slice(0, 10))}</p>
               </div>
               {report.details && <p className="text-sm whitespace-pre-line">{report.details}</p>}
-              {report.property ? (
+              {report.property && (
                 <p className="flex flex-wrap items-center gap-2 text-sm">
+                  <Badge variant="secondary">Anuncio</Badge>
                   <Link to={propertyDetailPath(report.property.id)} className="font-medium text-primary underline-offset-4 hover:underline">
                     {report.property.title}
                   </Link>
                   <Badge variant="outline">{LISTING_STATUS_LABELS[report.property.status]}</Badge>
                 </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">El anuncio ya no existe.</p>
+              )}
+              {report.project && (
+                <p className="flex flex-wrap items-center gap-2 text-sm">
+                  <Badge variant="secondary">Proyecto</Badge>
+                  <Link to={projectDetailPath(report.project.id)} className="font-medium text-primary underline-offset-4 hover:underline">
+                    {report.project.name}
+                  </Link>
+                  <Badge variant="outline">{PROJECT_STATUS_LABELS[report.project.status]}</Badge>
+                </p>
+              )}
+              {!report.property && !report.project && (
+                <p className="text-sm text-muted-foreground">Lo reportado ya no existe.</p>
               )}
               {report.status === 'open' && renderActions(report)}
             </li>
