@@ -73,6 +73,20 @@ describe('addImages', () => {
     expect(rejected).toEqual([{ name: 'sobrante.jpg', reason: 'limit' }])
   })
 
+  it('con otro máximo, como el de un proyecto, caben más fotos y el aviso lo dice', () => {
+    // Arrange
+    const current = Array.from({ length: 19 }, (_, index) => buildImageFile({ name: `render-${index}.jpg` }))
+    const added = [buildImageFile({ name: 'render-19.jpg' }), buildImageFile({ name: 'sobrante.jpg' })]
+
+    // Act
+    const { accepted, rejected } = addImages(current, added, 20)
+
+    // Assert
+    expect(accepted).toHaveLength(20)
+    expect(rejected).toEqual([{ name: 'sobrante.jpg', reason: 'limit' }])
+    expect(describeRejection(rejected[0], 20)).toBe('sobrante.jpg no cabe: el máximo son 20 fotos.')
+  })
+
   it('un archivo rechazado no ocupa sitio en el máximo', () => {
     // Arrange
     const current = Array.from({ length: MAX_IMAGES - 1 }, (_, index) => buildImageFile({ name: `foto-${index}.jpg` }))

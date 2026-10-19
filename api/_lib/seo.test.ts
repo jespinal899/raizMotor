@@ -2,14 +2,16 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   PAGE_SIZE,
   escapeHtml,
+  handleProjectPage,
   handlePropertyPage,
   handleRobots,
   handleSitemap,
   injectMeta,
   isPrivatePath,
+  projectMeta,
   propertyMeta,
 } from './seo'
-import type { PropertyRow, SeoDependencies } from './seo'
+import type { ProjectRow, PropertyRow, SeoDependencies } from './seo'
 // El index.html de verdad: así se prueba que la cabecera que se completa es la que se publica.
 import INDEX_HTML from '../../index.html?raw'
 
@@ -33,6 +35,22 @@ const ROW: PropertyRow = {
   built_area: 180,
   land_area: 300,
   updated_at: '2026-10-10T12:00:00Z',
+}
+
+const PROJECT: ProjectRow = {
+  id: ID,
+  name: 'Torre Vista Lomas',
+  description: 'Torre de 14 niveles con piscina en la azotea, gimnasio y seguridad las 24 horas.',
+  kind: 'torre',
+  stage: 'preventa',
+  price_from: 89000,
+  department: 'Francisco Morazán',
+  city: 'Tegucigalpa',
+  neighborhood: 'Lomas del Guijarro',
+  photos: ['cuenta/torre/0.webp', 'https://images.unsplash.com/photo-1?w=1200'],
+  developer_name: 'Constructora Norte',
+  delivery_date: '2027-12-01',
+  updated_at: '2026-10-18T12:00:00Z',
 }
 
 const json = (body: unknown, status = 200) =>
@@ -221,6 +239,68 @@ describe('handlePropertyPage', () => {
   })
 })
 
+describe('projectMeta', () => {
+  it('describe el proyecto con su tipo, su etapa, su zona y su precio desde', () => {
+    // Arrange: un proyecto publicado
+
+    // Act
+    const meta = projectMeta(PROJECT, ORIGIN, SUPABASE)
+
+    // Assert
+    expect(meta.title).toBe('Torre Vista Lomas · Desde US$ 89,000 | DomusRaíz')
+    expect(meta.description.startsWith('Torre de apartamentos en preventa en Lomas del Guijarro, Tegucigalpa')).toBe(true)
+    expect(meta.url).toBe(`${ORIGIN}/proyectos/${ID}`)
+    expect(meta.image).toBe(`${SUPABASE}/storage/v1/object/public/project-photos/cuenta/torre/0.webp`)
+  })
+
+  it('da a Google el precio desde, la desarrolladora y la entrega, y respeta las fotos que ya son una dirección', () => {
+    // Arrange: un proyecto publicado
+
+    // Act
+    const data = JSON.parse(projectMeta(PROJECT, ORIGIN, SUPABASE).jsonLd!)
+
+    // Assert
+    expect(data.offers).toMatchObject({
+      lowPrice: 89000,
+      priceCurrency: 'USD',
+      offeredBy: { name: 'Constructora Norte' },
+      availabilityStarts: '2027-12-01',
+    })
+    expect(data.image[1]).toBe('https://images.unsplash.com/photo-1?w=1200')
+  })
+})
+
+describe('handleProjectPage', () => {
+  it('entrega el sitio con la cabecera del proyecto publicado, pidiendo solo proyectos publicados', async () => {
+    // Arrange
+    const deps = depsWith(() => json([PROJECT]))
+
+    // Act
+    const response = await handleProjectPage(new Request(`${ORIGIN}/api/proyecto?id=${ID}`), deps)
+    const html = await response.text()
+
+    // Assert
+    expect(response.status).toBe(200)
+    expect(html).toContain('<title>Torre Vista Lomas · Desde US$ 89,000 | DomusRaíz</title>')
+    expect(html).toContain(`<meta property="og:url" content="${ORIGIN}/proyectos/${ID}" />`)
+    const supabaseCall = String(deps.fetch.mock.calls.find(([url]) => String(url).includes('/rest/v1/'))?.[0])
+    expect(supabaseCall).toContain('/rest/v1/projects?')
+    expect(supabaseCall).toContain('status=eq.published')
+  })
+
+  it('si el proyecto no existe o no está publicado, responde 404 con el sitio sin tocar', async () => {
+    // Arrange
+    const deps = depsWith(() => json([]))
+
+    // Act
+    const response = await handleProjectPage(new Request(`${ORIGIN}/api/proyecto?id=${ID}`), deps)
+
+    // Assert
+    expect(response.status).toBe(404)
+    expect(await response.text()).toBe(INDEX_HTML)
+  })
+})
+
 describe('handleSitemap', () => {
   it('lista las páginas públicas y cada anuncio publicado, leyendo por páginas', async () => {
     // Arrange
@@ -241,6 +321,8 @@ describe('handleSitemap', () => {
     expect(xml).toContain(`<loc>${ORIGIN}/</loc>`)
     expect(xml).toContain(`<loc>${ORIGIN}/propiedades</loc>`)
     expect(xml.match(/\/propiedad\//g)).toHaveLength(PAGE_SIZE + 2)
+    expect(xml.match(/\/proyectos\/[0-9]/g)).toHaveLength(PAGE_SIZE + 2)
+    expect(xml).toContain(`<loc>${ORIGIN}/proyectos</loc>`)
     expect(xml).toContain('<lastmod>2026-10-10</lastmod>')
     expect(xml).not.toContain('/publicar')
   })

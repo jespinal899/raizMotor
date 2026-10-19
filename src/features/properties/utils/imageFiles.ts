@@ -24,22 +24,25 @@ export interface ImageSelection {
 export const imageKey = (photo: PublicationPhoto): string =>
   typeof photo === 'string' ? photo : `${photo.name}|${photo.size}|${photo.lastModified}`
 
-const findRejection = (file: File, accepted: PublicationPhoto[]): ImageRejectionReason | undefined => {
+const findRejection = (file: File, accepted: PublicationPhoto[], max: number): ImageRejectionReason | undefined => {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return 'type'
   if (file.size > MAX_IMAGE_BYTES) return 'size'
   if (accepted.some((other) => imageKey(other) === imageKey(file))) return 'duplicate'
-  if (accepted.length >= MAX_IMAGES) return 'limit'
+  if (accepted.length >= max) return 'limit'
 
   return undefined
 }
 
-/** Añade las fotos elegidas a las que ya había y aparta las que no cumplen los requisitos. */
-export const addImages = (current: PublicationPhoto[], candidates: File[]): ImageSelection => {
+/**
+ * Añade las fotos elegidas a las que ya había y aparta las que no cumplen los requisitos. Caben `max`: las de
+ * un anuncio, salvo que se diga otra cosa (un proyecto admite más).
+ */
+export const addImages = (current: PublicationPhoto[], candidates: File[], max = MAX_IMAGES): ImageSelection => {
   const accepted = [...current]
   const rejected: RejectedImage[] = []
 
   for (const file of candidates) {
-    const reason = findRejection(file, accepted)
+    const reason = findRejection(file, accepted, max)
 
     if (reason) rejected.push({ name: file.name, reason })
     else accepted.push(file)
@@ -48,12 +51,13 @@ export const addImages = (current: PublicationPhoto[], candidates: File[]): Imag
   return { accepted, rejected }
 }
 
-const REJECTION_REASONS: Record<ImageRejectionReason, string> = {
-  type: 'no es una foto JPG, PNG o WebP',
-  size: `pesa más de ${MAX_IMAGE_MEGABYTES} MB`,
-  duplicate: 'ya estaba agregada',
-  limit: `no cabe: el máximo son ${MAX_IMAGES} fotos`,
+const REJECTION_REASONS: Record<ImageRejectionReason, (max: number) => string> = {
+  type: () => 'no es una foto JPG, PNG o WebP',
+  size: () => `pesa más de ${MAX_IMAGE_MEGABYTES} MB`,
+  duplicate: () => 'ya estaba agregada',
+  limit: (max) => `no cabe: el máximo son ${max} fotos`,
 }
 
 /** Frase que explica a la persona por qué no se agregó un archivo. */
-export const describeRejection = ({ name, reason }: RejectedImage): string => `${name} ${REJECTION_REASONS[reason]}.`
+export const describeRejection = ({ name, reason }: RejectedImage, max = MAX_IMAGES): string =>
+  `${name} ${REJECTION_REASONS[reason](max)}.`

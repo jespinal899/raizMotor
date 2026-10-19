@@ -106,7 +106,7 @@ Los textos en español de los cuatro correos (el código para activar la cuenta,
 
 ### Proyectos
 
-Las inmobiliarias publican sus proyectos solas, desde «Mis publicaciones» > Proyectos, con un formulario por pasos: ubicación en el mapa, datos del proyecto, modelos de unidad y amenidades con fotos y video. Se publican directo, como los anuncios: el equipo revisó la cuenta al activarle el plan, y si algo está mal se reporta y se oculta. Cualquiera reporta un proyecto desde su ficha («Reportar»), con los mismos motivos y límites que los anuncios; el reporte llega a la pestaña Reportes del panel, marcado como «Proyecto», donde el equipo lo oculta, lo resuelve o lo descarta. La pestaña Proyectos del panel lista todos (también los borradores) para ocultarlos o devolverlos al catálogo; un borrador solo lo publica su inmobiliaria. Pueden corregirlos, despublicarlos (quedan en borrador) y eliminarlos.
+Las inmobiliarias publican sus proyectos solas, desde «Mis publicaciones» > Proyectos, con un formulario por pasos: ubicación en el mapa, datos del proyecto, modelos de unidad y amenidades con hasta 20 fotos y un video. Se publican directo, como los anuncios: el equipo revisó la cuenta al activarle el plan, y si algo está mal se reporta y se oculta. Cualquiera reporta un proyecto desde su ficha («Reportar»), con los mismos motivos y límites que los anuncios; el reporte llega a la pestaña Reportes del panel, marcado como «Proyecto», donde el equipo lo oculta, lo resuelve o lo descarta. La pestaña Proyectos del panel lista todos (también los borradores) para ocultarlos o devolverlos al catálogo; un borrador solo lo publica su inmobiliaria. Pueden corregirlos, despublicarlos (quedan en borrador) y eliminarlos.
 
 Para que una cuenta publique proyectos, el equipo le activa un plan de inmobiliaria en el panel de administración > Cuentas > «Cambiar límite». Cada plan pone sus dos límites:
 
@@ -187,7 +187,7 @@ Se vuelve a publicar cada vez que cambia algo en `supabase/functions/contact-pub
 
 #### Limpieza de fotos huérfanas (Edge Function)
 
-Al publicar, primero se suben las fotos y después se guarda el anuncio. Si el anuncio no llega a guardarse (el límite del plan, una conexión cortada, una página cerrada a medias), si falla el borrado de las fotos viejas al editar o borrar un anuncio, o si se elimina una cuenta, quedan en el depósito fotos que no usa ningún anuncio. La función `supabase/functions/cleanup-photos` las borra una vez al día: solo las que no están en ningún anuncio, esté publicado, despublicado u oculto, y que se subieron hace más de 24 horas, para no tocar lo de quien está publicando en ese momento. Borra como mucho 10.000 por ejecución; si quedan más, salen al día siguiente.
+Al publicar, primero se suben las fotos y después se guarda el anuncio. Si el anuncio no llega a guardarse (el límite del plan, una conexión cortada, una página cerrada a medias), si falla el borrado de las fotos viejas al editar o borrar un anuncio, o si se elimina una cuenta, quedan en el depósito fotos que no usa ningún anuncio. La función `supabase/functions/cleanup-photos` las borra una vez al día, y lo mismo con las de los proyectos (depósito `project-photos`): solo las que no están en ningún anuncio o proyecto, esté publicado, despublicado u oculto, y que se subieron hace más de 24 horas, para no tocar lo de quien está publicando en ese momento. Borra como mucho 10.000 por ejecución; si quedan más, salen al día siguiente.
 
 Necesita la migración 12 y un secreto propio, de al menos 32 caracteres, que solo conocen la función y la tarea programada. En PowerShell se genera uno con `[guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')`:
 
@@ -346,10 +346,11 @@ El archivo `vercel.json` también hace que cualquier dirección del sitio entreg
 
 ### Buscadores y vista previa al compartir
 
-Google, WhatsApp y Facebook leen el HTML tal como llega, y el sitio se arma en el navegador: sin ayuda, todas las fichas dirían solo «DomusRaíz», sin foto. Tres funciones de Vercel, en `api/`, lo completan (la lógica está en `api/_lib/seo.ts` y la prueban las pruebas del proyecto):
+Google, WhatsApp y Facebook leen el HTML tal como llega, y el sitio se arma en el navegador: sin ayuda, todas las fichas dirían solo «DomusRaíz», sin foto. Cuatro funciones de Vercel, en `api/`, lo completan (la lógica está en `api/_lib/seo.ts` y la prueban las pruebas del proyecto):
 
 - **`/propiedad/:id`** (`api/propiedad.ts`): entrega el sitio con la cabecera de ese anuncio: su título con el precio, una descripción con el tipo, la zona y el precio, la portada como imagen de la vista previa, la dirección canónica y los datos estructurados (schema.org `RealEstateListing`) que Google usa para entender el precio y la ubicación. Solo con anuncios publicados; si no existe responde 404, y si Supabase no responde abre la ficha igual, sin vista previa.
-- **`/sitemap.xml`** (`api/sitemap.ts`): las páginas públicas y cada anuncio publicado, con su fecha de última edición.
+- **`/proyectos/:id`** (`api/proyecto.ts`): lo mismo con cada proyecto publicado: su nombre con el precio desde, una descripción con el tipo, la etapa y la zona, su primera foto y los datos estructurados con el precio desde, la desarrolladora y la entrega estimada.
+- **`/sitemap.xml`** (`api/sitemap.ts`): las páginas públicas y cada proyecto y anuncio publicado, con su fecha de última edición.
 - **`/robots.txt`** (`api/robots.ts`): cierra a los buscadores las páginas de cuenta, publicar, administrar y entrar, y señala el mapa del sitio.
 
 Usan las mismas variables de Supabase de la compilación, con la clave pública. Conviene añadir en Vercel (Settings > Environment Variables, en Production) la variable `SITE_URL` con la dirección del sitio, por ejemplo `https://www.tudominio.hn`: así la dirección canónica y el mapa del sitio usan siempre esa, aunque se entre por el dominio de Vercel. Sin ella, usan la dirección con que se pidió la página.
@@ -364,7 +365,7 @@ Para comprobarlo después de publicar: pegar el enlace de una ficha en WhatsApp 
 - Verificar el teléfono del registro con un código por SMS.
 - Consultar el tipo de cambio en un servidor: los precios se guardan en dólares y su equivalente en lempiras se calcula con un valor de referencia que hoy se actualiza a mano en `src/shared/constants/currency.ts`.
 - Definir el plan para inmobiliarias.
-- Proyectos: que la ficha de un proyecto se vea al compartirla y esté en el mapa del sitio, que la limpieza diaria de fotos incluya las de `project-photos`, y subir hasta 20 fotos por proyecto (el formulario admite 10).
+- Proyectos: un botón «Compartir» en su ficha, como el de los anuncios (al pegar el enlace ya sale la vista previa).
 - Construir lo que los planes anuncian y aún no existe: el panel del agente con gestión, reportes y métricas, los usuarios por plan, la marca del agente en sus anuncios, y el soporte 24/7.
 - Anuncios: decidir si la ficha muestra la dirección exacta o solo la zona.
 - Que quien paga elija qué anuncios destacar, con un tope por plan: hoy se destacan todos, por turnos.

@@ -1,11 +1,12 @@
-// Limpieza de fotos huérfanas: borra del depósito `property-photos` las fotos que ningún anuncio usa desde
-// hace más de 24 horas. La llama una vez al día una tarea programada de Supabase Cron, con el secreto
+// Limpieza de fotos huérfanas: borra de los depósitos `property-photos` y `project-photos` las fotos que ningún
+// anuncio ni proyecto usa desde hace más de 24 horas. La llama una vez al día una tarea programada de Supabase Cron, con el secreto
 // `CLEANUP_SECRET`. La lógica está en cleanup.ts; aquí solo se conecta con la base de datos y con Storage.
 //
 // Se publica con: supabase functions deploy cleanup-photos --no-verify-jwt
 // (la protege su propio secreto, no una sesión). Cómo programarla está en el README.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { handleCleanup } from './cleanup.ts'
+import { combineBuckets, handleCleanup } from './cleanup.ts'
+import type { PhotoBucket } from './cleanup.ts'
 
 const required = (name: string): string => {
   const value = Deno.env.get(name)?.trim()
@@ -21,25 +22,32 @@ const supabase = createClient(required('SUPABASE_URL'), required('SUPABASE_SERVI
   auth: { persistSession: false },
 })
 
-const listOrphans = async (limit: number) => {
-  const { data, error } = await supabase.rpc('orphan_photos', { max_rows: limit })
-  if (error) throw error
+/** Un depósito, con las funciones de la base de datos que dicen qué sobra en él (supabase/migrations). */
+const bucket = (name: string, list: string, count: string): PhotoBucket => ({
+  bucket: name,
+  listOrphans: async (limit) => {
+    const { data, error } = await supabase.rpc(list, { max_rows: limit })
+    if (error) throw error
 
-  return ((data ?? []) as { name: string }[]).map((row) => row.name)
-}
+    return ((data ?? []) as { name: string }[]).map((row) => row.name)
+  },
+  countOrphans: async () => {
+    const { data, error } = await supabase.rpc(count)
+    if (error) throw error
 
-const countOrphans = async () => {
-  const { data, error } = await supabase.rpc('count_orphan_photos')
-  if (error) throw error
+    return Number(data ?? 0)
+  },
+  removePhotos: async (paths) => {
+    const { data, error } = await supabase.storage.from(name).remove(paths)
+    if (error) throw error
 
-  return Number(data ?? 0)
-}
+    return data?.length ?? 0
+  },
+})
 
-const removePhotos = async (paths: string[]) => {
-  const { data, error } = await supabase.storage.from('property-photos').remove(paths)
-  if (error) throw error
+const photos = combineBuckets([
+  bucket('property-photos', 'orphan_photos', 'count_orphan_photos'),
+  bucket('project-photos', 'orphan_project_photos', 'count_orphan_project_photos'),
+])
 
-  return data?.length ?? 0
-}
-
-Deno.serve((request) => handleCleanup(request, { listOrphans, countOrphans, removePhotos, secret: CLEANUP_SECRET }))
+Deno.serve((request) => handleCleanup(request, { ...photos, secret: CLEANUP_SECRET }))

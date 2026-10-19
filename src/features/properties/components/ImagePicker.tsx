@@ -19,14 +19,16 @@ interface ImagePickerProps {
   files: PublicationPhoto[]
   onChange: (files: PublicationPhoto[]) => void
   error?: string
+  /** Cuántas caben: las de un anuncio, salvo que se diga otra cosa. */
+  max?: number
 }
 
-const ImagePicker = ({ files, onChange, error }: ImagePickerProps) => {
+const ImagePicker = ({ files, onChange, error, max = MAX_IMAGES }: ImagePickerProps) => {
   const [rejected, setRejected] = useState<RejectedImage[]>([])
-  const isFull = files.length >= MAX_IMAGES
+  const isFull = files.length >= max
 
   const handleSelect = (event: ChangeEvent<HTMLInputElement>) => {
-    const selection = addImages(files, Array.from(event.target.files ?? []))
+    const selection = addImages(files, Array.from(event.target.files ?? []), max)
     // Vaciar el campo permite volver a elegir un archivo que se acaba de quitar.
     event.target.value = ''
 
@@ -40,7 +42,7 @@ const ImagePicker = ({ files, onChange, error }: ImagePickerProps) => {
   }
 
   return (
-    <FormGroup label="Fotos" hint={`hasta ${MAX_IMAGES}, de ${MAX_IMAGE_MEGABYTES} MB como máximo cada una`} error={error}>
+    <FormGroup label="Fotos" hint={`hasta ${max}, de ${MAX_IMAGE_MEGABYTES} MB como máximo cada una`} error={error}>
       {(group) => (
         <div role="group" {...group} className="grid gap-3">
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -66,13 +68,13 @@ const ImagePicker = ({ files, onChange, error }: ImagePickerProps) => {
             )}
           </ul>
 
-          {isFull && <p className="text-sm text-muted-foreground">Llegaste al máximo de {MAX_IMAGES} fotos.</p>}
+          {isFull && <p className="text-sm text-muted-foreground">Llegaste al máximo de {max} fotos.</p>}
 
           {rejected.length > 0 && (
             <div role="alert" className="text-sm text-destructive">
               <ul className="grid gap-1">
                 {rejected.map((image) => (
-                  <li key={`${image.name}-${image.reason}`}>{describeRejection(image)}</li>
+                  <li key={`${image.name}-${image.reason}`}>{describeRejection(image, max)}</li>
                 ))}
               </ul>
             </div>

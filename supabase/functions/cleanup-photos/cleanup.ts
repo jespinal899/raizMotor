@@ -79,3 +79,52 @@ export const handleCleanup = async (request: Request, deps: CleanupDependencies)
 
   return reply(200, { deleted, more })
 }
+
+/** Un depósito de fotos que se limpia: cómo saber qué sobra en él y cómo borrarlo. */
+export interface PhotoBucket {
+  /** El nombre del depósito en Storage, p. ej. `property-photos`. */
+  bucket: string
+  listOrphans: CleanupDependencies['listOrphans']
+  countOrphans: CleanupDependencies['countOrphans']
+  removePhotos: CleanupDependencies['removePhotos']
+}
+
+/** Separa el depósito de la ruta: los nombres de depósito nunca llevan dos puntos. */
+const SEPARATOR = ':'
+
+/**
+ * Junta varios depósitos en uno solo para `handleCleanup`: cada tanda se llena con lo que sobra en el primero
+ * y, si cabe más, en los siguientes; cada ruta lleva delante su depósito, y al borrar se reparten de vuelta.
+ */
+export const combineBuckets = (
+  buckets: PhotoBucket[],
+): Pick<CleanupDependencies, 'listOrphans' | 'countOrphans' | 'removePhotos'> => ({
+  listOrphans: async (limit) => {
+    const found: string[] = []
+    for (const { bucket, listOrphans } of buckets) {
+      if (found.length >= limit) break
+      const paths = await listOrphans(limit - found.length)
+      found.push(...paths.map((path) => `${bucket}${SEPARATOR}${path}`))
+    }
+
+    return found
+  },
+
+  countOrphans: async () => {
+    let total = 0
+    for (const { countOrphans } of buckets) total += await countOrphans()
+
+    return total
+  },
+
+  removePhotos: async (keys) => {
+    let removed = 0
+    for (const { bucket, removePhotos } of buckets) {
+      const prefix = `${bucket}${SEPARATOR}`
+      const paths = keys.filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length))
+      if (paths.length > 0) removed += await removePhotos(paths)
+    }
+
+    return removed
+  },
+})
