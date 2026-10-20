@@ -62,3 +62,30 @@ describe('ProjectDetailPage', () => {
     expect(screen.getByRole('link', { name: 'Ver todos los proyectos' })).toHaveAttribute('href', '/proyectos')
   })
 })
+
+describe('ProjectDetailPage: cotizar', () => {
+  it('ofrece cotizar el proyecto eligiendo uno de sus modelos', async () => {
+    // Arrange
+    getById.mockResolvedValue({ ...PROJECTS[0], example: false })
+
+    // Act
+    openProject(PROJECTS[0].id)
+
+    // Assert
+    expect(await screen.findByRole('heading', { name: 'Cotiza este proyecto' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: /Modelo que te interesa/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Pedir cotización' })).toBeInTheDocument()
+  })
+
+  it('un proyecto de ejemplo no se cotiza: no es de nadie', async () => {
+    // Arrange
+    getById.mockResolvedValue({ ...PROJECTS[0], example: true })
+
+    // Act
+    openProject(PROJECTS[0].id)
+
+    // Assert
+    await screen.findByRole('heading', { level: 1, name: PROJECTS[0].name })
+    expect(screen.queryByRole('heading', { name: 'Cotiza este proyecto' })).not.toBeInTheDocument()
+  })
+})

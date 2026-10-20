@@ -1,5 +1,5 @@
-// «Contacta al publicador»: recibe del sitio los datos de quien ve un anuncio y se los envía por correo, con
-// Resend, a quien lo publicó. El correo del publicador se lee aquí, con la clave de servicio, y nunca llega
+// «Contacta al publicador» y «Cotizar» de los proyectos: recibe del sitio los datos de quien ve un anuncio o un
+// proyecto y se los envía por correo, con Resend, a quien lo publicó. El correo del publicador se lee aquí, con la clave de servicio, y nunca llega
 // al navegador. La lógica está en contact.ts; aquí solo se conecta con Supabase, Resend y Turnstile.
 //
 // Se publica con: supabase functions deploy contact-publisher --no-verify-jwt
@@ -28,19 +28,14 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? SITE_URL)
   .filter(Boolean)
 const TURNSTILE_SECRET_KEY = Deno.env.get('TURNSTILE_SECRET_KEY')?.trim() || null
 
-const claim = async (propertyId: string, operationKey: string, senderFingerprint: string): Promise<Claim> => {
-  const { data, error } = await supabase.rpc('claim_publisher_contact', {
-    target_property: propertyId,
-    contact_key: operationKey,
-    sender_fingerprint: senderFingerprint,
-  })
-  if (error) throw error
-
+/** La reserva del envío, tal como la entrega la base de datos (supabase/migrations). */
+const toClaim = (data: unknown): Claim => {
   const [row] = (data ?? []) as {
     outcome: string
     owner_email: string | null
     publisher_name: string | null
-    property_title: string | null
+    property_title?: string | null
+    project_name?: string | null
   }[]
   if (!row) throw new Error('La base de datos no respondió.')
   if (row.outcome === 'already_sent') return { outcome: 'already_sent' }
@@ -49,8 +44,30 @@ const claim = async (propertyId: string, operationKey: string, senderFingerprint
     outcome: 'claimed',
     ownerEmail: row.owner_email ?? '',
     publisherName: row.publisher_name ?? '',
-    propertyTitle: row.property_title ?? '',
+    propertyTitle: row.property_title ?? row.project_name ?? '',
   }
+}
+
+const claim = async (propertyId: string, operationKey: string, senderFingerprint: string): Promise<Claim> => {
+  const { data, error } = await supabase.rpc('claim_publisher_contact', {
+    target_property: propertyId,
+    contact_key: operationKey,
+    sender_fingerprint: senderFingerprint,
+  })
+  if (error) throw error
+
+  return toClaim(data)
+}
+
+const claimProject = async (projectId: string, operationKey: string, senderFingerprint: string): Promise<Claim> => {
+  const { data, error } = await supabase.rpc('claim_project_contact', {
+    target_project: projectId,
+    contact_key: operationKey,
+    sender_fingerprint: senderFingerprint,
+  })
+  if (error) throw error
+
+  return toClaim(data)
 }
 
 const release = async (operationKey: string) => {
@@ -90,6 +107,7 @@ const fingerprint = async (ip: string) => {
 Deno.serve((request) =>
   handleContact(request, {
     claim,
+    claimProject,
     release,
     sendEmail,
     verifyCaptcha: TURNSTILE_SECRET_KEY ? verifyCaptcha : null,

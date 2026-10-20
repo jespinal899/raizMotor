@@ -21,6 +21,7 @@ Sin las variables de Supabase en la compilación, el sitio sigue funcionando sin
 | Ficha de una propiedad | Muestra los anuncios publicados y los de ejemplo; se comparte por WhatsApp o enlace y, si el anuncio tiene su punto en el mapa, abre la ruta en Google Maps |
 | Contactar a quien publica | La ficha de un anuncio publicado dice quién lo publica y abre WhatsApp con el teléfono de su cuenta y el anuncio ya citado. Los de ejemplo llevan al contacto del sitio |
 | Contactar al publicador desde la ficha («Contacta al publicador en segundos») | Quien ve un anuncio, sin necesidad de cuenta, deja su nombre, su correo y su teléfono, y le llegan por correo a quien lo publicó, que puede responderle directamente. Lo envía la Edge Function `contact-publisher` con Resend: el correo del publicador nunca llega al navegador, y los datos de quien escribe no se guardan. Tiene verificación contra bots y un límite de 5 envíos por hora por IP y 20 por anuncio. No aparece en las propiedades de ejemplo |
+| Cotizar un proyecto desde su ficha («Cotiza este proyecto») | Igual que el contacto por un anuncio, con el modelo de unidad que interesa (opcional): le llega por correo a la cuenta de la inmobiliaria, con el proyecto, el modelo y los datos de quien escribe, y puede responderle directamente. La misma función `contact-publisher`, la misma verificación contra bots y los mismos límites: 5 envíos por hora por IP (sumando anuncios y proyectos) y 20 por proyecto. Los datos de quien escribe no se guardan. No aparece en los proyectos de ejemplo |
 | Reportar una publicación desde su ficha | Funciona con Supabase, con o sin sesión: el reporte llega al panel de administración. Hay un tope de reportes por hora, por cuenta y por anuncio. Las propiedades de ejemplo no se reportan |
 | Vistas de una ficha | Cuenta solo las visitas hechas desde este navegador, y lo dice; falta el servidor que sume las de todos |
 | Publicar una propiedad: formulario por pasos con mapa, estacionamientos y comodidades | Se llega desde los planes y pide iniciar sesión. Guarda el anuncio en Supabase con hasta 10 fotos, que se reducen antes de subirlas, y queda visible de inmediato. Cada cuenta admite los anuncios de su plan: uno con el gratuito |
@@ -165,7 +166,7 @@ Las tablas, sus permisos y el depósito de fotos se crean con los archivos de [`
 
 #### Contacto al publicador (Edge Function)
 
-El formulario de la ficha llama a la función `supabase/functions/contact-publisher`, que busca el correo de quien publicó el anuncio y le envía los datos con [Resend](https://resend.com/). Necesita la migración 11 y estos secretos de Supabase, que se ponen desde tu equipo y nunca van al repositorio:
+El formulario de la ficha llama a la función `supabase/functions/contact-publisher`, que busca el correo de quien publicó el anuncio (o de la cuenta dueña del proyecto, al cotizar uno) y le envía los datos con [Resend](https://resend.com/). Necesita la migración 11 (y la 18 para los proyectos) y estos secretos de Supabase, que se ponen desde tu equipo y nunca van al repositorio:
 
 ```bash
 supabase secrets set RESEND_API_KEY=re_…                       # la clave de API de Resend

@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, ReactNode } from 'react'
 import { Send } from 'lucide-react'
 import CaptchaWidget from '@/components/CaptchaWidget'
 import EmailField from '@/components/EmailField'
@@ -15,13 +15,25 @@ import { MAX_FULL_NAME_LENGTH } from '@/features/properties/utils/quoteValidatio
 interface PropertyQuoteFormProps {
   /** Se resuelve cuando la solicitud queda entregada. La clave identifica el envío, para no registrarlo dos veces. */
   onSubmit: (applicant: QuoteApplicant, operationKey: string) => Promise<void>
+  /** El título y la explicación del formulario: los de un anuncio, salvo que se pida otra cosa. */
+  heading?: string
+  description?: string
+  submitLabel?: string
+  /** Campos propios de lo que se cotiza, como el modelo de un proyecto: van antes de aceptar los términos. */
+  children?: ReactNode
 }
 
 /**
  * Formulario breve de la ficha para que el publicador contacte a quien está interesado: sus datos le llegan
  * por correo, sin que haga falta una cuenta.
  */
-const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
+const PropertyQuoteForm = ({
+  onSubmit,
+  heading = 'Contacta al publicador en segundos',
+  description = 'Déjale tus datos y te escribirá o llamará directamente.',
+  submitLabel = 'Enviar mis datos',
+  children,
+}: PropertyQuoteFormProps) => {
   const titleId = useId()
   const descriptionId = useId()
   const { values, errors, status, change, submit } = useQuoteForm({ onSubmit })
@@ -42,10 +54,10 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
     >
       <div className="grid gap-1">
         <h2 id={titleId} className="font-heading text-lg font-semibold tracking-tight">
-          Contacta al publicador en segundos
+          {heading}
         </h2>
         <p id={descriptionId} className="text-sm text-pretty text-muted-foreground">
-          Déjale tus datos y te escribirá o llamará directamente.
+          {description}
         </p>
       </div>
 
@@ -76,6 +88,8 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
         readOnly={isSending}
       />
 
+      {children}
+
       <TermsCheckboxField
         checked={values.acceptsTerms}
         error={errors.acceptsTerms}
@@ -92,7 +106,7 @@ const PropertyQuoteForm = ({ onSubmit }: PropertyQuoteFormProps) => {
         icon={Send}
         submittingLabel="Enviando…"
       >
-        Enviar mis datos
+        {submitLabel}
       </SubmitButton>
 
       <QuoteFormAlert status={status} />

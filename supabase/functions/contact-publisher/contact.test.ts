@@ -18,8 +18,25 @@ const CLAIMED: Claim = {
   propertyTitle: 'Casa amplia con patio en Palmira',
 }
 
+const PROJECT_ID = '0b9f8c1e-6f3a-4c8e-9a51-2f1c3d4e5f60'
+const PROJECT_CONTACT = {
+  projectId: PROJECT_ID,
+  model: 'Modelo A',
+  fullName: 'Ana Mejía',
+  email: 'ana@ejemplo.hn',
+  phone: '+50499998888',
+  operationKey: 'clave-del-envio',
+}
+const PROJECT_CLAIMED: Claim = {
+  outcome: 'claimed',
+  ownerEmail: 'ventas@constructora.hn',
+  publisherName: 'Constructora Norte',
+  propertyTitle: 'Torre Vista Lomas',
+}
+
 const deps = (overrides: Partial<ContactDependencies> = {}): ContactDependencies => ({
   claim: vi.fn(async () => CLAIMED),
+  claimProject: vi.fn(async () => PROJECT_CLAIMED),
   release: vi.fn(async () => {}),
   sendEmail: vi.fn(async () => {}),
   verifyCaptcha: null,
@@ -274,5 +291,81 @@ describe('handleContact', () => {
 
     // Assert
     expect(response.status).toBe(405)
+  })
+})
+
+describe('contacto por un proyecto', () => {
+  it('acepta un proyecto con su modelo, y sin modelo también', () => {
+    // Arrange
+    const { model: _model, ...withoutModel } = PROJECT_CONTACT
+
+    // Act
+    const withModel = parseContactRequest({ ...PROJECT_CONTACT, model: '  Modelo   A ' })
+    const plain = parseContactRequest(withoutModel)
+
+    // Assert
+    expect(withModel).toEqual({ ok: true, value: PROJECT_CONTACT })
+    expect(plain).toEqual({ ok: true, value: withoutModel })
+  })
+
+  it.each([
+    ['projectId', { projectId: 'torre-de-ejemplo' }],
+    ['projectId', { propertyId: PROPERTY_ID }],
+    ['model', { model: 'M'.repeat(61) }],
+    ['model', { model: 7 }],
+  ])('rechaza un %s que no es válido, y un contacto por un anuncio y un proyecto a la vez', (field, change) => {
+    // Arrange
+    const body = { ...PROJECT_CONTACT, ...change }
+
+    // Act
+    const parsed = parseContactRequest(body)
+
+    // Assert
+    expect(parsed).toEqual({ ok: false, field })
+  })
+
+  it('un anuncio no lleva modelo', () => {
+    // Arrange
+    const body = { ...CONTACT, model: 'Modelo A' }
+
+    // Act
+    const parsed = parseContactRequest(body)
+
+    // Assert
+    expect(parsed).toEqual({ ok: false, field: 'model' })
+  })
+
+  it('reserva el envío del proyecto y manda a la inmobiliaria la cotización con el modelo y el enlace al proyecto', async () => {
+    // Arrange
+    const dependencies = deps()
+
+    // Act
+    const response = await handleContact(post(PROJECT_CONTACT), dependencies)
+
+    // Assert
+    expect(response.status).toBe(200)
+    expect(dependencies.claimProject).toHaveBeenCalledExactlyOnceWith(PROJECT_ID, 'clave-del-envio', 'huella-de-200.1.2.3')
+    expect(dependencies.claim).not.toHaveBeenCalled()
+    const [email] = vi.mocked(dependencies.sendEmail).mock.calls[0]
+    expect(email).toMatchObject({
+      to: 'ventas@constructora.hn',
+      replyTo: 'ana@ejemplo.hn',
+      subject: 'Nueva solicitud de cotización del Modelo A en «Torre Vista Lomas»',
+    })
+    expect(email.text).toContain('Modelo que le interesa: Modelo A')
+    expect(email.text).toContain(`Ver el proyecto: ${SITE}/proyectos/${PROJECT_ID}`)
+    expect(email.html).toContain('<strong>Modelo A</strong>')
+  })
+
+  it('el modelo que escribió quien visita va como texto en el correo, nunca como etiquetas', () => {
+    // Arrange
+    const contact = { ...PROJECT_CONTACT, model: '<b>Modelo</b>' }
+
+    // Act
+    const email = buildPublisherEmail(contact, PROJECT_CLAIMED as Extract<Claim, { outcome: 'claimed' }>, SITE)
+
+    // Assert
+    expect(email.html).not.toContain('<b>Modelo</b>')
+    expect(email.html).toContain('&#60;b&#62;Modelo&#60;/b&#62;')
   })
 })

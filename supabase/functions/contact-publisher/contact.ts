@@ -5,6 +5,8 @@ const BRAND = 'DomusRaíz'
 const MAX_FULL_NAME_LENGTH = 120
 const MAX_EMAIL_LENGTH = 254
 const MAX_CAPTCHA_LENGTH = 2048
+/** El nombre de un modelo de unidad, como lo admite la base de datos. */
+const MAX_MODEL_LENGTH = 60
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const OPERATION_KEY = /^[A-Za-z0-9_-]{1,64}$/
@@ -12,15 +14,19 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 /** +504 y ocho dígitos, empezando por 2, 3, 7, 8 o 9: la misma regla del formulario. */
 const HONDURAN_PHONE = /^\+504[23789]\d{7}$/
 
-/** Lo que manda el sitio. */
-export interface ContactRequest {
-  propertyId: string
+interface ContactDetails {
   fullName: string
   email: string
   phone: string
   operationKey: string
   captchaToken?: string
 }
+
+/**
+ * Lo que manda el sitio: el contacto por un anuncio, o por un proyecto con el modelo de unidad que interesa,
+ * si se eligió uno.
+ */
+export type ContactRequest = ContactDetails & ({ propertyId: string } | { projectId: string; model?: string })
 
 /** Lo que la base de datos entrega al reservar el envío. */
 export type Claim =
@@ -42,8 +48,13 @@ export interface DatabaseError {
 }
 
 export interface ContactDependencies {
-  /** Reserva el envío en la base de datos; rechaza con su fallo. */
+  /** Reserva el envío por un anuncio en la base de datos; rechaza con su fallo. */
   claim(propertyId: string, operationKey: string, senderFingerprint: string): Promise<Claim>
+  /**
+   * Lo mismo por un proyecto: `propertyTitle` trae entonces el nombre del proyecto, y `publisherName`, el de su
+   * desarrolladora.
+   */
+  claimProject(projectId: string, operationKey: string, senderFingerprint: string): Promise<Claim>
   /** Libera la reserva si el correo no salió, para que el reintento lo envíe. */
   release(operationKey: string): Promise<void>
   /** Envía el correo; rechaza si el proveedor no lo aceptó. */
@@ -65,9 +76,20 @@ const isText = (value: unknown): value is string => typeof value === 'string'
 /** Lo que llega se comprueba entero: viene de un navegador y nada de ello es de fiar. */
 export const parseContactRequest = (body: unknown): Parsed => {
   if (typeof body !== 'object' || body === null) return { ok: false, field: 'body' }
-  const { propertyId, fullName, email, phone, operationKey, captchaToken } = body as Record<string, unknown>
+  const { propertyId, projectId, model, fullName, email, phone, operationKey, captchaToken } = body as Record<string, unknown>
 
-  if (!isText(propertyId) || !UUID.test(propertyId)) return { ok: false, field: 'propertyId' }
+  // Un contacto es por un anuncio o por un proyecto, nunca por los dos.
+  const isForProject = projectId !== undefined
+  if (isForProject) {
+    if (propertyId !== undefined || !isText(projectId) || !UUID.test(projectId)) return { ok: false, field: 'projectId' }
+  } else if (!isText(propertyId) || !UUID.test(propertyId)) {
+    return { ok: false, field: 'propertyId' }
+  }
+
+  const modelName = isText(model) ? model.trim().replace(/\s+/g, ' ') : ''
+  if (model !== undefined && (!isForProject || !isText(model) || modelName.length > MAX_MODEL_LENGTH)) {
+    return { ok: false, field: 'model' }
+  }
 
   const name = isText(fullName) ? fullName.trim().replace(/\s+/g, ' ') : ''
   if (!/\S\s+\S/.test(name) || name.length > MAX_FULL_NAME_LENGTH) return { ok: false, field: 'fullName' }
@@ -82,9 +104,13 @@ export const parseContactRequest = (body: unknown): Parsed => {
     return { ok: false, field: 'captchaToken' }
   }
 
+  const details = { fullName: name, email: address, phone, operationKey, ...(captchaToken ? { captchaToken } : {}) }
+
   return {
     ok: true,
-    value: { propertyId, fullName: name, email: address, phone, operationKey, ...(captchaToken ? { captchaToken } : {}) },
+    value: isForProject
+      ? { projectId: projectId as string, ...(modelName ? { model: modelName } : {}), ...details }
+      : { propertyId: propertyId as string, ...details },
   }
 }
 
@@ -105,47 +131,56 @@ const formatPhone = (phone: string) => `+504 ${phone.slice(4, 8)}-${phone.slice(
 
 /** El correo que recibe quien publicó: los datos de quien quiere que lo contacte, y nada más. */
 export const buildPublisherEmail = (
-  { fullName, email, phone, propertyId }: ContactRequest,
+  contact: ContactRequest,
   { ownerEmail, publisherName, propertyTitle }: Extract<Claim, { outcome: 'claimed' }>,
   siteUrl: string,
 ): OutgoingEmail => {
-  const listingUrl = `${siteUrl}/propiedad/${propertyId}`
+  const { fullName, email, phone } = contact
+  const isProject = 'projectId' in contact
+  const subject = isProject ? 'proyecto' : 'anuncio'
+  const listingUrl = isProject ? `${siteUrl}/proyectos/${contact.projectId}` : `${siteUrl}/propiedad/${contact.propertyId}`
+  const model = isProject && contact.model ? contact.model.replace(/[\r\n]+/g, ' ') : ''
   const title = propertyTitle.replace(/[\r\n]+/g, ' ')
   const greeting = publisherName.trim() ? `Hola, ${publisherName.trim()}:` : 'Hola:'
   const whatsApp = `https://wa.me/${phone.replace(/\D/g, '')}`
+  const wants = isProject ? 'quiere que le envíes una cotización' : 'quiere que lo contactes'
 
   const text = [
     greeting,
     '',
-    `${fullName} vio tu anuncio «${title}» en ${BRAND} y quiere que lo contactes.`,
+    `${fullName} vio tu ${subject} «${title}» en ${BRAND} y ${wants}.`,
     '',
+    ...(model ? [`Modelo que le interesa: ${model}`] : []),
     `Nombre: ${fullName}`,
     `Correo: ${email}`,
     `Teléfono: ${formatPhone(phone)}`,
     '',
-    `Ver el anuncio: ${listingUrl}`,
+    `Ver el ${subject}: ${listingUrl}`,
     '',
     'Si respondes a este correo, le escribes directamente.',
     '',
-    `Recibes este correo porque publicaste este anuncio en ${BRAND}. ${BRAND} no guarda los datos de quien te escribe.`,
+    `Recibes este correo porque publicaste este ${subject} en ${BRAND}. ${BRAND} no guarda los datos de quien te escribe.`,
   ].join('\n')
 
   const html = `<div style="font-family: Arial, Helvetica, sans-serif; color: #1f2933; max-width: 520px; margin: 0 auto; padding: 24px">
   <p style="line-height: 1.5">${escapeHtml(greeting)}</p>
-  <p style="line-height: 1.5"><strong>${escapeHtml(fullName)}</strong> vio tu anuncio «<a href="${escapeHtml(listingUrl)}" style="color: #0f4c81">${escapeHtml(title)}</a>» en ${BRAND} y quiere que lo contactes.</p>
-  <table style="border-collapse: collapse; margin: 16px 0">
+  <p style="line-height: 1.5"><strong>${escapeHtml(fullName)}</strong> vio tu ${subject} «<a href="${escapeHtml(listingUrl)}" style="color: #0f4c81">${escapeHtml(title)}</a>» en ${BRAND} y ${wants}.</p>
+  <table style="border-collapse: collapse; margin: 16px 0">${model ? `
+    <tr><td style="padding: 4px 12px 4px 0; color: #52606d">Modelo</td><td style="padding: 4px 0"><strong>${escapeHtml(model)}</strong></td></tr>` : ''}
     <tr><td style="padding: 4px 12px 4px 0; color: #52606d">Nombre</td><td style="padding: 4px 0">${escapeHtml(fullName)}</td></tr>
     <tr><td style="padding: 4px 12px 4px 0; color: #52606d">Correo</td><td style="padding: 4px 0"><a href="mailto:${escapeHtml(email)}" style="color: #0f4c81">${escapeHtml(email)}</a></td></tr>
     <tr><td style="padding: 4px 12px 4px 0; color: #52606d">Teléfono</td><td style="padding: 4px 0"><a href="tel:${escapeHtml(phone)}" style="color: #0f4c81">${escapeHtml(formatPhone(phone))}</a> · <a href="${escapeHtml(whatsApp)}" style="color: #0f4c81">WhatsApp</a></td></tr>
   </table>
   <p style="line-height: 1.5">Si respondes a este correo, le escribes directamente.</p>
-  <p style="line-height: 1.5; color: #52606d; font-size: 13px">Recibes este correo porque publicaste este anuncio en ${BRAND}. ${BRAND} no guarda los datos de quien te escribe.</p>
+  <p style="line-height: 1.5; color: #52606d; font-size: 13px">Recibes este correo porque publicaste este ${subject} en ${BRAND}. ${BRAND} no guarda los datos de quien te escribe.</p>
 </div>`
 
   return {
     to: ownerEmail,
     replyTo: email,
-    subject: `Nuevo interesado en tu anuncio «${title}»`,
+    subject: isProject
+      ? `Nueva solicitud de cotización${model ? ` del ${model}` : ''} en «${title}»`
+      : `Nuevo interesado en tu anuncio «${title}»`,
     html,
     text,
   }
@@ -202,7 +237,11 @@ export const handleContact = async (request: Request, deps: ContactDependencies)
 
   let claim: Claim
   try {
-    claim = await deps.claim(contact.propertyId, contact.operationKey, await deps.fingerprint(ip ?? 'unknown'))
+    const senderFingerprint = await deps.fingerprint(ip ?? 'unknown')
+    claim =
+      'projectId' in contact
+        ? await deps.claimProject(contact.projectId, contact.operationKey, senderFingerprint)
+        : await deps.claim(contact.propertyId, contact.operationKey, senderFingerprint)
   } catch (reason) {
     const known = DATABASE_FAILURES[(reason as DatabaseError)?.code ?? '']
     return known ? reply(known.status, { error: known.error }) : reply(500, { error: 'unexpected' })

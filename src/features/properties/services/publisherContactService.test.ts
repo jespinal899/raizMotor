@@ -97,3 +97,51 @@ describe('createPublisherContactService', () => {
     expect(invoke).not.toHaveBeenCalled()
   })
 })
+
+describe('createPublisherContactService: cotizar un proyecto', () => {
+  const PROJECT_ID = '0b9f8c1e-6f3a-4c8e-9a51-2f1c3d4e5f60'
+  const APPLICANT = { fullName: 'Ana Mejía', email: 'ana@gmail.com', phone: '+50499999999' }
+
+  it('manda a la función el proyecto, el modelo elegido y la clave del envío', async () => {
+    // Arrange
+    const { service, invoke } = setup({ token: 'token-de-turnstile' })
+
+    // Act
+    await service.requestForProject({ projectId: PROJECT_ID, model: 'Modelo A', ...APPLICANT }, 'clave-del-envio')
+
+    // Assert
+    expect(invoke).toHaveBeenCalledExactlyOnceWith({
+      projectId: PROJECT_ID,
+      model: 'Modelo A',
+      ...APPLICANT,
+      operationKey: 'clave-del-envio',
+      captchaToken: 'token-de-turnstile',
+    })
+  })
+
+  it('sin modelo elegido no lo manda', async () => {
+    // Arrange
+    const { service, invoke } = setup()
+
+    // Act
+    await service.requestForProject({ projectId: PROJECT_ID, ...APPLICANT }, 'clave-del-envio')
+
+    // Assert
+    expect(invoke.mock.calls[0][0]).not.toHaveProperty('model')
+  })
+
+  it('un proyecto de ejemplo no tiene a quién escribirle, y un exceso de envíos pide esperar', async () => {
+    // Arrange
+    const sample = setup()
+    const throttled = setup({ error: httpError(429) })
+
+    // Act
+    const forSample = sample.service.requestForProject({ projectId: 'torre-de-ejemplo', ...APPLICANT }, 'clave')
+    const tooMany = throttled.service.requestForProject({ projectId: PROJECT_ID, ...APPLICANT }, 'clave')
+
+    // Assert
+    await expect(forSample).rejects.toBeInstanceOf(QuoteUnavailableError)
+    expect(sample.invoke).not.toHaveBeenCalled()
+    await expect(tooMany).rejects.toBeInstanceOf(QuoteThrottledError)
+  })
+})
