@@ -35,8 +35,14 @@ const toFailure = (error: unknown) => {
   return error
 }
 
+/** La cotización de un proyecto: quién la pide y, si eligió uno, el modelo que le interesa. */
+export interface ProjectQuoteRequest extends Omit<QuoteRequest, 'propertyId'> {
+  projectId: string
+  model?: string
+}
+
 /**
- * Contacto con quien publicó un anuncio: la función del servidor le envía por correo los datos de quien
+ * Contacto con quien publicó un anuncio o un proyecto: la función del servidor le envía por correo los datos de quien
  * escribe. El correo del publicador no pasa por el navegador. La clave del envío evita mandarlo dos veces.
  */
 export const createPublisherContactService = ({ invoke, takeCaptchaToken, captchaRequired }: PublisherContactOptions) => ({
@@ -49,6 +55,27 @@ export const createPublisherContactService = ({ invoke, takeCaptchaToken, captch
 
     const { error } = await invoke({
       propertyId,
+      fullName,
+      email,
+      phone,
+      operationKey,
+      ...(captchaToken ? { captchaToken } : {}),
+    })
+
+    if (error) throw toFailure(error)
+  },
+
+  /** Lo mismo por un proyecto: la cotización llega por correo a la cuenta de la inmobiliaria. */
+  requestForProject: async ({ projectId, model, fullName, email, phone }: ProjectQuoteRequest, operationKey: string) => {
+    // Los proyectos de ejemplo no son de nadie: no hay a quién escribirle.
+    if (!UUID.test(projectId)) throw new QuoteUnavailableError()
+
+    const captchaToken = await takeCaptchaToken()
+    if (captchaRequired && !captchaToken) throw new QuoteCaptchaError()
+
+    const { error } = await invoke({
+      projectId,
+      ...(model?.trim() ? { model: model.trim() } : {}),
       fullName,
       email,
       phone,
