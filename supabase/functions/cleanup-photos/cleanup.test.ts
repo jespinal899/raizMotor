@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { BATCH_SIZE, MAX_BATCHES, handleCleanup, sameSecret } from './cleanup.ts'
-import type { CleanupDependencies } from './cleanup.ts'
+import { BATCH_SIZE, MAX_BATCHES, combineBuckets, handleCleanup, sameSecret } from './cleanup.ts'
+import type { CleanupDependencies, PhotoBucket } from './cleanup.ts'
 
 const SECRET = 'secreto-de-prueba-con-mas-de-32-caracteres'
 const URL_BASE = 'https://proyecto.supabase.co/functions/v1/cleanup-photos'
@@ -175,5 +175,66 @@ describe('handleCleanup', () => {
     // Assert
     expect(log).toHaveBeenCalledWith('cleanup-photos: borradas 2 fotos.')
     expect(String(log.mock.calls)).not.toContain('cuenta/clave')
+  })
+})
+
+describe('combineBuckets', () => {
+  /** Un depósito con esas fotos sobrantes, que se van borrando. */
+  const bucketWith = (bucket: string, orphans: string[]): PhotoBucket & { left: string[] } => {
+    const state = { left: [...orphans] }
+
+    return {
+      bucket,
+      get left() {
+        return state.left
+      },
+      listOrphans: vi.fn(async (limit: number) => state.left.slice(0, limit)),
+      countOrphans: vi.fn(async () => state.left.length),
+      removePhotos: vi.fn(async (paths: string[]) => {
+        state.left = state.left.filter((path) => !paths.includes(path))
+
+        return paths.length
+      }),
+    }
+  }
+
+  it('limpia las fotos sobrantes de anuncios y de proyectos, cada una en su depósito', async () => {
+    // Arrange
+    const properties = bucketWith('property-photos', ['a/1.webp'])
+    const projects = bucketWith('project-photos', ['b/1.webp', 'b/2.webp'])
+
+    // Act
+    const response = await handleCleanup(call(), { ...combineBuckets([properties, projects]), secret: SECRET })
+
+    // Assert
+    expect(await response.json()).toEqual({ deleted: 3, more: false })
+    expect(properties.removePhotos).toHaveBeenCalledExactlyOnceWith(['a/1.webp'])
+    expect(projects.removePhotos).toHaveBeenCalledExactlyOnceWith(['b/1.webp', 'b/2.webp'])
+  })
+
+  it('cuenta las de los dos depósitos en el modo de prueba', async () => {
+    // Arrange
+    const properties = bucketWith('property-photos', ['a/1.webp', 'a/2.webp'])
+    const projects = bucketWith('project-photos', ['b/1.webp'])
+
+    // Act
+    const response = await handleCleanup(call({ query: '?dry_run=1' }), { ...combineBuckets([properties, projects]), secret: SECRET })
+
+    // Assert
+    expect(await response.json()).toEqual({ dryRun: true, orphans: 3 })
+  })
+
+  it('no pide a un depósito más de lo que cabe en la tanda', async () => {
+    // Arrange
+    const properties = bucketWith('property-photos', ['a/1.webp', 'a/2.webp'])
+    const projects = bucketWith('project-photos', ['b/1.webp'])
+    const combined = combineBuckets([properties, projects])
+
+    // Act
+    const first = await combined.listOrphans(2)
+
+    // Assert
+    expect(first).toEqual(['property-photos:a/1.webp', 'property-photos:a/2.webp'])
+    expect(projects.listOrphans).not.toHaveBeenCalled()
   })
 })

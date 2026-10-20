@@ -5,6 +5,7 @@
 const BRAND = 'DomusRaíz'
 const LOCALE = 'es-HN'
 const PHOTOS_BUCKET = 'property-photos'
+const PROJECT_PHOTOS_BUCKET = 'project-photos'
 const DESCRIPTION_LENGTH = 160
 /** Lo que pide Supabase de una vez como mucho (Max Rows): el mapa del sitio lo lee por páginas. */
 export const PAGE_SIZE = 100
@@ -28,11 +29,15 @@ const PRIVATE_PATHS = [
   '/recuperar-contrasena',
   '/restablecer-contrasena',
   '/planes/agente-inmobiliario/contratar/',
+  '/planes/inmobiliarias/contratar/',
 ]
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export const isPropertyId = (value: string | null): value is string => value !== null && UUID.test(value)
+
+/** Los proyectos usan el mismo tipo de identificador que los anuncios. */
+export const isProjectId = isPropertyId
 
 /** Un anuncio publicado, con lo que hace falta para presentarlo. */
 export interface PropertyRow {
@@ -83,8 +88,10 @@ const shorten = (text: string, length: number) => {
 const formatDollars = (amount: number) =>
   `US$ ${new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 }).format(amount)}`
 
-export const photoUrl = (supabaseUrl: string, path: string) =>
-  `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/${PHOTOS_BUCKET}/${path.split('/').map(encodeURIComponent).join('/')}`
+export const photoUrl = (supabaseUrl: string, path: string, bucket = PHOTOS_BUCKET) =>
+  /^https:\/\//.test(path)
+    ? path
+    : `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`
 
 /** El título, la descripción, la foto y los datos estructurados de la ficha de un anuncio. */
 export const propertyMeta = (row: PropertyRow, origin: string, supabaseUrl: string): PageMeta => {
@@ -126,6 +133,84 @@ export const propertyMeta = (row: PropertyRow, origin: string, supabaseUrl: stri
     url,
     image,
     // `<` escapado: el texto del anuncio nunca puede cerrar la etiqueta <script>.
+    jsonLd: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+  }
+}
+
+/** Un proyecto publicado, con lo que hace falta para presentarlo. */
+export interface ProjectRow {
+  id: string
+  name: string
+  description: string
+  kind: string
+  stage: string
+  price_from: number
+  department: string
+  city: string
+  neighborhood: string
+  photos: string[]
+  developer_name: string
+  delivery_date: string | null
+  updated_at: string
+}
+
+/** Las columnas que se piden de cada proyecto para su ficha. */
+export const PROJECT_COLUMNS =
+  'id,name,description,kind,stage,price_from,department,city,neighborhood,photos,developer_name,delivery_date,updated_at'
+
+const KIND_LABELS: Record<string, string> = {
+  residencial: 'Residencial',
+  torre: 'Torre de apartamentos',
+  condominio: 'Condominio',
+  lotificacion: 'Lotificación',
+}
+const STAGE_LABELS: Record<string, string> = {
+  preventa: 'en preventa',
+  construccion: 'en construcción',
+  entrega_inmediata: 'de entrega inmediata',
+}
+
+/** El título, la descripción, la foto y los datos estructurados de la ficha de un proyecto. */
+export const projectMeta = (row: ProjectRow, origin: string, supabaseUrl: string): PageMeta => {
+  const kind = `${KIND_LABELS[row.kind] ?? 'Proyecto'} ${STAGE_LABELS[row.stage] ?? ''}`.trim()
+  const place = [row.neighborhood, row.city, row.department].filter(Boolean).join(', ')
+  const price = `Desde ${formatDollars(row.price_from)}`
+  const url = `${origin}/proyectos/${row.id}`
+  const photos = row.photos.map((path) => photoUrl(supabaseUrl, path, PROJECT_PHOTOS_BUCKET))
+  const description = shorten(`${kind} en ${place} · ${price}. ${row.description}`, DESCRIPTION_LENGTH)
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: row.name,
+    description: shorten(row.description, 500),
+    url,
+    image: photos,
+    dateModified: row.updated_at,
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: row.price_from,
+      priceCurrency: 'USD',
+      offeredBy: { '@type': 'Organization', name: row.developer_name },
+      ...(row.delivery_date && { availabilityStarts: row.delivery_date }),
+    },
+    contentLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: row.city,
+        addressRegion: row.department,
+        addressCountry: 'HN',
+      },
+    },
+  }
+
+  return {
+    title: `${row.name} · ${price} | ${BRAND}`,
+    description,
+    url,
+    image: photos[0] ?? null,
+    // `<` escapado: el texto del proyecto nunca puede cerrar la etiqueta <script>.
     jsonLd: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
   }
 }
@@ -230,6 +315,41 @@ export const findPublishedProperty = async (id: string, deps: SeoDependencies): 
   return row ?? null
 }
 
+/** El proyecto publicado con ese identificador, o `null` si no existe, no está publicado o Supabase no responde. */
+export const findPublishedProject = async (id: string, deps: SeoDependencies): Promise<ProjectRow | null> => {
+  if (!deps.supabaseUrl || !deps.supabaseKey) return null
+
+  const url = `${deps.supabaseUrl.replace(/\/+$/, '')}/rest/v1/projects?select=${PROJECT_COLUMNS}&id=eq.${id}&status=eq.published&limit=1`
+  const response = await deps.fetch(url, { headers: restHeaders(deps.supabaseKey) })
+  if (!response.ok) return null
+
+  const [row] = (await response.json()) as ProjectRow[]
+
+  return row ?? null
+}
+
+/** Las filas publicadas de una tabla, por páginas, como entradas del mapa del sitio. */
+const listPublished = async (table: string, toPath: (id: string) => string, deps: SeoDependencies, limit: number) => {
+  if (!deps.supabaseUrl || !deps.supabaseKey) return []
+
+  const entries: SitemapEntry[] = []
+  for (let offset = 0; offset < limit; offset += PAGE_SIZE) {
+    const url = `${deps.supabaseUrl.replace(/\/+$/, '')}/rest/v1/${table}?select=id,updated_at&status=eq.published&order=created_at.desc&offset=${offset}&limit=${PAGE_SIZE}`
+    const response = await deps.fetch(url, { headers: restHeaders(deps.supabaseKey) })
+    if (!response.ok) break
+
+    const rows = (await response.json()) as { id: string; updated_at: string }[]
+    entries.push(...rows.map((row) => ({ path: toPath(row.id), lastModified: row.updated_at })))
+    if (rows.length < PAGE_SIZE) break
+  }
+
+  return entries
+}
+
+/** Los proyectos publicados, para el mapa del sitio. Si Supabase falla, entrega lo que alcanzó a leer. */
+export const listPublishedProjects = (deps: SeoDependencies, limit = MAX_SITEMAP_URLS): Promise<SitemapEntry[]> =>
+  listPublished('projects', (id) => `/proyectos/${id}`, deps, limit)
+
 /** Los anuncios publicados, por páginas, para el mapa del sitio. Si Supabase falla, entrega lo que alcanzó a leer. */
 export const listPublishedProperties = async (deps: SeoDependencies): Promise<SitemapEntry[]> => {
   if (!deps.supabaseUrl || !deps.supabaseKey) return []
@@ -251,11 +371,16 @@ export const listPublishedProperties = async (deps: SeoDependencies): Promise<Si
 const CACHE = 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600'
 
 /**
- * La ficha de un anuncio: el index.html del sitio con la cabecera de ese anuncio. Si no existe o no está
- * publicado responde 404 con el sitio sin tocar, que muestra su propio aviso. Si Supabase no responde, entrega
- * el sitio igual: la ficha funciona, solo sin vista previa.
+ * Una ficha: el index.html del sitio con la cabecera de lo que se pide. Si no existe o no está publicado
+ * responde 404 con el sitio sin tocar, que muestra su propio aviso. Si Supabase no responde, entrega el sitio
+ * igual: la ficha funciona, solo sin vista previa.
  */
-export const handlePropertyPage = async (request: Request, deps: SeoDependencies): Promise<Response> => {
+const handleDetailPage = async <Row>(
+  request: Request,
+  deps: SeoDependencies,
+  find: (id: string, deps: SeoDependencies) => Promise<Row | null>,
+  toMeta: (row: Row, origin: string, supabaseUrl: string) => PageMeta,
+): Promise<Response> => {
   const requestUrl = new URL(request.url)
   const origin = publicOrigin(request, deps.siteUrl)
   const id = requestUrl.searchParams.get('id')
@@ -268,27 +393,38 @@ export const handlePropertyPage = async (request: Request, deps: SeoDependencies
 
   if (!isPropertyId(id)) return page(html, 404, CACHE)
 
-  let row: PropertyRow | null
+  let row: Row | null
   try {
-    row = await findPublishedProperty(id, deps)
+    row = await find(id, deps)
   } catch {
     return page(html, 200, 'no-store')
   }
   if (!row) return page(html, 404, CACHE)
 
-  return page(injectMeta(html, propertyMeta(row, origin, deps.supabaseUrl ?? '')), 200, CACHE)
+  return page(injectMeta(html, toMeta(row, origin, deps.supabaseUrl ?? '')), 200, CACHE)
 }
+
+/** La ficha de un anuncio, con su cabecera. */
+export const handlePropertyPage = (request: Request, deps: SeoDependencies) =>
+  handleDetailPage(request, deps, findPublishedProperty, propertyMeta)
+
+/** La ficha de un proyecto, con su cabecera. */
+export const handleProjectPage = (request: Request, deps: SeoDependencies) =>
+  handleDetailPage(request, deps, findPublishedProject, projectMeta)
 
 export const handleSitemap = async (request: Request, deps: SeoDependencies): Promise<Response> => {
   const origin = publicOrigin(request, deps.siteUrl)
-  let properties: SitemapEntry[] = []
-  try {
-    properties = await listPublishedProperties(deps)
-  } catch {
-    // Sin Supabase, el mapa lleva al menos las páginas fijas.
+  const read = async (list: () => Promise<SitemapEntry[]>) => {
+    try {
+      return await list()
+    } catch {
+      // Sin Supabase, el mapa lleva al menos las páginas fijas.
+      return []
+    }
   }
+  const [properties, projects] = await Promise.all([read(() => listPublishedProperties(deps)), read(() => listPublishedProjects(deps))])
 
-  return new Response(sitemapXml(origin, [...STATIC_PATHS.map((path) => ({ path })), ...properties]), {
+  return new Response(sitemapXml(origin, [...STATIC_PATHS.map((path) => ({ path })), ...projects, ...properties]), {
     headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=0, s-maxage=3600' },
   })
 }

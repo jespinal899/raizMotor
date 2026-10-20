@@ -18,8 +18,31 @@ export interface AdminReport {
   status: ReportStatus
   /** Fecha y hora ISO. */
   createdAt: string
-  /** El anuncio reportado; `null` si ya no existe. */
+  /** El anuncio reportado; `null` si el reporte es de un proyecto o si el anuncio ya no existe. */
   property: { id: string; title: string; status: ListingStatus } | null
+  /** El proyecto reportado; `null` si el reporte es de un anuncio o si el proyecto ya no existe. */
+  project?: { id: string; name: string; status: AdminProjectStatus } | null
+}
+
+/** Estado de un proyecto: en el catálogo, en borrador de su inmobiliaria, u oculto por el equipo. */
+export type AdminProjectStatus = 'published' | 'draft' | 'hidden'
+
+export interface AdminProject {
+  id: string
+  name: string
+  status: AdminProjectStatus
+  developerName: string
+  developerPhone: string
+  city: string
+  priceFrom: number
+  createdAt: string
+}
+
+export interface ProjectFilter {
+  /** Sin él, todos. */
+  status?: AdminProjectStatus
+  /** Un trozo del nombre. */
+  search?: string
 }
 
 export interface AdminListing {
@@ -72,6 +95,9 @@ export interface AdminService {
   listListings(filter: ListingFilter, page: PageRequest): Promise<Paginated<AdminListing>>
   /** Oculta un anuncio, o devuelve al catálogo uno que ocultó el equipo. */
   setListingStatus(propertyId: string, status: 'published' | 'hidden', note: string): Promise<void>
+  listProjects(filter: ProjectFilter, page: PageRequest): Promise<Paginated<AdminProject>>
+  /** Oculta un proyecto, o devuelve al catálogo uno que ocultó el equipo. */
+  setProjectStatus(projectId: string, status: 'published' | 'hidden', note: string): Promise<void>
   /** Busca en el correo y en el nombre. */
   listAccounts(search: string, page: PageRequest): Promise<Paginated<AdminAccount>>
 /** Los dos límites de la cuenta, en un paso: lo que se hace al activar un plan contratado. */

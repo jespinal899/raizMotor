@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   AdminAccount,
   AdminListing,
+  AdminProject,
   AdminReport,
   AdminService,
 } from '@/features/admin/types/admin.types'
@@ -60,7 +61,25 @@ interface ReportRow {
    * la librería lo declara como lista: se aceptan las dos formas.
    */
   property: AdminReport['property'] | NonNullable<AdminReport['property']>[]
+  /** Igual que `property`, para los reportes de proyectos. */
+  project: AdminReport['project'] | NonNullable<AdminReport['project']>[]
 }
+
+interface ProjectAdminRow {
+  id: string
+  name: string
+  status: AdminProject['status']
+  developer_name: string
+  developer_phone: string
+  city: string
+  price_from: number
+  created_at: string
+}
+
+const PROJECT_COLUMNS = 'id, name, status, developer_name, developer_phone, city, price_from, created_at'
+
+/** Supabase entrega la fila relacionada como objeto, o como lista sin los tipos de la base generados. */
+const firstOf = <T>(related: T | T[] | null | undefined): T | null => (Array.isArray(related) ? related[0] : related) ?? null
 
 interface ListingRow {
   id: string
@@ -116,7 +135,7 @@ export const createSupabaseAdminService = (client: SupabaseClient): AdminService
       const reports = (head = false) =>
         client
           .from('property_reports')
-          .select('id, reason, details, status, created_at, property:properties(id, title, status)', {
+          .select('id, reason, details, status, created_at, property:properties(id, title, status), project:projects(id, name, status)', {
             count: 'exact',
             head,
           })
@@ -134,7 +153,8 @@ export const createSupabaseAdminService = (client: SupabaseClient): AdminService
           details: row.details,
           status: row.status,
           createdAt: row.created_at,
-          property: (Array.isArray(row.property) ? row.property[0] : row.property) ?? null,
+          property: firstOf(row.property),
+          project: firstOf(row.project),
         }),
         page,
       )
@@ -175,6 +195,39 @@ export const createSupabaseAdminService = (client: SupabaseClient): AdminService
 
     setListingStatus: (propertyId, status, note) =>
       call('admin_set_property_status', { target_property: propertyId, new_status: status, review_note: note }),
+
+    listProjects: ({ status, search }, page) => {
+      const projects = (head = false) => {
+        let query = client.from('projects').select(PROJECT_COLUMNS, { count: 'exact', head })
+        if (status) query = query.eq('status', status)
+        if (search?.trim()) query = query.ilike('name', toPattern(search))
+
+        return query
+      }
+
+      return readPage<ProjectAdminRow, AdminProject>(
+        projects()
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: true })
+          .range(...rangeOf(page)),
+        () => projects(true),
+        (row) => ({
+          id: row.id,
+          name: row.name,
+          status: row.status,
+          developerName: row.developer_name,
+          developerPhone: row.developer_phone,
+          city: row.city,
+          priceFrom: row.price_from,
+          createdAt: row.created_at,
+        }),
+        page,
+      )
+    },
+
+    // La función la crea supabase/migrations/20261018000000_moderar_proyectos.sql.
+    setProjectStatus: (projectId, status, note) =>
+      call('admin_set_project_status', { target_project: projectId, new_status: status, review_note: note }),
 
     listAccounts: async (search, page) => {
       const [offset] = rangeOf(page)

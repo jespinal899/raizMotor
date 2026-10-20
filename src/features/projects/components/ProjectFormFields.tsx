@@ -16,6 +16,7 @@ import {
   MAX_PROJECT_DESCRIPTION_LENGTH,
   MAX_PROJECT_MODELS,
   MAX_PROJECT_NAME_LENGTH,
+  MAX_PROJECT_PHOTOS,
 } from '@/features/projects/utils/projectFormRules'
 import AddressConfirmation from '@/features/properties/components/AddressConfirmation'
 import ImagePicker from '@/features/properties/components/ImagePicker'
@@ -287,7 +288,12 @@ export const ProjectExtrasScreen = ({ values, errors, change }: ProjectScreenPro
         />
       )}
     </FormField>
-    <ImagePicker files={values.images} onChange={(images) => change('images', images)} error={errors.images} />
+    <ImagePicker
+      files={values.images}
+      onChange={(images) => change('images', images)}
+      error={errors.images}
+      max={MAX_PROJECT_PHOTOS}
+    />
     <TextField
       label="Video del proyecto"
       hint="opcional, enlace de YouTube u otro sitio"

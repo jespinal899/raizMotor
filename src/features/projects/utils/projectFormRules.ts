@@ -17,6 +17,8 @@ export const MAX_PROJECT_NAME_LENGTH = 100
 export const MIN_PROJECT_DESCRIPTION_LENGTH = 20
 export const MAX_PROJECT_DESCRIPTION_LENGTH = 4000
 export const MAX_PROJECT_MODELS = 20
+/** Renders y fotos de la obra por proyecto: las mismas que admite la base de datos. */
+export const MAX_PROJECT_PHOTOS = 20
 const MAX_PRICE = 50_000_000
 
 export const EMPTY_MODEL: ProjectModelValues = { name: '', bedrooms: '', bathrooms: '', area: '', priceFrom: '' }

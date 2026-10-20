@@ -14,6 +14,8 @@ export const createPendingAdminService = (): AdminService => {
     reviewReport: unavailable,
     listListings: unavailable,
     setListingStatus: unavailable,
+    listProjects: unavailable,
+    setProjectStatus: unavailable,
     listAccounts: unavailable,
     setAccountLimits: unavailable,
   }

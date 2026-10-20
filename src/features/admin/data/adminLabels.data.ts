@@ -1,10 +1,16 @@
-import type { ListingStatus, ReportStatus } from '@/features/admin/types/admin.types'
+import type { AdminProjectStatus, ListingStatus, ReportStatus } from '@/features/admin/types/admin.types'
 import { MAX_FREE_PUBLICATIONS } from '@/features/properties/utils/publicationLimit'
 import { PAID_PLANS } from '@/features/shop/data/plans.data'
 
 export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
   published: 'Publicado',
   unpublished: 'Despublicado por su dueño',
+  hidden: 'Oculto por el equipo',
+}
+
+export const PROJECT_STATUS_LABELS: Record<AdminProjectStatus, string> = {
+  published: 'Publicado',
+  draft: 'En borrador de la inmobiliaria',
   hidden: 'Oculto por el equipo',
 }
 

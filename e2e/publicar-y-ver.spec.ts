@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { createProject, deleteProject, ownerOf, setProjectLimit, setPublicationLimit } from './database.ts'
+import { createProject, deleteProject, ownerOf, reportsOfProject, setProjectLimit, setPublicationLimit } from './database.ts'
 import { latestCode } from './mailpit.ts'
 
 /**
@@ -148,7 +148,7 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
     }
   })
 
-  test('un proyecto de una inmobiliaria de pago sale en el catálogo de proyectos, con su ficha, y destacado en la portada', async ({
+  test('un proyecto de una inmobiliaria de pago sale en el catálogo, con su ficha, destacado en la portada, y se puede reportar', async ({
     page,
   }) => {
     await isolateFromExternalServices(page)
@@ -168,6 +168,15 @@ test.describe.serial('publicar un anuncio y encontrarlo', () => {
       await page.goto('/')
       const featured = page.getByRole('region', { name: 'Proyectos en preventa' })
       await expect(featured.getByRole('link', { name })).toBeVisible()
+
+      // Un visitante lo reporta desde su ficha, y el reporte llega al equipo.
+      await page.goto(`/proyectos/${project}`)
+      await page.getByRole('button', { name: 'Reportar' }).click()
+      const dialog = page.getByRole('dialog', { name: 'Reportar publicación' })
+      await dialog.getByRole('radio', { name: 'Posible fraude o estafa' }).check()
+      await dialog.getByRole('button', { name: 'Enviar reporte' }).click()
+      await expect(dialog.getByRole('status')).toBeVisible()
+      expect(await reportsOfProject(project)).toEqual([{ reason: 'fraud', status: 'open' }])
     } finally {
       await deleteProject(project)
       await setPublicationLimit(owner, 1)

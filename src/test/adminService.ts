@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 import type {
   AdminAccount,
   AdminListing,
+  AdminProject,
   AdminReport,
   AdminService,
 } from '@/features/admin/types/admin.types'
@@ -22,6 +23,18 @@ export const buildReport = (overrides: Partial<AdminReport> = {}): AdminReport =
   status: 'open',
   createdAt: '2026-10-11T15:30:00.000Z',
   property: { id: 'anuncio-1', title: 'Casa amplia con patio en Palmira', status: 'published' },
+  ...overrides,
+})
+
+export const buildProject = (overrides: Partial<AdminProject> = {}): AdminProject => ({
+  id: 'proyecto-1',
+  name: 'Torre Vista Lomas',
+  status: 'published',
+  developerName: 'Constructora Norte',
+  developerPhone: '+50499998888',
+  city: 'San Pedro Sula',
+  priceFrom: 89000,
+  createdAt: '2026-10-15T12:00:00.000Z',
   ...overrides,
 })
 
@@ -60,6 +73,8 @@ export const buildAdminService = (overrides: Partial<AdminService> = {}): AdminS
   reviewReport: vi.fn(async () => {}),
   listListings: vi.fn(async () => pageOf<AdminListing>([])),
   setListingStatus: vi.fn(async () => {}),
+  listProjects: vi.fn(async () => pageOf<AdminProject>([])),
+  setProjectStatus: vi.fn(async () => {}),
   listAccounts: vi.fn(async () => pageOf<AdminAccount>([])),
   setAccountLimits: vi.fn(async () => {}),
   ...overrides,

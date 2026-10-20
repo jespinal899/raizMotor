@@ -74,6 +74,63 @@ describe('createSupabaseAdminService: isAdmin', () => {
 })
 
 describe('createSupabaseAdminService: listas', () => {
+  it('un reporte de un proyecto trae el proyecto, y no un anuncio', async () => {
+    // Arrange
+    const row = {
+      id: 'reporte-2',
+      reason: 'misleading',
+      details: 'Los renders no son del proyecto',
+      status: 'open',
+      created_at: '2026-10-18T10:00:00Z',
+      property: null,
+      project: { id: 'proyecto-1', name: 'Torre Vista', status: 'published' },
+    }
+    const { client } = fakeClient({ answers: [{ data: [row], count: 1 }] })
+
+    // Act
+    const { items } = await createSupabaseAdminService(client).listReports('open', { page: 1, pageSize: 20 })
+
+    // Assert
+    expect(items[0]).toMatchObject({ property: null, project: { id: 'proyecto-1', name: 'Torre Vista', status: 'published' } })
+  })
+
+  it('lee los proyectos con el estado y el nombre pedidos', async () => {
+    // Arrange
+    const row = {
+      id: 'proyecto-1',
+      name: 'Torre Vista',
+      status: 'hidden',
+      developer_name: 'Constructora Norte',
+      developer_phone: '+50499998888',
+      city: 'San Pedro Sula',
+      price_from: 89000,
+      created_at: '2026-10-15T12:00:00Z',
+    }
+    const { client, queries } = fakeClient({ answers: [{ data: [row], count: 1 }] })
+
+    // Act
+    const { items } = await createSupabaseAdminService(client).listProjects({ status: 'hidden', search: 'torre' }, { page: 1, pageSize: 20 })
+
+    // Assert
+    expect(queries[0]).toEqual(
+      expect.arrayContaining([
+        ['from', 'projects'],
+        ['eq', 'status', 'hidden'],
+        ['ilike', 'name', '%torre%'],
+      ]),
+    )
+    expect(items[0]).toEqual({
+      id: 'proyecto-1',
+      name: 'Torre Vista',
+      status: 'hidden',
+      developerName: 'Constructora Norte',
+      developerPhone: '+50499998888',
+      city: 'San Pedro Sula',
+      priceFrom: 89000,
+      createdAt: '2026-10-15T12:00:00Z',
+    })
+  })
+
   it('lee los reportes del estado pedido, del más reciente al más antiguo, con el anuncio de cada uno', async () => {
     // Arrange
     const row = {
@@ -107,6 +164,7 @@ describe('createSupabaseAdminService: listas', () => {
           status: 'open',
           createdAt: '2026-10-11T15:30:00Z',
           property: { id: 'anuncio-1', title: 'Casa en Palmira', status: 'published' },
+          project: null,
         },
       ],
       total: 21,
@@ -182,6 +240,7 @@ describe('createSupabaseAdminService: decisiones', () => {
   it.each([
     ['revisar un reporte', 'admin_review_report', { target_report: 'r', decision: 'dismiss', review_note: 'n' }],
     ['ocultar un anuncio', 'admin_set_property_status', { target_property: 'p', new_status: 'hidden', review_note: 'n' }],
+    ['ocultar un proyecto', 'admin_set_project_status', { target_project: 'pj', new_status: 'hidden', review_note: 'n' }],
     [
       'cambiar los límites',
       'admin_set_account_limits',
@@ -195,6 +254,7 @@ describe('createSupabaseAdminService: decisiones', () => {
       admin_review_report: () => service.reviewReport('r', 'dismiss', 'n'),
       admin_set_property_status: () => service.setListingStatus('p', 'hidden', 'n'),
       admin_set_account_limits: () => service.setAccountLimits('c', { publications: 150, projects: 3 }, 'n'),
+      admin_set_project_status: () => service.setProjectStatus('pj', 'hidden', 'n'),
     }
 
     // Act

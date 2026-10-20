@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage'
 import { authService } from '@/features/auth/services/authService'
 import { BRAND } from '@/shared/constants/brand'
-import { buildAccount, buildAdminService, buildListing, buildReport, pageOf } from '@/test/adminService'
+import { buildAccount, buildAdminService, buildListing, buildProject, buildReport, pageOf } from '@/test/adminService'
 import { buildSessionUser } from '@/test/factories'
 import { renderWithRouter } from '@/test/renderWithRouter'
 import { sessionIs } from '@/test/session'
@@ -103,6 +103,54 @@ describe('AdminDashboardPage', () => {
     // Assert
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('No pudimos guardar la decisión')
     expect(service.reviewReport).toHaveBeenCalledWith('reporte-1', 'dismiss', '')
+  })
+
+  it('un reporte de un proyecto enlaza al proyecto y permite ocultarlo', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const report = buildReport({ property: null, project: { id: 'proyecto-1', name: 'Torre Vista Lomas', status: 'published' } })
+    const { service } = renderPage(buildAdminService({ listReports: vi.fn(async () => pageOf([report])) }))
+    expect(await screen.findByRole('link', { name: 'Torre Vista Lomas' })).toHaveAttribute('href', '/proyectos/proyecto-1')
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Ocultar proyecto' }))
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Ocultar proyecto' }))
+
+    // Assert
+    await waitFor(() => expect(service.reviewReport).toHaveBeenCalledExactlyOnceWith('reporte-1', 'hide_property', ''))
+    expect(screen.queryByRole('button', { name: 'Ocultar anuncio' })).not.toBeInTheDocument()
+  })
+
+  it('en Proyectos oculta uno publicado y busca por nombre', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const service = buildAdminService({ listProjects: vi.fn(async () => pageOf([buildProject()])) })
+    renderPage(service)
+    await user.click(await screen.findByRole('tab', { name: 'Proyectos' }))
+
+    // Act
+    await user.type(await screen.findByRole('searchbox', { name: 'Buscar por nombre' }), 'Torre')
+    await user.click(screen.getByRole('button', { name: 'Buscar' }))
+    await user.click(await screen.findByRole('button', { name: 'Ocultar' }))
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Ocultar' }))
+
+    // Assert
+    expect(service.listProjects).toHaveBeenCalledWith({ status: undefined, search: 'Torre' }, { page: 1, pageSize: 20 })
+    await waitFor(() => expect(service.setProjectStatus).toHaveBeenCalledExactlyOnceWith('proyecto-1', 'hidden', ''))
+  })
+
+  it('en Proyectos un borrador de la inmobiliaria no se publica desde el panel', async () => {
+    // Arrange
+    const user = userEvent.setup()
+    const draft = buildProject({ status: 'draft' })
+    renderPage(buildAdminService({ listProjects: vi.fn(async () => pageOf([draft])) }))
+
+    // Act
+    await user.click(await screen.findByRole('tab', { name: 'Proyectos' }))
+
+    // Assert
+    expect(await screen.findByText('En borrador de la inmobiliaria')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Devolver al catálogo|Ocultar/ })).not.toBeInTheDocument()
   })
 
   it('en Anuncios filtra por estado y devuelve al catálogo uno que ocultó el equipo', async () => {

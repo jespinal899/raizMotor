@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import AdminListingsTable from '@/features/admin/components/AdminListingsTable'
+import AdminProjectsTable from '@/features/admin/components/AdminProjectsTable'
 import AdminReportsTable from '@/features/admin/components/AdminReportsTable'
 import AdminUsersTable from '@/features/admin/components/AdminUsersTable'
 import type { AdminService } from '@/features/admin/types/admin.types'
@@ -7,6 +8,7 @@ import type { AdminService } from '@/features/admin/types/admin.types'
 const SECTIONS = [
   { id: 'reportes', title: 'Reportes', Content: AdminReportsTable },
   { id: 'anuncios', title: 'Anuncios', Content: AdminListingsTable },
+  { id: 'proyectos', title: 'Proyectos', Content: AdminProjectsTable },
   { id: 'cuentas', title: 'Cuentas', Content: AdminUsersTable },
 ] as const
 
@@ -14,7 +16,7 @@ interface AdminDashboardProps {
   service: AdminService
 }
 
-/** Las tres pestañas del panel. Cada una lee su lista solo al abrirla. */
+/** Las pestañas del panel. Cada una lee su lista solo al abrirla. */
 const AdminDashboard = ({ service }: AdminDashboardProps) => {
   return (
     <Tabs defaultValue={SECTIONS[0].id} className="gap-6">
