@@ -126,6 +126,7 @@ export const routes: RouteObject[] = [
               description: 'El panel de administración es solo para las cuentas del equipo del sitio.',
             }),
           },
+          { path: ROUTES.myPlan, ...page(() => import('@/pages/MyPlanPage')) },
           { path: ROUTES.pricing, ...page(() => import('@/features/shop/pages/PricingPage')) },
           { path: ROUTES.agentPlans, ...page(() => import('@/features/shop/pages/AgentPlansPage')) },
           { path: ROUTES.agentPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },

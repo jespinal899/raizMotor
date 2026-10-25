@@ -24,8 +24,8 @@ export const NAV = {
   projects: { label: 'Proyectos', to: ROUTES.projects },
   contact: { label: 'Contáctenos', to: ROUTES.contact },
   login: { label: 'Iniciar sesión', to: ROUTES.login },
-  // Publicar empieza por elegir plan: el formulario se abre desde el plan Propietario.
-  publish: { label: 'Publicar', to: ROUTES.pricing },
+  // Publicar empieza por el plan: quien tiene uno de pago ve el suyo y qué publicar; los demás, todos los planes.
+  publish: { label: 'Publicar', to: ROUTES.myPlan },
   pricing: { label: 'Planes', to: ROUTES.pricing },
   about: { label: 'Quiénes somos', to: ROUTES.about },
   howItWorks: { label: 'Cómo funciona', to: ROUTES.howItWorks },

@@ -12,11 +12,15 @@ const FREE_PLAN = PLANS.find((plan) => plan.id === 'propietario')!
 const CUSTOM_PLAN = 'Plan a medida'
 
 /**
- * El plan de una cuenta, deducido de cuántas publicaciones admite a la vez: ese límite es lo único que la
- * cuenta guarda de su plan.
+ * El plan de una cuenta, deducido de cuántas publicaciones admite a la vez y, si se sabe, cuántos proyectos:
+ * esos límites son lo único que la cuenta guarda de su plan.
  */
-export const toActivePlan = (limit: number): ActivePlan => {
-  if (limit === MAX_FREE_PUBLICATIONS) return { name: FREE_PLAN.name, isFree: true }
+export const toActivePlan = (limit: number, projectLimit?: number): ActivePlan => {
+  if (limit === MAX_FREE_PUBLICATIONS && !projectLimit) return { name: FREE_PLAN.name, isFree: true }
 
-  return { name: PAID_PLANS.find((plan) => plan.maxPublications === limit)?.name ?? CUSTOM_PLAN, isFree: false }
+  const plan = PAID_PLANS.find(
+    (paid) => paid.maxPublications === limit && (projectLimit === undefined || paid.maxProjects === projectLimit),
+  )
+
+  return { name: plan?.name ?? CUSTOM_PLAN, isFree: false }
 }

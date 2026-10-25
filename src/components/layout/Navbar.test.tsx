@@ -62,6 +62,6 @@ describe('Navbar', () => {
     renderWithRouter(<Navbar />)
 
     // Assert
-    expect(bar().getByRole('link', { name: 'Publicar' })).toHaveAttribute('href', '/planes')
+    expect(bar().getByRole('link', { name: 'Publicar' })).toHaveAttribute('href', '/mi-plan')
   })
 })
