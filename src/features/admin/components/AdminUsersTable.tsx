@@ -35,6 +35,7 @@ const AdminUsersTable = ({ service }: AdminUsersTableProps) => {
         <TextField
           label="Buscar por correo o nombre"
           type="search"
+          enterKeyHint="search"
           value={typed}
           onChange={setTyped}
           className="w-72 max-w-full"

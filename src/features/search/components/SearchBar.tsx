@@ -65,6 +65,8 @@ const SearchBar = ({ initialFilters = DEFAULT_FILTERS, className }: SearchBarPro
             onChange={(event) => update({ location: event.target.value })}
             placeholder="Colonia o ciudad"
             autoComplete="off"
+            type="search"
+            enterKeyHint="search"
             className="h-11 pl-9"
           />
         </div>

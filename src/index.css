@@ -21,6 +21,17 @@
     }
 }
 @custom-variant tall (@media (min-height: 45rem));
+/*
+  En el teléfono, mientras se escribe en un campo y el teclado está abierto: lo que va fijo abajo se aparta para
+  no tapar el campo ni quedar flotando sobre el teclado.
+*/
+@custom-variant typing {
+    @media (pointer: coarse) {
+        &:where(:root:has(:is(input:not([type='checkbox'], [type='radio'], [type='button'], [type='submit'], [type='reset'], [type='range'], [type='file'], [type='color']), textarea, [contenteditable='true']):focus) *) {
+            @slot;
+        }
+    }
+}
 
 /*
   La barra de pestañas de abajo en el teléfono (BottomNav) y el borde de la barra de gestos del iPhone y de
@@ -37,6 +48,24 @@
 }
 @utility bottom-safe {
     bottom: env(safe-area-inset-bottom);
+}
+@utility pt-safe {
+    padding-top: env(safe-area-inset-top);
+}
+/*
+  Un botón o enlace pequeño a la vista que se toca como uno de 44 px, el mínimo cómodo para el dedo: el área de
+  toque crece alrededor sin cambiar cómo se ve. El elemento tiene que estar posicionado (`relative`, `absolute`).
+*/
+@utility hitbox {
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: max(100%, 2.75rem);
+        height: max(100%, 2.75rem);
+        translate: -50% -50%;
+    }
 }
 
 @theme inline {
@@ -135,6 +164,8 @@
 
 :root {
     --tabbar-height: 4rem;
+    /* Cuánto suben los avisos (sonner) para no quedar bajo la barra de gestos ni, instalada, bajo las pestañas. */
+    --toast-lift: env(safe-area-inset-bottom);
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -168,6 +199,18 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* Instalada, por debajo de `lg` salen las pestañas de abajo (BottomNav): los avisos suben por encima. */
+@media (max-width: 63.99rem) {
+    :root.app-instalada {
+        --toast-lift: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+    }
+}
+@media (display-mode: standalone) and (max-width: 63.99rem) {
+    :root {
+        --toast-lift: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+    }
 }
 
 .dark {

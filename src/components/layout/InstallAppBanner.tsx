@@ -45,7 +45,7 @@ const InstallAppBanner = ({ className }: InstallAppBannerProps) => {
           </p>
         )}
       </div>
-      <Button variant="ghost" size="icon-sm" aria-label="Ahora no" onClick={dismiss} className="-mr-1 -mt-1">
+      <Button variant="ghost" size="icon-sm" aria-label="Ahora no" onClick={dismiss} className="relative -mr-1 -mt-1 hitbox">
         <X />
       </Button>
     </aside>

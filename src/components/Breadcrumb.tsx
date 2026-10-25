@@ -22,7 +22,7 @@ const Breadcrumb = ({ items }: BreadcrumbProps) => {
             {to ? (
               <Link
                 to={to}
-                className="rounded outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="relative rounded outline-none transition-colors hitbox hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 {label}
               </Link>

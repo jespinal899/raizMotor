@@ -64,6 +64,8 @@ const LoginForm = ({ onSubmit, onGoogleSignIn, onConfirmEmail, onResendConfirmat
           error={errors.password}
           name="password"
           autoComplete="current-password"
+          // La tecla de acción del teclado dice «Ir»: con ella se entra sin buscar el botón.
+          enterKeyHint="go"
           value={values.password}
           onChange={(value) => change('password', value)}
           readOnly={isBusy}

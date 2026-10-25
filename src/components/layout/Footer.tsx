@@ -28,12 +28,12 @@ const Footer = ({ compact = false }: FooterProps) => {
           {FOOTER_SECTIONS.map(({ title, links }) => (
             <nav key={title} aria-label={title} className="grid content-start gap-3">
               <h2 className="text-sm font-semibold">{title}</h2>
-              <ul className="grid gap-2">
+              <ul className="grid gap-2 pointer-coarse:gap-0">
                 {links.map(({ label, to }) => (
                   <li key={to}>
                     <Link
                       to={to}
-                      className="rounded text-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="inline-block rounded text-sm text-muted-foreground pointer-coarse:py-2.5 outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
                     >
                       {label}
                     </Link>

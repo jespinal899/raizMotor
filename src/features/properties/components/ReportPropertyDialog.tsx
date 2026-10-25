@@ -32,7 +32,7 @@ const ReportPropertyDialog = ({ propertyId, service = reportService, subject = '
         <Flag />
         Reportar
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-lg">Reportar publicación</DialogTitle>
           <DialogDescription>Cuéntanos qué pasa con {subject} para que podamos revisarlo.</DialogDescription>
