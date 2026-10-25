@@ -11,7 +11,7 @@ export const PLANS: Plan[] = [
     description:
       `Vende o arrienda rápido. Publica ${MAX_FREE_PUBLICATIONS} propiedad gratis y aprovecha nuestra alta ` +
       'visualización para llegar a miles de interesados sin comisiones.',
-    action: { label: 'Publicar como propietario', to: ROUTES.publish, icon: House },
+    action: { label: 'Publicar como propietario', to: ROUTES.publish, icon: House, requiresAccount: true },
   },
   {
     id: 'agente',
@@ -31,9 +31,16 @@ export const PLANS: Plan[] = [
   },
 ]
 
-/** Todavía no hay pagos en línea: el botón abre la página donde el plan se pide por WhatsApp. */
-const checkout = (id: AgentPlanId, label: string) => ({ label, to: agentPlanCheckoutPath(id) })
-const agencyCheckout = (id: AgencyPlanId, label: string) => ({ label, to: agencyPlanCheckoutPath(id) })
+/**
+ * Todavía no hay pagos en línea: el botón abre la página donde el plan se pide por WhatsApp. El plan queda a
+ * nombre de una cuenta, así que antes se inicia sesión.
+ */
+const checkout = (id: AgentPlanId, label: string) => ({ label, to: agentPlanCheckoutPath(id), requiresAccount: true })
+const agencyCheckout = (id: AgencyPlanId, label: string) => ({
+  label,
+  to: agencyPlanCheckoutPath(id),
+  requiresAccount: true,
+})
 
 const PRO_PUBLICATIONS = 25
 const ELITE_PUBLICATIONS = 100

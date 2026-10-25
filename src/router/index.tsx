@@ -44,6 +44,13 @@ const page = (
 
 const searchPage = () => import('@/features/search/pages/SearchPage')
 
+const checkoutPage = () => import('@/features/shop/pages/AgentPlanCheckoutPage')
+
+const CHECKOUT_GUARD: Guard = {
+  title: 'Inicia sesión para contratar tu plan',
+  description: 'Tu plan queda a nombre de tu cuenta, con los datos que diste al registrarte.',
+}
+
 /** Las páginas de la aplicación. Van aparte del enrutador para poder abrirlas también en las pruebas. */
 export const routes: RouteObject[] = [
   {
@@ -129,9 +136,9 @@ export const routes: RouteObject[] = [
           { path: ROUTES.myPlan, ...page(() => import('@/pages/MyPlanPage')) },
           { path: ROUTES.pricing, ...page(() => import('@/features/shop/pages/PricingPage')) },
           { path: ROUTES.agentPlans, ...page(() => import('@/features/shop/pages/AgentPlansPage')) },
-          { path: ROUTES.agentPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
+          { path: ROUTES.agentPlanCheckout, ...page(checkoutPage, CHECKOUT_GUARD) },
           { path: ROUTES.agencyPlans, ...page(() => import('@/features/shop/pages/AgencyPlansPage')) },
-          { path: ROUTES.agencyPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
+          { path: ROUTES.agencyPlanCheckout, ...page(checkoutPage, CHECKOUT_GUARD) },
           { path: ROUTES.terms, ...page(() => import('@/features/legal/pages/TermsPage')) },
           { path: ROUTES.privacy, ...page(() => import('@/features/legal/pages/PrivacyPage')) },
           { path: '*', element: <NotFoundPage /> },
