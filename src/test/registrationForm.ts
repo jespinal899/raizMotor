@@ -11,7 +11,6 @@ export const registrationForm = {
   phone: () => screen.getByRole('textbox', { name: 'Teléfono' }),
   password: () => screen.getByLabelText(/^Contraseña/),
   submitButton: () => screen.getByRole('button', { name: /^Crear cuenta$|Creando cuenta/ }),
-  googleButton: () => screen.getByRole('button', { name: /Registrarse con Google|Conectando con Google/ }),
 }
 
 /** Pega cada dato de una vez: escribirlos tecla a tecla haría lentas las pruebas. */

@@ -137,7 +137,7 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     expect(screen.queryByRole('region', { name: 'Tus datos' })).not.toBeInTheDocument()
   })
 
-  it('en el paso 2 el resumen de compra lleva la casilla del código de descuento y la de los términos', async () => {
+  it('en el paso 2 el resumen de compra lleva solo la casilla de los términos: aún no hay códigos de descuento', async () => {
     // Arrange
     const { user } = setup()
 
@@ -146,10 +146,8 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
 
     // Assert
     expect(rowsOf(checkoutForm.summary())).toEqual(COST_ROWS)
-    expect(within(checkoutForm.summary()).getAllByRole('checkbox')).toEqual([
-      checkoutForm.hasDiscountCode(),
-      checkoutForm.terms(),
-    ])
+    expect(within(checkoutForm.summary()).getAllByRole('checkbox')).toEqual([checkoutForm.terms()])
+    expect(within(checkoutForm.summary()).queryByText(/código de descuento/)).not.toBeInTheDocument()
     expect(within(checkoutForm.summary()).getByRole('link', { name: 'Términos y Condiciones de uso' })).toHaveAttribute(
       'href',
       '/terminos',
@@ -167,22 +165,6 @@ describe('CheckoutSteps', { timeout: 20_000 }, () => {
     // Assert
     expect(checkoutForm.terms()).toHaveAccessibleDescription('Acepta los términos y condiciones para continuar.')
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument()
-  })
-
-  it('marcar que se tiene un código muestra dónde escribirlo; aplicarlo no cambia el total: todavía no hay códigos', async () => {
-    // Arrange
-    const { user } = setup()
-    await completePersonStep(user)
-    await user.click(checkoutForm.hasDiscountCode())
-    await user.type(checkoutForm.coupon(), 'PROMO10')
-
-    // Act
-    await user.click(checkoutForm.applyCoupon())
-
-    // Assert
-    expect(checkoutForm.coupon()).toHaveAccessibleDescription('Ese código de descuento no es válido.')
-    expect(rowsOf(checkoutForm.summary())).toEqual(COST_ROWS)
-    expect(open).not.toHaveBeenCalled()
   })
 
   it('se puede volver al paso anterior sin perder lo escrito', async () => {

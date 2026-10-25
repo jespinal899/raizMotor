@@ -1,5 +1,4 @@
 import { Separator } from '@/components/ui/separator'
-import PropertyViews from '@/features/properties/components/PropertyViews'
 import ReportPropertyDialog from '@/features/properties/components/ReportPropertyDialog'
 import SharePropertyDialog from '@/features/properties/components/SharePropertyDialog'
 import type { Property } from '@/features/properties/types/property.types'
@@ -8,7 +7,7 @@ interface PropertyToolbarProps {
   property: Property
 }
 
-/** Acciones de la ficha, junto a la ruta de navegación: compartir, reportar y cuántas vistas lleva. */
+/** Acciones de la ficha, junto a la ruta de navegación: compartir y reportar. */
 const PropertyToolbar = ({ property }: PropertyToolbarProps) => {
   const { id, localOnly, example } = property
 
@@ -31,7 +30,6 @@ const PropertyToolbar = ({ property }: PropertyToolbarProps) => {
           </>
         )}
       </div>
-      <PropertyViews propertyId={id} />
     </div>
   )
 }

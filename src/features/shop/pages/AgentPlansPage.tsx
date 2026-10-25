@@ -1,4 +1,4 @@
-import { BadgeCheck, Check, Headset, PanelsTopLeft } from 'lucide-react'
+import { BadgeCheck, Check, MessageCircle, PanelsTopLeft } from 'lucide-react'
 import BackLink from '@/components/BackLink'
 import PageHeader from '@/components/PageHeader'
 import Container from '@/components/layout/Container'
@@ -13,17 +13,16 @@ import { ROUTES } from '@/shared/constants/routes'
 
 const TITLE = 'Planes para agentes inmobiliarios'
 
+// Solo lo que el sitio ya hace: un plan no puede prometer lo que aún no existe.
 const REASONS_TO_CHOOSE = [
-  { icon: Headset, text: 'Soporte y atención al cliente 24/7.' },
-  { icon: PanelsTopLeft, text: 'Administra todo desde un solo panel.' },
-  { icon: BadgeCheck, text: 'Tu marca en cada propiedad, sin anuncios externos.' },
+  { icon: MessageCircle, text: 'Quien ve tu anuncio te escribe directo a tu WhatsApp o a tu correo.' },
+  { icon: PanelsTopLeft, text: 'Administra todos tus anuncios desde «Mis publicaciones».' },
+  { icon: BadgeCheck, text: 'Tu nombre en cada propiedad que publicas.' },
 ]
 
 const PLAN_BENEFITS = [
-  'Asesoría personalizada.',
-  'Reportes y métricas de tus propiedades.',
   'Gestión centralizada de tus publicaciones.',
-  'Mayor exposición para tus propiedades.',
+  'Mayor exposición: tus propiedades se destacan en la portada.',
   `Presencia profesional dentro de ${BRAND.name}.`,
 ]
 

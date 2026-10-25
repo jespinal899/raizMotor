@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import RegisterPage from '@/features/auth/pages/RegisterPage'
-import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/auth/services/authErrors'
+import { RegistrationUnavailableError } from '@/features/auth/services/authErrors'
 import { authService } from '@/features/auth/services/authService'
 import { BRAND } from '@/shared/constants/brand'
 import { buildRegistration } from '@/test/factories'
@@ -28,7 +28,7 @@ const REGISTER_PATH = '/registro'
 
 const renderPage = () => renderWithRouter(<RegisterPage />, { route: REGISTER_PATH, path: REGISTER_PATH })
 
-const { submitButton, googleButton } = registrationForm
+const { submitButton } = registrationForm
 
 describe('RegisterPage', { timeout: 20_000 }, () => {
   beforeEach(() => {
@@ -177,35 +177,6 @@ describe('RegisterPage', { timeout: 20_000 }, () => {
 
     // Act
     await user.click(submitButton())
-
-    // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('El registro aún no está disponible')
-    expect(currentPath()).toBe(REGISTER_PATH)
-  })
-
-  it('registra con Google y lleva al inicio, sin pedir los datos del formulario', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    loginWithGoogle.mockResolvedValue(undefined)
-    const { currentPath } = renderPage()
-
-    // Act
-    await user.click(googleButton())
-
-    // Assert
-    expect(loginWithGoogle).toHaveBeenCalledOnce()
-    expect(register).not.toHaveBeenCalled()
-    await waitFor(() => expect(currentPath()).toBe('/'))
-  })
-
-  it('si no se pudo registrar con Google, explica el motivo y se queda en la página', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    loginWithGoogle.mockRejectedValue(new AuthUnavailableError())
-    const { currentPath } = renderPage()
-
-    // Act
-    await user.click(googleButton())
 
     // Assert
     expect(await screen.findByRole('alert')).toHaveTextContent('El registro aún no está disponible')

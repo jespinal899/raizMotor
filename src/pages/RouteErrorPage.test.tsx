@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import RouteErrorPage from '@/pages/RouteErrorPage'
@@ -43,7 +43,7 @@ describe('RouteErrorPage', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Algo salió mal' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Volver a intentar' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
-    expect(document.title).toBe(`Algo salió mal | ${BRAND.name}`)
+    await waitFor(() => expect(document.title).toBe(`Algo salió mal | ${BRAND.name}`))
   })
 
   it('si el sitio se actualizó mientras estaba abierto, recarga la página en lugar de mostrar el fallo', async () => {
