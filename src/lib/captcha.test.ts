@@ -91,6 +91,21 @@ describe('createCaptchaSession', () => {
     await expect(taking).resolves.toBeNull()
   })
 
+  it('si deja de esperar sin token, no reinicia el widget: la casilla puede estar a punto de marcarse', async () => {
+    // Arrange
+    const session = createCaptchaSession()
+    const reset = vi.fn()
+    session.onReset(reset)
+
+    // Act
+    const taking = session.takeToken()
+    await vi.advanceTimersByTimeAsync(TOKEN_WAIT_MS)
+    await taking
+
+    // Assert
+    expect(reset).not.toHaveBeenCalled()
+  })
+
   it('al usar el token avisa para reiniciar el widget, hasta que se deja de escuchar', async () => {
     // Arrange
     const session = createCaptchaSession()
