@@ -26,6 +26,8 @@ export const ROUTES = {
   account: '/mi-cuenta',
   /** El panel del equipo del sitio. */
   admin: '/admin',
+  /** A donde lleva «Publicar»: con un plan de pago, ese plan y qué publicar; sin él, todos los planes. */
+  myPlan: '/mi-plan',
   pricing: '/planes',
   agentPlans: '/planes/agente-inmobiliario',
   agentPlanCheckout: '/planes/agente-inmobiliario/contratar/:plan',

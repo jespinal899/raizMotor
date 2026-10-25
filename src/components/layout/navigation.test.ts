@@ -5,7 +5,7 @@ import { parseSearchFilters } from '@/features/search/utils/buildSearchQuery'
 import { ROUTES } from '@/shared/constants/routes'
 
 describe('NAV', () => {
-  it('publicar empieza por elegir plan: su enlace lleva a la página de planes', () => {
+  it('publicar empieza por el plan: su enlace lleva al plan de la cuenta, que sin uno de pago muestra todos', () => {
     // Arrange
     const publish = NAV.publish
 
@@ -14,7 +14,7 @@ describe('NAV', () => {
 
     // Assert
     expect(publish.label).toBe('Publicar')
-    expect(destination).toBe(ROUTES.pricing)
+    expect(destination).toBe(ROUTES.myPlan)
   })
 
   it('el pie no repite destino: "Planes" y "Publicar" llevarían al mismo sitio', () => {

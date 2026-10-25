@@ -350,6 +350,7 @@ describe('handleRobots', () => {
     // Assert
     expect(text).toContain('Disallow: /admin')
     expect(text).toContain('Disallow: /mi-cuenta')
+    expect(text).toContain('Disallow: /mi-plan')
     expect(text).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`)
   })
 

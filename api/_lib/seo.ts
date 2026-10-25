@@ -23,6 +23,7 @@ const PRIVATE_PATHS = [
   '/publicar',
   '/mis-publicaciones',
   '/mi-cuenta',
+  '/mi-plan',
   '/admin',
   '/iniciar-sesion',
   '/registro',
