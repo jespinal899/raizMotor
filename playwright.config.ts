@@ -17,6 +17,8 @@ export default defineConfig({
     baseURL: 'http://localhost:4173',
     locale: 'es-HN',
     trace: 'retain-on-failure',
+    // El sitio compilado registra su trabajador; fuera, para que las pruebas vean cada petición tal cual.
+    serviceWorkers: 'block',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {

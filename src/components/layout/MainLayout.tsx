@@ -1,5 +1,7 @@
 import { Outlet, ScrollRestoration, useNavigation } from 'react-router-dom'
+import BottomNav from '@/components/layout/BottomNav'
 import Footer from '@/components/layout/Footer'
+import InstallAppBanner from '@/components/layout/InstallAppBanner'
 import Navbar from '@/components/layout/Navbar'
 
 interface MainLayoutProps {
@@ -12,7 +14,7 @@ const MainLayout = ({ compactFooter = false }: MainLayoutProps) => {
   const { state } = useNavigation()
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="flex min-h-svh flex-col pb-tabbar lg:pb-0">
       {state === 'loading' && (
         <div
           role="progressbar"
@@ -25,6 +27,9 @@ const MainLayout = ({ compactFooter = false }: MainLayoutProps) => {
         <Outlet />
       </main>
       <Footer compact={compactFooter} />
+      {/* En el teléfono se maneja como una aplicación: pestañas abajo y la invitación a instalarla. */}
+      <InstallAppBanner className="lg:hidden" />
+      <BottomNav className="lg:hidden" />
       {/* Al cambiar de página sube al inicio (o a la sección del enlace) y al volver atrás recupera la posición. */}
       <ScrollRestoration />
     </div>

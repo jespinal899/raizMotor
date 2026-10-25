@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { PROJECTS } from '@/features/projects/data/projects.data'
 import type { MyProjectsService } from '@/features/projects/services/myProjectsService'
@@ -86,7 +86,8 @@ describe('MyPlanPage', () => {
     expect(screen.getByRole('link', { name: 'Publicar una propiedad' })).toHaveAttribute('href', '/publicar')
     expect(screen.queryByRole('link', { name: 'Publicar un proyecto' })).not.toBeInTheDocument()
     expect(screen.queryByText(/Publica tu propiedad en/)).not.toBeInTheDocument()
-    expect(document.title).toBe(`Tu plan | ${BRAND.name}`)
+    // El título se pone en un efecto: con la máquina cargada puede llegar un instante después.
+    await waitFor(() => expect(document.title).toBe(`Tu plan | ${BRAND.name}`))
   })
 
   it('un agente mejora su plan entre los planes de agente', async () => {

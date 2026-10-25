@@ -10,6 +10,23 @@
 */
 @custom-variant tall (@media (min-height: 45rem));
 
+/*
+  La barra de pestañas de abajo en el teléfono (BottomNav) y el borde de la barra de gestos del iPhone y de
+  Android: el contenido se aparta de las dos para que nada quede tapado.
+*/
+@utility h-tabbar {
+    height: var(--tabbar-height);
+}
+@utility pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pb-tabbar {
+    padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+}
+@utility bottom-tabbar {
+    bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+}
+
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
@@ -105,6 +122,7 @@
 }
 
 :root {
+    --tabbar-height: 4rem;
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -181,8 +199,25 @@
     }
   body {
     @apply bg-background text-foreground;
+    /* Con el teléfono de lado, el contenido no se mete bajo la muesca. */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
     }
   html {
     @apply font-sans;
+    /* En el teléfono, tocar no deja el recuadro gris del navegador ni cambia el tamaño de la letra al girarlo. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     }
+  /* Sin la espera del doble toque para ampliar: los botones y enlaces responden al instante. */
+  a, button, input, select, textarea, label, [role='button'] {
+    touch-action: manipulation;
+    }
+  /* Instalada como aplicación, la página no rebota ni se estira al llegar arriba o abajo. */
+  @media (display-mode: standalone) {
+    html, body {
+      overscroll-behavior-y: none;
+      }
+  }
 }
