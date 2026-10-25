@@ -45,6 +45,10 @@ export const RETURN_PARAM = 'volver'
 /** Abre el inicio de sesión para volver, al entrar, a la página desde la que se pidió. */
 export const loginPath = (returnTo: string) => `${ROUTES.login}?${RETURN_PARAM}=${encodeURIComponent(returnTo)}`
 
+/** Abre el registro para volver, al crear la cuenta, a la página desde la que se pidió. */
+export const registerPath = (returnTo: string) =>
+  `${ROUTES.register}?${RETURN_PARAM}=${encodeURIComponent(returnTo)}`
+
 /** Solo se vuelve a una página del propio sitio: nunca a una dirección de fuera que alguien ponga en el enlace. */
 export const isInternalPath = (path: string) => /^\/(?![/\\])/.test(path)
 

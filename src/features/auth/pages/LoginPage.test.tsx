@@ -55,6 +55,20 @@ describe('LoginPage', () => {
     expect(screen.getByRole('link', { name: 'Regístrate' })).toHaveAttribute('href', registerPath)
   })
 
+  it('quien pasa a registrarse no pierde la página a la que iba', () => {
+    // Arrange
+    const route = `${LOGIN_PATH}?volver=%2Fplanes%2Finmobiliarias%2Fcontratar%2Finmobiliaria-plus`
+
+    // Act
+    renderWithRouter(<LoginPage />, { route, path: LOGIN_PATH })
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Regístrate' })).toHaveAttribute(
+      'href',
+      '/registro?volver=%2Fplanes%2Finmobiliarias%2Fcontratar%2Finmobiliaria-plus',
+    )
+  })
+
   it('ofrece recuperar la contraseña', () => {
     // Arrange: visitante sin sesión
 

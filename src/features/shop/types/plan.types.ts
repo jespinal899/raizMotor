@@ -5,6 +5,8 @@ export interface PlanAction {
   to: string
   /** Icono decorativo que acompaña el enlace cuando la tarjeta lo presenta. */
   icon?: LucideIcon
+  /** El siguiente paso es de una cuenta: a quien no ha iniciado sesión, el botón lo lleva antes a iniciarla. */
+  requiresAccount?: boolean
 }
 
 /** Lo que tiene cualquier plan que se muestra en una tarjeta: su nombre y su siguiente paso. */

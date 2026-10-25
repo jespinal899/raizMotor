@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react'
 import ButtonLink from '@/components/ButtonLink'
 import { Card } from '@/components/ui/card'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { ACCOUNTS_AVAILABLE } from '@/features/auth/services/authService'
 import type { PlanAction } from '@/features/shop/types/plan.types'
 import { cn } from '@/lib/utils'
+import { loginPath } from '@/shared/constants/routes'
 
 interface PlanCardProps {
   name: string
@@ -14,7 +17,12 @@ interface PlanCardProps {
 }
 
 const PlanCard = ({ name, action, accented = false, children }: PlanCardProps) => {
+  const { status } = useAuth()
   const ActionIcon = action.icon
+  // Sin sesión, elegir el plan lleva a iniciarla y, al entrar, al paso que se eligió. Mientras se sabe si hay
+  // sesión el botón va al paso mismo: esa página también la pide.
+  const to =
+    action.requiresAccount && ACCOUNTS_AVAILABLE && status === 'signedOut' ? loginPath(action.to) : action.to
 
   return (
     <Card className="h-full gap-6 p-6">
@@ -22,7 +30,7 @@ const PlanCard = ({ name, action, accented = false, children }: PlanCardProps) =
       {children}
       {/* El botón queda abajo aunque las tarjetas de la fila tengan textos de distinto largo. */}
       <ButtonLink
-        to={action.to}
+        to={to}
         variant="default"
         size="lg"
         className={cn(

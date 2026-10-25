@@ -86,6 +86,20 @@ describe('RegisterPage', { timeout: 20_000 }, () => {
     expect(screen.getByRole('link', { name: 'Inicia sesión' })).toHaveAttribute('href', loginPath)
   })
 
+  it('quien vuelve a iniciar sesión no pierde la página a la que iba', () => {
+    // Arrange
+    const route = `${REGISTER_PATH}?volver=%2Fplanes%2Fagente-inmobiliario%2Fcontratar%2Fagente-plan-2`
+
+    // Act
+    renderWithRouter(<RegisterPage />, { route, path: REGISTER_PATH })
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Inicia sesión' })).toHaveAttribute(
+      'href',
+      '/iniciar-sesion?volver=%2Fplanes%2Fagente-inmobiliario%2Fcontratar%2Fagente-plan-2',
+    )
+  })
+
   it('crea la cuenta con los datos escritos y dice a qué correo se envió el código para confirmarla', async () => {
     // Arrange
     const user = userEvent.setup()

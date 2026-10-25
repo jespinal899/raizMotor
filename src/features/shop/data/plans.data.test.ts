@@ -115,11 +115,11 @@ describe('AGENT_PLANS', () => {
     expect(misplaced).toEqual([])
   })
 
-  it('el botón de cada plan abre su página de contratación', () => {
+  it('el botón de cada plan abre su página de contratación, que pide una cuenta', () => {
     // Arrange
     const expectedActions = [
-      { label: 'Comenzar con Pro', to: '/planes/agente-inmobiliario/contratar/agente-plan-1' },
-      { label: 'Comenzar con Élite', to: '/planes/agente-inmobiliario/contratar/agente-plan-2' },
+      { label: 'Comenzar con Pro', to: '/planes/agente-inmobiliario/contratar/agente-plan-1', requiresAccount: true },
+      { label: 'Comenzar con Élite', to: '/planes/agente-inmobiliario/contratar/agente-plan-2', requiresAccount: true },
     ]
 
     // Act
@@ -142,6 +142,17 @@ describe('todos los planes', () => {
 
     // Assert
     expect(ids.size).toBe(total)
+  })
+
+  it('elegir un plan pide una cuenta; abrir la lista de planes de agente o de inmobiliaria, no', () => {
+    // Arrange
+    const listsOfPlans: string[] = [ROUTES.agentPlans, ROUTES.agencyPlans]
+
+    // Act
+    const withoutAccount = allPlans.filter((plan) => !plan.action.requiresAccount).map((plan) => plan.action.to)
+
+    // Assert
+    expect(withoutAccount).toEqual(listsOfPlans)
   })
 
   it('cada botón lleva a una página que existe', () => {

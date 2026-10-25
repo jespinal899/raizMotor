@@ -57,10 +57,13 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText(CONTENT)).not.toBeInTheDocument()
   })
 
-  it('el inicio de sesión que ofrece vuelve después a esta misma página', () => {
+  it('el inicio de sesión y el registro que ofrece vuelven después a esta misma página', () => {
     // Arrange
     sessionIs(null)
-    const expectedLinks = ['Iniciar sesión → /iniciar-sesion?volver=%2Fpublicar', 'Crear una cuenta → /registro']
+    const expectedLinks = [
+      'Iniciar sesión → /iniciar-sesion?volver=%2Fpublicar',
+      'Crear una cuenta → /registro?volver=%2Fpublicar',
+    ]
 
     // Act
     renderRoute()

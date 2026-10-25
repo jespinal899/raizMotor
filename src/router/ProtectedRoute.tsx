@@ -6,7 +6,7 @@ import PageLoading from '@/components/PageLoading'
 import PageMessage from '@/components/PageMessage'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { ACCOUNTS_AVAILABLE } from '@/features/auth/services/authService'
-import { ROUTES, loginPath } from '@/shared/constants/routes'
+import { loginPath, registerPath } from '@/shared/constants/routes'
 
 export interface ProtectedRouteProps {
   /** Qué se le pide a quien llega sin sesión, p. ej. "Inicia sesión para publicar". */
@@ -32,7 +32,7 @@ const ProtectedRoute = ({ title, description, children }: ProtectedRouteProps) =
   return (
     <PageMessage icon={LogIn} title={title} description={description}>
       <ButtonLink to={loginPath(pathname)}>Iniciar sesión</ButtonLink>
-      <ButtonLink to={ROUTES.register} variant="outline">
+      <ButtonLink to={registerPath(pathname)} variant="outline">
         Crear una cuenta
       </ButtonLink>
     </PageMessage>

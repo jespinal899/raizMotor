@@ -1,4 +1,5 @@
 import { Construction } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import StatusAlert from '@/components/StatusAlert'
 import AuthCard from '@/features/auth/components/AuthCard'
 import EmailCodeForm from '@/features/auth/components/EmailCodeForm'
@@ -6,12 +7,18 @@ import RegisterForm from '@/features/auth/components/RegisterForm'
 import { useRegistration } from '@/features/auth/hooks/useRegistration'
 import { ACCOUNTS_AVAILABLE } from '@/features/auth/services/authService'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { ROUTES } from '@/shared/constants/routes'
-
-const LOGIN_ALTERNATIVE = { question: '¿Ya tienes cuenta?', action: 'Inicia sesión', to: ROUTES.login }
+import { RETURN_PARAM, ROUTES, loginPath } from '@/shared/constants/routes'
 
 const RegisterPage = () => {
   const { confirmationEmail, register, registerWithGoogle, confirm, resendCode } = useRegistration()
+  const [params] = useSearchParams()
+  const returnTo = params.get(RETURN_PARAM)
+  // Quien ya tiene cuenta y pasa a iniciar sesión no pierde a dónde iba, p. ej. el plan que eligió.
+  const loginAlternative = {
+    question: '¿Ya tienes cuenta?',
+    action: 'Inicia sesión',
+    to: returnTo ? loginPath(returnTo) : ROUTES.login,
+  }
 
   usePageTitle('Crear una cuenta')
 
@@ -19,7 +26,7 @@ const RegisterPage = () => {
     <AuthCard
       title="Crear una cuenta"
       description="Regístrate para publicar y gestionar tus propiedades."
-      alternative={LOGIN_ALTERNATIVE}
+      alternative={loginAlternative}
     >
       {confirmationEmail ? (
         // La cuenta existe, pero no se activa hasta escribir el código: el formulario de registro ya no hace falta.
