@@ -252,6 +252,14 @@
   * {
     @apply border-border outline-ring/50;
     }
+  /*
+    La página nunca se desliza de lado en el teléfono: lo que sobresalga por la derecha (una animación que entra
+    desde el costado, un texto largo) se recorta. `clip` y no `hidden`, que rompería la barra de arriba fija.
+  */
+  html, body {
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+    }
   body {
     @apply bg-background text-foreground;
     /* Con el teléfono de lado, el contenido no se mete bajo la muesca. */
