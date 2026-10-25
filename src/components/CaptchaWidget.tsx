@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CAPTCHA_SITE_KEY, captchaSession } from '@/lib/captcha'
 import type { CaptchaSession } from '@/lib/captcha'
 
@@ -14,6 +14,8 @@ export interface TurnstileApi {
       callback: (token: string) => void
       'expired-callback': () => void
       'error-callback': () => void
+      /** Cloudflare va a mostrar la casilla: sospecha que quien está es un bot. */
+      'before-interactive-callback': () => void
     },
   ): string
   reset(widgetId: string): void
@@ -60,6 +62,7 @@ interface CaptchaWidgetProps {
  */
 const CaptchaWidget = ({ siteKey = CAPTCHA_SITE_KEY, session = captchaSession, load = loadTurnstile }: CaptchaWidgetProps) => {
   const container = useRef<HTMLDivElement>(null)
+  const [interactive, setInteractive] = useState(false)
 
   useEffect(() => {
     if (!siteKey || !container.current) return
@@ -80,12 +83,14 @@ const CaptchaWidget = ({ siteKey = CAPTCHA_SITE_KEY, session = captchaSession, l
           callback: (token) => session.setToken(token),
           'expired-callback': () => session.setToken(null),
           'error-callback': () => session.setToken(null),
+          'before-interactive-callback': () => setInteractive(true),
         })
       })
       // Si no carga, el envío lo dirá: Supabase rechazará la petición sin token.
       .catch(() => {})
 
     const stopListening = session.onReset(() => {
+      setInteractive(false)
       if (api && widgetId) api.reset(widgetId)
     })
 
@@ -99,8 +104,10 @@ const CaptchaWidget = ({ siteKey = CAPTCHA_SITE_KEY, session = captchaSession, l
 
   if (!siteKey) return null
 
-  // Vacío no ocupa espacio; si Cloudflare muestra la casilla, el contenedor crece con ella.
-  return <div ref={container} className="empty:hidden" />
+  // Turnstile deja su iframe dentro aunque no se vea, así que el contenedor nunca está vacío. Mientras no hay casilla
+  // va fuera del flujo, para no sumar el espacio entre campos del formulario; no se oculta con `display: none`
+  // porque la comprobación en segundo plano tiene que seguir corriendo.
+  return <div ref={container} className={interactive ? undefined : 'absolute'} />
 }
 
 export default CaptchaWidget

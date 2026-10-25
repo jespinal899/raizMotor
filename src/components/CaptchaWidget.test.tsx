@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import CaptchaWidget from '@/components/CaptchaWidget'
 import type { TurnstileApi } from '@/components/CaptchaWidget'
@@ -59,7 +59,24 @@ describe('CaptchaWidget', () => {
 
     // Assert
     expect(turnstile.options().appearance).toBe('interaction-only')
-    expect(container.firstElementChild).toHaveClass('empty:hidden')
+    expect(container.firstElementChild).toHaveClass('absolute')
+  })
+
+  it('cuando Cloudflare va a mostrar la casilla, ocupa su sitio encima del botón hasta el siguiente intento', async () => {
+    // Arrange
+    const turnstile = fakeTurnstile()
+    const session = createCaptchaSession()
+    const { container } = render(<CaptchaWidget siteKey="clave-del-sitio" session={session} load={turnstile.load} />)
+    await waitFor(() => expect(turnstile.api.render).toHaveBeenCalled())
+
+    // Act
+    act(() => turnstile.options()['before-interactive-callback']())
+    const shown = container.firstElementChild?.className
+    await act(() => session.takeToken(0))
+
+    // Assert
+    expect(shown).toBe('')
+    expect(container.firstElementChild).toHaveClass('absolute')
   })
 
   it('se reinicia cada vez que se usa el token, porque no sirve dos veces', async () => {

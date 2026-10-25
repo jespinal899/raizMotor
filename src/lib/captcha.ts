@@ -25,7 +25,7 @@ export interface CaptchaSession {
   setToken(token: string | null): void
   /**
    * Entrega el token y lo da por usado: el widget se reinicia para el siguiente intento. Si la comprobación
-   * aún no terminó, la espera hasta `waitMs`; si no llega, entrega `null`.
+   * aún no terminó, la espera hasta `waitMs`; si no llega, entrega `null` y deja el widget como está.
    */
   takeToken(waitMs?: number): Promise<string | null>
   /** Avisa cada vez que hay que reiniciar el widget. Devuelve cómo dejar de escuchar. */
@@ -65,9 +65,11 @@ export const createCaptchaSession = (): CaptchaSession => {
           clearTimeout(timer)
           resolve(consume(arrived))
         }
+        // Sin token no hay nada que dar por usado: no se reinicia el widget, que puede estar mostrando la casilla
+        // a punto de marcarse.
         const timer = setTimeout(() => {
           waiting.delete(deliver)
-          resolve(consume(null))
+          resolve(null)
         }, waitMs)
         waiting.add(deliver)
       })
