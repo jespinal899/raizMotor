@@ -8,6 +8,7 @@ import LazyEditPropertyPage from '@/features/properties/pages/LazyEditPropertyPa
 import LazyPublishPropertyPage from '@/features/properties/pages/LazyPublishPropertyPage'
 import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import RouteErrorPage from '@/pages/RouteErrorPage'
 import ProtectedRoute from '@/router/ProtectedRoute'
 import type { ProtectedRouteProps } from '@/router/ProtectedRoute'
 import { landFromAuthLink } from '@/router/authLinkLanding'
@@ -48,87 +49,93 @@ export const routes: RouteObject[] = [
   {
     element: <MainLayout />,
     children: [
-      { path: ROUTES.home, element: <HomePage /> },
-      { path: ROUTES.properties, ...page(searchPage) },
-      { path: ROUTES.propertiesByType, ...page(searchPage) },
-      { path: ROUTES.propertyDetail, ...page(() => import('@/features/properties/pages/PropertyDetailPage')) },
-      { path: ROUTES.projects, ...page(() => import('@/features/projects/pages/ProjectsPage')) },
-      { path: ROUTES.projectDetail, ...page(() => import('@/features/projects/pages/ProjectDetailPage')) },
-      { path: ROUTES.contact, ...page(() => import('@/features/contact/pages/ContactPage')) },
-      { path: ROUTES.forgotPassword, ...page(() => import('@/features/auth/pages/ForgotPasswordPage')) },
-      { path: ROUTES.resetPassword, ...page(() => import('@/features/auth/pages/ResetPasswordPage')) },
       {
-        path: ROUTES.publish,
-        element: (
-          <ProtectedRoute
-            title="Inicia sesión para publicar"
-            description="Tu anuncio queda a nombre de tu cuenta, con el teléfono que diste al registrarte para que te escriban."
-          >
-            <LazyPublishPropertyPage />
-          </ProtectedRoute>
-        ),
+        // Un fallo al abrir una página se explica dentro del sitio, con la barra y el pie a la vista.
+        errorElement: <RouteErrorPage />,
+        children: [
+          { path: ROUTES.home, element: <HomePage /> },
+          { path: ROUTES.properties, ...page(searchPage) },
+          { path: ROUTES.propertiesByType, ...page(searchPage) },
+          { path: ROUTES.propertyDetail, ...page(() => import('@/features/properties/pages/PropertyDetailPage')) },
+          { path: ROUTES.projects, ...page(() => import('@/features/projects/pages/ProjectsPage')) },
+          { path: ROUTES.projectDetail, ...page(() => import('@/features/projects/pages/ProjectDetailPage')) },
+          { path: ROUTES.contact, ...page(() => import('@/features/contact/pages/ContactPage')) },
+          { path: ROUTES.forgotPassword, ...page(() => import('@/features/auth/pages/ForgotPasswordPage')) },
+          { path: ROUTES.resetPassword, ...page(() => import('@/features/auth/pages/ResetPasswordPage')) },
+          {
+            path: ROUTES.publish,
+            element: (
+              <ProtectedRoute
+                title="Inicia sesión para publicar"
+                description="Tu anuncio queda a nombre de tu cuenta, con el teléfono que diste al registrarte para que te escriban."
+              >
+                <LazyPublishPropertyPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: ROUTES.myProperties,
+            ...page(() => import('@/pages/MyPropertiesPage'), {
+              title: 'Inicia sesión para ver tus publicaciones',
+              description: 'Tus publicaciones están guardadas en tu cuenta.',
+            }),
+          },
+          {
+            path: ROUTES.myProjects,
+            ...page(() => import('@/features/projects/pages/MyProjectsPage'), {
+              title: 'Inicia sesión para ver tus proyectos',
+              description: 'Tus proyectos están guardados en tu cuenta.',
+            }),
+          },
+          {
+            path: ROUTES.newProject,
+            ...page(() => import('@/features/projects/pages/ProjectEditorPage'), {
+              title: 'Inicia sesión para publicar un proyecto',
+              description: 'Tu proyecto queda a nombre de tu cuenta de inmobiliaria.',
+            }),
+          },
+          {
+            path: ROUTES.editProject,
+            ...page(() => import('@/features/projects/pages/ProjectEditorPage'), {
+              title: 'Inicia sesión para editar tu proyecto',
+              description: 'Solo la inmobiliaria que publicó un proyecto puede corregirlo.',
+            }),
+          },
+          {
+            path: ROUTES.editProperty,
+            element: (
+              <ProtectedRoute
+                title="Inicia sesión para editar tu anuncio"
+                description="Solo quien publicó un anuncio puede corregirlo."
+              >
+                <LazyEditPropertyPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: ROUTES.account,
+            ...page(() => import('@/features/auth/pages/AccountPage'), {
+              title: 'Inicia sesión para ver tu cuenta',
+              description: 'Aquí corriges tu nombre y el teléfono al que te escriben por tus anuncios.',
+            }),
+          },
+          {
+            path: ROUTES.admin,
+            ...page(() => import('@/features/admin/pages/AdminDashboardPage'), {
+              title: 'Inicia sesión para entrar al panel',
+              description: 'El panel de administración es solo para las cuentas del equipo del sitio.',
+            }),
+          },
+          { path: ROUTES.pricing, ...page(() => import('@/features/shop/pages/PricingPage')) },
+          { path: ROUTES.agentPlans, ...page(() => import('@/features/shop/pages/AgentPlansPage')) },
+          { path: ROUTES.agentPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
+          { path: ROUTES.agencyPlans, ...page(() => import('@/features/shop/pages/AgencyPlansPage')) },
+          { path: ROUTES.agencyPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
+          { path: ROUTES.terms, ...page(() => import('@/features/legal/pages/TermsPage')) },
+          { path: ROUTES.privacy, ...page(() => import('@/features/legal/pages/PrivacyPage')) },
+          { path: '*', element: <NotFoundPage /> },
+        ],
       },
-      {
-        path: ROUTES.myProperties,
-        ...page(() => import('@/pages/MyPropertiesPage'), {
-          title: 'Inicia sesión para ver tus publicaciones',
-          description: 'Tus publicaciones están guardadas en tu cuenta.',
-        }),
-      },
-      {
-        path: ROUTES.myProjects,
-        ...page(() => import('@/features/projects/pages/MyProjectsPage'), {
-          title: 'Inicia sesión para ver tus proyectos',
-          description: 'Tus proyectos están guardados en tu cuenta.',
-        }),
-      },
-      {
-        path: ROUTES.newProject,
-        ...page(() => import('@/features/projects/pages/ProjectEditorPage'), {
-          title: 'Inicia sesión para publicar un proyecto',
-          description: 'Tu proyecto queda a nombre de tu cuenta de inmobiliaria.',
-        }),
-      },
-      {
-        path: ROUTES.editProject,
-        ...page(() => import('@/features/projects/pages/ProjectEditorPage'), {
-          title: 'Inicia sesión para editar tu proyecto',
-          description: 'Solo la inmobiliaria que publicó un proyecto puede corregirlo.',
-        }),
-      },
-      {
-        path: ROUTES.editProperty,
-        element: (
-          <ProtectedRoute
-            title="Inicia sesión para editar tu anuncio"
-            description="Solo quien publicó un anuncio puede corregirlo."
-          >
-            <LazyEditPropertyPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: ROUTES.account,
-        ...page(() => import('@/features/auth/pages/AccountPage'), {
-          title: 'Inicia sesión para ver tu cuenta',
-          description: 'Aquí corriges tu nombre y el teléfono al que te escriben por tus anuncios.',
-        }),
-      },
-      {
-        path: ROUTES.admin,
-        ...page(() => import('@/features/admin/pages/AdminDashboardPage'), {
-          title: 'Inicia sesión para entrar al panel',
-          description: 'El panel de administración es solo para las cuentas del equipo del sitio.',
-        }),
-      },
-      { path: ROUTES.pricing, ...page(() => import('@/features/shop/pages/PricingPage')) },
-      { path: ROUTES.agentPlans, ...page(() => import('@/features/shop/pages/AgentPlansPage')) },
-      { path: ROUTES.agentPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
-      { path: ROUTES.agencyPlans, ...page(() => import('@/features/shop/pages/AgencyPlansPage')) },
-      { path: ROUTES.agencyPlanCheckout, ...page(() => import('@/features/shop/pages/AgentPlanCheckoutPage')) },
-      { path: ROUTES.terms, ...page(() => import('@/features/legal/pages/TermsPage')) },
-      { path: ROUTES.privacy, ...page(() => import('@/features/legal/pages/PrivacyPage')) },
-      { path: '*', element: <NotFoundPage /> },
     ],
   },
   {
@@ -136,8 +143,13 @@ export const routes: RouteObject[] = [
     // solo el aviso de derechos.
     element: <MainLayout compactFooter />,
     children: [
-      { path: ROUTES.login, ...page(() => import('@/features/auth/pages/LoginPage')) },
-      { path: ROUTES.register, ...page(() => import('@/features/auth/pages/RegisterPage')) },
+      {
+        errorElement: <RouteErrorPage />,
+        children: [
+          { path: ROUTES.login, ...page(() => import('@/features/auth/pages/LoginPage')) },
+          { path: ROUTES.register, ...page(() => import('@/features/auth/pages/RegisterPage')) },
+        ],
+      },
     ],
   },
 ]
