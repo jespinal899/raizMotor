@@ -14,7 +14,7 @@ const MainLayout = ({ compactFooter = false }: MainLayoutProps) => {
   const { state } = useNavigation()
 
   return (
-    <div className="flex min-h-svh flex-col pb-tabbar lg:pb-0">
+    <div className="flex min-h-svh flex-col standalone:max-lg:pb-tabbar">
       {state === 'loading' && (
         <div
           role="progressbar"
@@ -27,9 +27,12 @@ const MainLayout = ({ compactFooter = false }: MainLayoutProps) => {
         <Outlet />
       </main>
       <Footer compact={compactFooter} />
-      {/* En el teléfono se maneja como una aplicación: pestañas abajo y la invitación a instalarla. */}
+      {/*
+        En el navegador del teléfono el sitio se ve como una web e invita a instalarlo; instalado, se maneja
+        como una aplicación, con las pestañas abajo.
+      */}
       <InstallAppBanner className="lg:hidden" />
-      <BottomNav className="lg:hidden" />
+      <BottomNav className="hidden standalone:max-lg:block" />
       {/* Al cambiar de página sube al inicio (o a la sección del enlace) y al volver atrás recupera la posición. */}
       <ScrollRestoration />
     </div>

@@ -19,6 +19,7 @@ interface BottomNavProps {
 
 /**
  * Las pestañas fijas abajo, como en las aplicaciones del teléfono: lo principal queda al alcance del pulgar.
+ * Solo salen en el sitio instalado (`MainLayout`); en el navegador, el menú de arriba hace su papel.
  * Se aparta de la barra de gestos del iPhone y de Android (`pb-safe`).
  */
 const BottomNav = ({ className }: BottomNavProps) => {
@@ -35,7 +36,7 @@ const BottomNav = ({ className }: BottomNavProps) => {
 
   return (
     <nav
-      aria-label="Navegación principal"
+      aria-label="Pestañas de la aplicación"
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-safe backdrop-blur-md select-none',
         className,

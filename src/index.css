@@ -8,6 +8,18 @@
   Ventanas con alto de sobra para dejar fija la columna de la ficha de una propiedad: caben la barra de
   navegación y la tarjeta de cotizar entera, también con los avisos de sus campos a la vista.
 */
+/*
+  Abierta desde el ícono de la pantalla de inicio, como aplicación. El iPhone viejo no entiende la consulta
+  `display-mode`: para él, `markInstalledApp` deja la clase `app-instalada` en <html>.
+*/
+@custom-variant standalone {
+    @media (display-mode: standalone) {
+        @slot;
+    }
+    &:where(.app-instalada, .app-instalada *) {
+        @slot;
+    }
+}
 @custom-variant tall (@media (min-height: 45rem));
 
 /*
@@ -23,8 +35,8 @@
 @utility pb-tabbar {
     padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
 }
-@utility bottom-tabbar {
-    bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+@utility bottom-safe {
+    bottom: env(safe-area-inset-bottom);
 }
 
 @theme inline {

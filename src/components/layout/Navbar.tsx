@@ -32,8 +32,8 @@ const Navbar = () => {
               <NavLabel>{NAV.login.label}</NavLabel>
             </ButtonLink>
           )}
-          {/* En el teléfono «Publicar» va en las pestañas de abajo. */}
-          <ButtonLink to={NAV.publish.to} markCurrent size="lg" className="group/nav hidden px-3.5 lg:inline-flex">
+          {/* En la aplicación instalada, «Publicar» va en las pestañas de abajo del teléfono. */}
+          <ButtonLink to={NAV.publish.to} markCurrent size="lg" className="group/nav px-3.5 standalone:max-lg:hidden">
             <Plus />
             <NavLabel>{NAV.publish.label}</NavLabel>
           </ButtonLink>

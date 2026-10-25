@@ -10,7 +10,7 @@ interface InstallAppBannerProps {
 
 /**
  * Invita a poner el sitio en la pantalla de inicio del teléfono, para abrirlo como una aplicación: con su
- * ícono y sin la barra del navegador. Queda justo encima de las pestañas de abajo y se puede cerrar.
+ * ícono y sin la barra del navegador. Queda abajo, apartada de la barra de gestos, y se puede cerrar.
  */
 const InstallAppBanner = ({ className }: InstallAppBannerProps) => {
   const { way, install, dismiss } = useInstallApp()
@@ -21,7 +21,7 @@ const InstallAppBanner = ({ className }: InstallAppBannerProps) => {
     <aside
       aria-label={`Instalar ${BRAND.name}`}
       className={cn(
-        'fixed inset-x-3 bottom-tabbar z-40 mb-3 flex animate-fade-up items-start gap-3 rounded-2xl border bg-background p-3 shadow-lg',
+        'fixed inset-x-3 bottom-safe z-40 mb-3 flex animate-fade-up items-start gap-3 rounded-2xl border bg-background p-3 shadow-lg',
         className,
       )}
     >
