@@ -29,7 +29,7 @@ const ImageThumbnail = ({ photo, position, onRemove }: ImageThumbnailProps) => {
         size="icon-sm"
         aria-label={`Quitar foto ${position}`}
         onClick={onRemove}
-        className="absolute top-1.5 right-1.5 shadow-sm"
+        className="absolute top-1.5 right-1.5 shadow-sm hitbox"
       >
         <X />
       </Button>

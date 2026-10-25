@@ -77,7 +77,7 @@ const AdminProjectsTable = ({ service }: AdminProjectsTableProps) => {
           setSearch(typed.trim())
         }}
       >
-        <TextField label="Buscar por nombre" type="search" value={typed} onChange={setTyped} className="w-72 max-w-full" />
+        <TextField label="Buscar por nombre" type="search" enterKeyHint="search" value={typed} onChange={setTyped} className="w-72 max-w-full" />
         <Button type="submit" size="lg" className="h-11">
           <Search />
           Buscar

@@ -107,7 +107,7 @@ const PropertyPhotoViewer = ({ images, title, selected, isOpen, onSelect, onClos
         onKeyDown={handleKeyDown}
         {...swipe.handlers}
         className={cn(
-          'top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 items-center justify-center gap-0 overflow-hidden rounded-none bg-slate-950 p-4 text-white ring-0 select-none sm:max-w-none sm:p-16',
+          'top-0 left-0 flex h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 items-center justify-center gap-0 overflow-hidden rounded-none bg-slate-950 p-4 text-white ring-0 select-none sm:max-w-none sm:p-16',
           // El gesto horizontal es del visor; el vertical y el de ampliar, del navegador. Cuando no se puede
           // deslizar, todos son del navegador: con la foto ampliada es él quien la mueve bajo el dedo.
           canSwipe && 'touch-pan-y touch-pinch-zoom',

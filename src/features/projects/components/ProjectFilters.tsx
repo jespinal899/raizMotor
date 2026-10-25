@@ -64,6 +64,8 @@ const ProjectFilters = ({ filters }: ProjectFiltersProps) => {
               value={location}
               onChange={(event) => setLocation(event.target.value)}
               placeholder="Colonia o ciudad"
+              type="search"
+              enterKeyHint="search"
               className="h-11"
             />
             <Button type="submit" size="icon" aria-label="Buscar por zona" className="size-11 shrink-0">

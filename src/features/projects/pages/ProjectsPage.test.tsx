@@ -49,7 +49,7 @@ describe('ProjectsPage', () => {
     await screen.findByText('2 proyectos')
 
     // Act
-    await user.type(screen.getByRole('textbox', { name: 'Zona' }), 'Lomas')
+    await user.type(screen.getByRole('searchbox', { name: 'Zona' }), 'Lomas')
     await user.click(screen.getByRole('button', { name: 'Buscar por zona' }))
 
     // Assert

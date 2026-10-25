@@ -28,7 +28,7 @@ const PhoneField = ({ label, error, onChange, ...inputProps }: PhoneFieldProps) 
         <InputGroup className="h-11">
           <InputGroupAddon className="pl-2.5">
             {/* Mismo tamaño de letra que el campo, para que prefijo y número se lean como uno solo. */}
-            <InputGroupText className="text-base md:text-sm">{HONDURAS_DIAL_CODE}</InputGroupText>
+            <InputGroupText className="text-base md:pointer-fine:text-sm">{HONDURAS_DIAL_CODE}</InputGroupText>
           </InputGroupAddon>
           <InputGroupInput
             placeholder="9999-9999"

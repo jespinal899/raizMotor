@@ -21,6 +21,7 @@ const CodeField = ({ value, error, readOnly, onChange }: CodeFieldProps) => {
       name="code"
       inputMode="numeric"
       autoComplete="one-time-code"
+      enterKeyHint="go"
       maxLength={CODE_LENGTH}
       className="text-center text-lg tracking-[0.4em]"
       value={value}

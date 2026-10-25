@@ -15,7 +15,7 @@ describe('SearchBar', () => {
 
     // Assert
     expect(screen.getByRole('button', { name: 'Comprar' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('textbox', { name: 'Ubicación' })).toHaveValue('')
+    expect(screen.getByRole('searchbox', { name: 'Ubicación' })).toHaveValue('')
     expect(textOf(screen.getByRole('combobox', { name: 'Tipo de propiedad' }))).toContain('Todos los tipos')
     expect(textOf(screen.getByRole('combobox', { name: 'Precio máximo' }))).toContain('Sin límite')
   })
@@ -34,7 +34,7 @@ describe('SearchBar', () => {
 
     // Assert
     expect(screen.getByRole('button', { name: 'Alquilar' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('textbox', { name: 'Ubicación' })).toHaveValue('Surco')
+    expect(screen.getByRole('searchbox', { name: 'Ubicación' })).toHaveValue('Surco')
     expect(textOf(screen.getByRole('combobox', { name: 'Tipo de propiedad' }))).toContain('Casas')
     expect(textOf(screen.getByRole('combobox', { name: 'Precio máximo' }))).toContain('Hasta $ 1,500')
   })
@@ -43,7 +43,7 @@ describe('SearchBar', () => {
     // Arrange
     const user = userEvent.setup()
     const { currentPath } = renderWithRouter(<SearchBar />)
-    await user.type(screen.getByRole('textbox', { name: 'Ubicación' }), 'Miraflores')
+    await user.type(screen.getByRole('searchbox', { name: 'Ubicación' }), 'Miraflores')
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Buscar' }))
@@ -58,7 +58,7 @@ describe('SearchBar', () => {
     const { currentPath } = renderWithRouter(<SearchBar initialFilters={{ type: 'terreno' }} />)
 
     // Act
-    await user.type(screen.getByRole('textbox', { name: 'Ubicación' }), 'Cusco{Enter}')
+    await user.type(screen.getByRole('searchbox', { name: 'Ubicación' }), 'Cusco{Enter}')
 
     // Assert
     expect(currentPath()).toBe('/propiedades/terrenos?ubicacion=Cusco')

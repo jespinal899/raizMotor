@@ -142,7 +142,7 @@ describe('SearchPage', () => {
     await screen.findByText('Mostrando 7–11 de 11 propiedades')
 
     // Act
-    await user.type(screen.getByRole('textbox', { name: 'Ubicación' }), 'Lima{Enter}')
+    await user.type(screen.getByRole('searchbox', { name: 'Ubicación' }), 'Lima{Enter}')
 
     // Assert
     expect(await screen.findByText('Mostrando 1–6 de 11 propiedades')).toBeInTheDocument()

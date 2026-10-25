@@ -31,8 +31,9 @@ const MainLayout = ({ compactFooter = false }: MainLayoutProps) => {
         En el navegador del teléfono el sitio se ve como una web e invita a instalarlo; instalado, se maneja
         como una aplicación, con las pestañas abajo.
       */}
-      <InstallAppBanner className="lg:hidden" />
-      <BottomNav className="hidden standalone:max-lg:block" />
+      <InstallAppBanner className="lg:hidden typing:hidden" />
+      {/* Con el teclado abierto se aparta (`typing`): así no tapa el campo en el que se escribe. */}
+      <BottomNav className="hidden standalone:max-lg:block typing:hidden!" />
       {/* Al cambiar de página sube al inicio (o a la sección del enlace) y al volver atrás recupera la posición. */}
       <ScrollRestoration />
     </div>

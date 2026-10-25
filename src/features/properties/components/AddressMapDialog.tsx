@@ -34,7 +34,7 @@ const AddressMapDialog = ({ open, review, onEdit, onClosed, finalFocus, ...revie
       <DialogContent
         showCloseButton={false}
         finalFocus={finalFocus}
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl"
+        className="sm:max-w-2xl"
       >
         {review && <AddressMapReview review={review} onEdit={onEdit} {...reviewProps} />}
       </DialogContent>

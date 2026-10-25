@@ -125,7 +125,7 @@ const SharePropertyDialog = ({ property }: SharePropertyProps) => {
       >
         <Share2 className="size-5" />
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <SharePropertyPanel property={property} />
       </DialogContent>
     </Dialog>

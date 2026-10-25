@@ -8,6 +8,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme="light"
       className="toaster group"
+      // Por encima de la barra de gestos y, en la aplicación instalada, de las pestañas de abajo (`--toast-lift`).
+      offset={{ bottom: "calc(24px + var(--toast-lift))" }}
+      mobileOffset={{ bottom: "calc(16px + var(--toast-lift))" }}
       icons={{
         success: (
           <CircleCheckIcon className="size-4" />
