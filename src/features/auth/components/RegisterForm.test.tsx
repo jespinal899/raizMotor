@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import RegisterForm from '@/features/auth/components/RegisterForm'
-import { AuthUnavailableError, RegistrationUnavailableError } from '@/features/auth/services/authErrors'
+import { RegistrationUnavailableError } from '@/features/auth/services/authErrors'
 import type { RegistrationCredentials } from '@/features/auth/types/auth.types'
 import { MIN_PASSWORD_LENGTH } from '@/features/auth/utils/credentialRules'
 import { MAX_NAME_LENGTH } from '@/features/auth/utils/registerValidation'
@@ -27,7 +27,7 @@ const setup = ({
   return { onSubmit, onGoogleSignUp, user: userEvent.setup() }
 }
 
-const { firstName, lastName, email, phone, password, submitButton, googleButton } = registrationForm
+const { firstName, lastName, email, phone, password, submitButton } = registrationForm
 
 const pending = () => new Promise<void>(() => {})
 
@@ -157,7 +157,7 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
     expect(lastName()).toHaveAttribute('aria-invalid', 'true')
   })
 
-  it('mientras crea la cuenta desactiva los dos botones y bloquea los campos, para evitar envíos duplicados', async () => {
+  it('mientras crea la cuenta desactiva el botón y bloquea los campos, para evitar envíos duplicados', async () => {
     // Arrange
     const { user } = setup({ onSubmit: pending })
     await fillRegistrationForm(user)
@@ -168,7 +168,6 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
     // Assert
     expect(submitButton()).toBeDisabled()
     expect(submitButton()).toHaveTextContent('Creando cuenta…')
-    expect(googleButton()).toBeDisabled()
     for (const field of [firstName, lastName, email, phone, password]) expect(field()).toHaveAttribute('readonly')
   })
 
@@ -216,53 +215,14 @@ describe('RegisterForm', { timeout: 20_000 }, () => {
 })
 
 describe('RegisterForm: registrarse con Google', () => {
-  it('lo presenta como la otra forma de continuar, sin enviar el formulario', () => {
+  it('no lo ofrece mientras el sitio no esté dado de alta en Google', () => {
     // Arrange: formulario recién abierto
 
     // Act
     setup()
 
     // Assert
-    expect(screen.getByText('O continúa con')).toBeInTheDocument()
-    expect(googleButton()).toHaveTextContent('Registrarse con Google')
-    expect(googleButton()).toHaveAttribute('type', 'button')
-  })
-
-  it('lo ofrece como alternativa y no pide rellenar el formulario', async () => {
-    // Arrange
-    const { onGoogleSignUp, onSubmit, user } = setup()
-
-    // Act
-    await user.click(googleButton())
-
-    // Assert
-    expect(onGoogleSignUp).toHaveBeenCalledOnce()
-    expect(onSubmit).not.toHaveBeenCalled()
-    expect(email()).toHaveAttribute('aria-invalid', 'false')
-  })
-
-  it('mientras conecta lo indica y desactiva los dos botones', async () => {
-    // Arrange
-    const { user } = setup({ onGoogleSignUp: pending })
-
-    // Act
-    await user.click(googleButton())
-
-    // Assert
-    expect(googleButton()).toBeDisabled()
-    expect(googleButton()).toHaveTextContent('Conectando con Google…')
-    expect(submitButton()).toBeDisabled()
-  })
-
-  it('si el acceso con Google aún no está activo lo avisa, sin dar la cuenta por creada', async () => {
-    // Arrange
-    const { user } = setup({ onGoogleSignUp: () => Promise.reject(new AuthUnavailableError()) })
-
-    // Act
-    await user.click(googleButton())
-
-    // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('El registro aún no está disponible')
-    expect(googleButton()).toBeEnabled()
+    expect(screen.queryByText('O continúa con')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Google/ })).not.toBeInTheDocument()
   })
 })

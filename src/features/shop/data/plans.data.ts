@@ -17,8 +17,8 @@ export const PLANS: Plan[] = [
     id: 'agente',
     name: 'Agente inmobiliario',
     description:
-      'Impulsa tu carrera. Publica tu cartera de propiedades y accede a un panel exclusivo para administrar, ' +
-      'dar seguimiento y ver reportes de tus anuncios. La herramienta definitiva para cerrar más ventas.',
+      'Impulsa tu carrera. Publica tu cartera de propiedades, adminístrala desde «Mis publicaciones» y destaca ' +
+      'tus anuncios en la portada.',
     action: { label: 'Publicar como inmobiliario', to: ROUTES.agentPlans, icon: UserRound },
   },
   {
@@ -44,6 +44,12 @@ const activeProperties = (count: number): AgentPlanFeature => ({
   emphasized: `Hasta ${count} propiedades`,
 })
 
+/** Lo que da cualquier plan de pago: la portada destaca, por turnos, los anuncios de sus cuentas. */
+const FEATURED: AgentPlanFeature = {
+  text: 'Propiedades destacadas en la portada, por turnos',
+  emphasized: 'destacadas en la portada',
+}
+
 export const AGENT_PLANS: PaidPlan[] = [
   {
     id: 'agente-plan-1',
@@ -52,7 +58,7 @@ export const AGENT_PLANS: PaidPlan[] = [
     maxProjects: 0,
     features: [
       activeProperties(PRO_PUBLICATIONS),
-      { text: '1 usuario por agente inmobiliario', emphasized: '1 usuario' },
+      FEATURED,
     ],
     monthlyPrice: 599,
     action: checkout('agente-plan-1', 'Comenzar con Pro'),
@@ -64,7 +70,7 @@ export const AGENT_PLANS: PaidPlan[] = [
     maxProjects: 0,
     features: [
       activeProperties(ELITE_PUBLICATIONS),
-      { text: '2 usuarios por agente inmobiliario', emphasized: '2 usuarios' },
+      FEATURED,
     ],
     monthlyPrice: 999,
     action: checkout('agente-plan-2', 'Comenzar con Élite'),

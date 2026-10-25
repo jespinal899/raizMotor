@@ -20,7 +20,7 @@ describe('PLANS', () => {
     // Arrange
     const expectedDescriptions = [
       'Vende o arrienda rápido. Publica 1 propiedad gratis y aprovecha nuestra alta visualización para llegar a miles de interesados sin comisiones.',
-      'Impulsa tu carrera. Publica tu cartera de propiedades y accede a un panel exclusivo para administrar, dar seguimiento y ver reportes de tus anuncios. La herramienta definitiva para cerrar más ventas.',
+      'Impulsa tu carrera. Publica tu cartera de propiedades, adminístrala desde «Mis publicaciones» y destaca tus anuncios en la portada.',
       'Para desarrolladoras y empresas con varias propiedades. Publica tus proyectos en preventa o en construcción, con sus modelos y renders, junto a tu cartera de propiedades.',
     ]
 
@@ -67,7 +67,7 @@ describe('AGENT_PLANS', () => {
         name: 'Agente Pro',
         features: [
           { text: 'Hasta 25 propiedades activas', emphasized: 'Hasta 25 propiedades' },
-          { text: '1 usuario por agente inmobiliario', emphasized: '1 usuario' },
+          { text: 'Propiedades destacadas en la portada, por turnos', emphasized: 'destacadas en la portada' },
         ],
         monthlyPrice: 599,
       },
@@ -75,7 +75,7 @@ describe('AGENT_PLANS', () => {
         name: 'Agente Élite',
         features: [
           { text: 'Hasta 100 propiedades activas', emphasized: 'Hasta 100 propiedades' },
-          { text: '2 usuarios por agente inmobiliario', emphasized: '2 usuarios' },
+          { text: 'Propiedades destacadas en la portada, por turnos', emphasized: 'destacadas en la portada' },
         ],
         monthlyPrice: 999,
       },

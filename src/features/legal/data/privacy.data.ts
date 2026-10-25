@@ -23,7 +23,6 @@ export const PRIVACY: LegalDocumentContent = {
         'Contactar al publicador: el nombre, el correo y el teléfono que escribes en la ficha de un anuncio se envían por correo a quien lo publicó, para que te contacte. No los guardamos: solo anotamos que se hizo un envío y sobre qué anuncio, para no mandarlo dos veces y para limitar los abusos.',
         'Los reportes de anuncios: el motivo y el comentario que escribes, y tu cuenta si tenías la sesión abierta. Los lee el equipo del sitio para revisar el anuncio.',
         'Para proteger el sitio de abusos guardamos una huella de tu dirección IP, nunca la IP tal cual, durante como mucho un día.',
-        'El contador de vistas de cada ficha se guarda en tu navegador y solo cuenta tus propias visitas.',
       ],
     },
     {

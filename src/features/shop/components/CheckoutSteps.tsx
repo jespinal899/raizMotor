@@ -11,7 +11,6 @@ import CardPaymentDemoReceipt from '@/features/shop/components/CardPaymentDemoRe
 import CheckoutPaymentFields from '@/features/shop/components/CheckoutPaymentFields'
 import CheckoutPersonFields from '@/features/shop/components/CheckoutPersonFields'
 import CheckoutPurchaseDetail from '@/features/shop/components/CheckoutPurchaseDetail'
-import CouponBox from '@/features/shop/components/CouponBox'
 import PlanCostSummary from '@/features/shop/components/PlanCostSummary'
 import PlanRequestNotice from '@/features/shop/components/PlanRequestNotice'
 import { PAYMENT_MODE } from '@/features/shop/data/paymentMode'
@@ -131,10 +130,10 @@ const CheckoutSteps = ({ plan, paymentMode = PAYMENT_MODE }: CheckoutStepsProps)
           className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-3 lg:row-start-1"
         >
           <PlanCostSummary plan={plan}>
-            {/* En el resumen se cierra la compra: aquí va el código de descuento y se aceptan los términos. */}
+            {/* En el resumen se cierra la compra: aquí se aceptan los términos. El código de descuento vuelve
+                cuando existan códigos que validar. */}
             {steps.current === CHECKOUT_STEP.summary && (
               <>
-                <CouponBox />
                 <TermsCheckboxField
                   lead="Declaro conocer y aceptar los"
                   linkLabel="Términos y Condiciones de uso"

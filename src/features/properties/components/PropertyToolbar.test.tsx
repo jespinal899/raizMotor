@@ -11,12 +11,11 @@ const PROPERTY = buildProperty({ id: 'casa-1' })
 const follows = (first: HTMLElement, second: HTMLElement) =>
   Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
 
-/** Pinta las acciones y espera a que aparezcan las vistas, lo último en llegar. */
-const renderToolbar = async (property: Property = PROPERTY) => {
+/** Pinta las acciones de la ficha. */
+const renderToolbar = (property: Property = PROPERTY) => {
   renderWithRouter(<PropertyToolbar property={property} />)
-  const toolbar = screen.getByRole('group', { name: 'Acciones de la ficha' })
 
-  return { toolbar, views: await within(toolbar).findByText(/en este navegador/) }
+  return { toolbar: screen.getByRole('group', { name: 'Acciones de la ficha' }) }
 }
 
 describe('PropertyToolbar', () => {
@@ -24,24 +23,23 @@ describe('PropertyToolbar', () => {
     vi.spyOn(propertyViewService, 'registerView').mockResolvedValue(12)
   })
 
-  it('reúne compartir, reportar y las vistas, en ese orden', async () => {
+  it('reúne compartir y reportar, en ese orden', () => {
     // Arrange: propiedad del catálogo
 
     // Act
-    const { toolbar, views } = await renderToolbar()
+    const { toolbar } = renderToolbar()
 
     // Assert
     const share = within(toolbar).getByRole('button', { name: 'Compartir' })
     const report = within(toolbar).getByRole('button', { name: 'Reportar' })
     expect(follows(share, report)).toBe(true)
-    expect(follows(report, views)).toBe(true)
   })
 
-  it('separa compartir de reportar con una línea', async () => {
+  it('separa compartir de reportar con una línea', () => {
     // Arrange: propiedad del catálogo
 
     // Act
-    const { toolbar } = await renderToolbar()
+    const { toolbar } = renderToolbar()
 
     // Assert
     const divider = within(toolbar).getByRole('separator')
@@ -49,23 +47,23 @@ describe('PropertyToolbar', () => {
     expect(follows(divider, within(toolbar).getByRole('button', { name: 'Reportar' }))).toBe(true)
   })
 
-  it('cuenta la visita a esta ficha y dice cuántas lleva', async () => {
-    // Arrange: ficha con 12 visitas contadas
+  it('no muestra un contador de vistas que solo contaría las de este navegador', () => {
+    // Arrange: propiedad del catálogo
 
     // Act
-    const { views } = await renderToolbar()
+    const { toolbar } = renderToolbar()
 
     // Assert
-    expect(views).toHaveTextContent('12 vistas en este navegador')
-    expect(propertyViewService.registerView).toHaveBeenCalledExactlyOnceWith('casa-1')
+    expect(within(toolbar).queryByText(/vistas?/)).not.toBeInTheDocument()
+    expect(propertyViewService.registerView).not.toHaveBeenCalled()
   })
 
-  it('en un anuncio guardado solo en este navegador no ofrece reportarlo: es de quien lo está viendo', async () => {
+  it('en un anuncio guardado solo en este navegador no ofrece reportarlo: es de quien lo está viendo', () => {
     // Arrange
     const local = buildProperty({ id: 'casa-1', localOnly: true })
 
     // Act
-    const { toolbar } = await renderToolbar(local)
+    const { toolbar } = renderToolbar(local)
 
     // Assert
     expect(within(toolbar).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
@@ -73,12 +71,12 @@ describe('PropertyToolbar', () => {
     expect(within(toolbar).queryByRole('separator')).not.toBeInTheDocument()
   })
 
-  it('en una propiedad de ejemplo no ofrece reportarla: no es un anuncio de nadie', async () => {
+  it('en una propiedad de ejemplo no ofrece reportarla: no es un anuncio de nadie', () => {
     // Arrange
     const sample = buildProperty({ id: 'casa-1', example: true })
 
     // Act
-    const { toolbar } = await renderToolbar(sample)
+    const { toolbar } = renderToolbar(sample)
 
     // Assert
     expect(within(toolbar).getByRole('button', { name: 'Compartir' })).toBeInTheDocument()

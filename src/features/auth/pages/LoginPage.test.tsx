@@ -55,7 +55,7 @@ describe('LoginPage', () => {
     expect(screen.getByRole('link', { name: 'Regístrate' })).toHaveAttribute('href', registerPath)
   })
 
-  it('ofrece recuperar la contraseña y entrar con Google', () => {
+  it('ofrece recuperar la contraseña', () => {
     // Arrange: visitante sin sesión
 
     // Act
@@ -63,7 +63,6 @@ describe('LoginPage', () => {
 
     // Assert
     expect(screen.getByRole('link', { name: 'Olvidé mi contraseña' })).toHaveAttribute('href', '/recuperar-contrasena')
-    expect(screen.getByRole('button', { name: 'Iniciar sesión con Google' })).toBeInTheDocument()
   })
 
   it('inicia sesión con los datos escritos y lleva al inicio', async () => {
@@ -88,35 +87,6 @@ describe('LoginPage', () => {
 
     // Act
     await submitCredentials(user)
-
-    // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('El inicio de sesión aún no está disponible')
-    expect(currentPath()).toBe(LOGIN_PATH)
-  })
-
-  it('inicia sesión con Google y lleva al inicio', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    loginWithGoogle.mockResolvedValue(undefined)
-    const { currentPath } = renderPage()
-
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión con Google' }))
-
-    // Assert
-    expect(loginWithGoogle).toHaveBeenCalledOnce()
-    expect(login).not.toHaveBeenCalled()
-    await waitFor(() => expect(currentPath()).toBe('/'))
-  })
-
-  it('si no se pudo entrar con Google, explica el motivo y se queda en la página', async () => {
-    // Arrange
-    const user = userEvent.setup()
-    loginWithGoogle.mockRejectedValue(new AuthUnavailableError())
-    const { currentPath } = renderPage()
-
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Iniciar sesión con Google' }))
 
     // Assert
     expect(await screen.findByRole('alert')).toHaveTextContent('El inicio de sesión aún no está disponible')

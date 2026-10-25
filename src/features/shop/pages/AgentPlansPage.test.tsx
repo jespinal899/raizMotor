@@ -41,11 +41,11 @@ describe('AgentPlansPage', () => {
     const expectedFeatures = [
       [
         'Hasta 25 propiedades activas',
-        '1 usuario por agente inmobiliario',
+        'Propiedades destacadas en la portada, por turnos',
       ],
       [
         'Hasta 100 propiedades activas',
-        '2 usuarios por agente inmobiliario',
+        'Propiedades destacadas en la portada, por turnos',
       ],
     ]
 
@@ -71,23 +71,21 @@ describe('AgentPlansPage', () => {
     expect(screen.queryByText('Panel de administración de cartera')).not.toBeInTheDocument()
     expect(screen.queryByText('Reportes básicos de visitas')).not.toBeInTheDocument()
     expect(within(planCard('Agente Pro')).getByText('Hasta 25 propiedades').tagName).toBe('STRONG')
-    expect(within(planCard('Agente Pro')).getByText('1 usuario').tagName).toBe('STRONG')
+    expect(within(planCard('Agente Pro')).getByText('destacadas en la portada').tagName).toBe('STRONG')
     expect(within(planCard('Agente Élite')).getByText('Hasta 100 propiedades').tagName).toBe('STRONG')
-    expect(within(planCard('Agente Élite')).getByText('2 usuarios').tagName).toBe('STRONG')
+    expect(within(planCard('Agente Élite')).getByText('destacadas en la portada').tagName).toBe('STRONG')
   })
 
   it('presenta los motivos para contratar y lo que se obtiene con un plan, cada uno en su lista', () => {
     // Arrange
     const expectedReasons = [
-      'Soporte y atención al cliente 24/7.',
-      'Administra todo desde un solo panel.',
-      'Tu marca en cada propiedad, sin anuncios externos.',
+      'Quien ve tu anuncio te escribe directo a tu WhatsApp o a tu correo.',
+      'Administra todos tus anuncios desde «Mis publicaciones».',
+      'Tu nombre en cada propiedad que publicas.',
     ]
     const expectedBenefits = [
-      'Asesoría personalizada.',
-      'Reportes y métricas de tus propiedades.',
       'Gestión centralizada de tus publicaciones.',
-      'Mayor exposición para tus propiedades.',
+      'Mayor exposición: tus propiedades se destacan en la portada.',
       `Presencia profesional dentro de ${BRAND.name}.`,
     ]
 

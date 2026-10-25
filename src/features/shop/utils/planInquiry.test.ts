@@ -28,7 +28,7 @@ describe('findPlanInquiry', () => {
     expect(inquiry).toEqual({
       id: 'agente-plan-1',
       name: 'Agente Pro',
-      detail: 'Hasta 25 propiedades activas · 1 usuario por agente inmobiliario',
+      detail: 'Hasta 25 propiedades activas · Propiedades destacadas en la portada, por turnos',
     })
   })
 

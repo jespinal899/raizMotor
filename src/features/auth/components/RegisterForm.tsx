@@ -6,8 +6,6 @@ import PhoneField from '@/components/PhoneField'
 import CaptchaWidget from '@/components/CaptchaWidget'
 import SubmitButton from '@/components/SubmitButton'
 import { FieldGroup } from '@/components/ui/field'
-import AccessSeparator from '@/features/auth/components/AccessSeparator'
-import GoogleButton from '@/features/auth/components/GoogleButton'
 import NameFields from '@/features/auth/components/NameFields'
 import RegisterAlert from '@/features/auth/components/RegisterAlert'
 import { useRegisterForm } from '@/features/auth/hooks/useRegisterForm'
@@ -20,7 +18,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormProps) => {
-  const { values, errors, status, change, submit, signUpWithGoogle } = useRegisterForm({ onSubmit, onGoogleSignUp })
+  const { values, errors, status, change, submit } = useRegisterForm({ onSubmit, onGoogleSignUp })
   const isSubmitting = status === 'submitting'
   const isConnecting = status === 'connecting'
   // Mientras se crea la cuenta por una vía, la otra queda bloqueada.
@@ -75,11 +73,6 @@ const RegisterForm = ({ onSubmit, onGoogleSignUp }: RegisterFormProps) => {
           Crear cuenta
         </SubmitButton>
 
-        <AccessSeparator />
-
-        <GoogleButton isConnecting={isConnecting} disabled={isSubmitting} onClick={() => void signUpWithGoogle()}>
-          Registrarse con Google
-        </GoogleButton>
 
         <RegisterAlert status={status} />
       </FieldGroup>

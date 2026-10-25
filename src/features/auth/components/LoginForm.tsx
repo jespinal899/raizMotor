@@ -7,9 +7,7 @@ import CaptchaWidget from '@/components/CaptchaWidget'
 import SubmitButton from '@/components/SubmitButton'
 import TextLink from '@/components/TextLink'
 import { FieldGroup } from '@/components/ui/field'
-import AccessSeparator from '@/features/auth/components/AccessSeparator'
 import EmailCodeForm from '@/features/auth/components/EmailCodeForm'
-import GoogleButton from '@/features/auth/components/GoogleButton'
 import LoginAlert from '@/features/auth/components/LoginAlert'
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm'
 import type { LoginCredentials } from '@/features/auth/types/auth.types'
@@ -25,7 +23,7 @@ interface LoginFormProps {
 }
 
 const LoginForm = ({ onSubmit, onGoogleSignIn, onConfirmEmail, onResendConfirmation }: LoginFormProps) => {
-  const { values, errors, status, change, submit, signInWithGoogle } = useLoginForm({ onSubmit, onGoogleSignIn })
+  const { values, errors, status, change, submit } = useLoginForm({ onSubmit, onGoogleSignIn })
   const isSubmitting = status === 'submitting'
   const isConnecting = status === 'connecting'
   // Mientras se entra por una vía, la otra queda bloqueada.
@@ -85,11 +83,6 @@ const LoginForm = ({ onSubmit, onGoogleSignIn, onConfirmEmail, onResendConfirmat
           Iniciar sesión
         </SubmitButton>
 
-        <AccessSeparator />
-
-        <GoogleButton isConnecting={isConnecting} disabled={isSubmitting} onClick={() => void signInWithGoogle()}>
-          Iniciar sesión con Google
-        </GoogleButton>
 
         <LoginAlert status={status} />
       </FieldGroup>

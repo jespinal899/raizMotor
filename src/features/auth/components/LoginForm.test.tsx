@@ -44,7 +44,6 @@ const emailField = () => screen.getByRole('textbox', { name: 'Correo' })
 const passwordField = () => screen.getByLabelText('Contraseña')
 const rememberBox = () => screen.getByRole('checkbox', { name: 'Recordarme en este dispositivo' })
 const submitButton = () => screen.getByRole('button', { name: /^Iniciar sesión$|Ingresando/ })
-const googleButton = () => screen.getByRole('button', { name: /Iniciar sesión con Google|Conectando con Google/ })
 
 const pending = () => new Promise<void>(() => {})
 
@@ -79,17 +78,15 @@ describe('LoginForm', () => {
     expect(screen.getByRole('link', { name: 'Olvidé mi contraseña' })).toHaveAttribute('href', recoveryPath)
   })
 
-  it('ofrece entrar con Google como alternativa, sin enviar el formulario', () => {
+  it('no ofrece entrar con Google mientras el sitio no esté dado de alta en Google', () => {
     // Arrange: formulario recién abierto
 
     // Act
     setup()
 
     // Assert
-    expect(screen.getByText('O continúa con')).toBeInTheDocument()
-    expect(googleButton()).toHaveTextContent('Iniciar sesión con Google')
-    expect(googleButton()).toHaveAttribute('type', 'button')
-    expect(googleButton()).toBeEnabled()
+    expect(screen.queryByText('O continúa con')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Google/ })).not.toBeInTheDocument()
   })
 
   it('envía el correo y la contraseña, sin recordar la sesión si no se pide', async () => {
@@ -147,7 +144,7 @@ describe('LoginForm', () => {
     expect(passwordField()).toHaveValue('secreta123')
   })
 
-  it('mientras entra desactiva los dos botones y bloquea los campos, para evitar envíos duplicados', async () => {
+  it('mientras entra desactiva el botón y bloquea los campos, para evitar envíos duplicados', async () => {
     // Arrange
     const { user } = setup({ onSubmit: pending })
     await fillCredentials(user)
@@ -158,7 +155,6 @@ describe('LoginForm', () => {
     // Assert
     expect(submitButton()).toBeDisabled()
     expect(submitButton()).toHaveTextContent('Ingresando…')
-    expect(googleButton()).toBeDisabled()
     expect(emailField()).toHaveAttribute('readonly')
     expect(passwordField()).toHaveAttribute('readonly')
   })
@@ -257,56 +253,7 @@ describe('LoginForm', () => {
   })
 })
 
-describe('LoginForm: entrar con Google', () => {
-  it('no pide rellenar el correo ni la contraseña', async () => {
-    // Arrange
-    const { onGoogleSignIn, onSubmit, user } = setup()
-
-    // Act
-    await user.click(googleButton())
-
-    // Assert
-    expect(onGoogleSignIn).toHaveBeenCalledOnce()
-    expect(onSubmit).not.toHaveBeenCalled()
-    expect(emailField()).toHaveAttribute('aria-invalid', 'false')
-  })
-
-  it('mientras conecta lo indica y desactiva los dos botones', async () => {
-    // Arrange
-    const { user } = setup({ onGoogleSignIn: pending })
-
-    // Act
-    await user.click(googleButton())
-
-    // Assert
-    expect(googleButton()).toBeDisabled()
-    expect(googleButton()).toHaveTextContent('Conectando con Google…')
-    expect(submitButton()).toBeDisabled()
-  })
-
-  it('si el acceso con Google aún no está activo lo avisa, sin dar la sesión por iniciada', async () => {
-    // Arrange
-    const { user } = setup({ onGoogleSignIn: () => Promise.reject(new AuthUnavailableError()) })
-
-    // Act
-    await user.click(googleButton())
-
-    // Assert
-    expect(await screen.findByRole('alert')).toHaveTextContent('El inicio de sesión aún no está disponible')
-    expect(googleButton()).toBeEnabled()
-  })
-
-  it('el logotipo de Google es decorativo: el nombre del botón es solo su texto', () => {
-    // Arrange: formulario recién abierto
-
-    // Act
-    setup()
-
-    // Assert
-    expect(googleButton()).toHaveAccessibleName('Iniciar sesión con Google')
-    expect(googleButton().querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
-  })
-
+describe('LoginForm: cuenta sin activar', () => {
   it('si la cuenta no está activa, ofrece activarla con el código que llegó al correo', async () => {
     // Arrange
     const { user, onConfirmEmail } = setup({ onSubmit: vi.fn<Submit>(async () => Promise.reject(new EmailNotConfirmedError())) })
