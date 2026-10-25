@@ -10,7 +10,7 @@ vi.mock('@/features/auth/services/authService', () => ({
   authService: { logout: vi.fn(), onSessionChange: vi.fn() },
 }))
 
-const tabs = () => within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+const tabs = () => within(screen.getByRole('navigation', { name: 'Pestañas de la aplicación' }))
 const tab = (name: string) => tabs().getByRole('link', { name })
 
 describe('BottomNav', () => {
