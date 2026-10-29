@@ -47,7 +47,8 @@ jobs:
   # base de datos (supabase/tests) y el recorrido del sitio en un navegador de verdad (e2e/).
   integration:
     name: Base de datos y punta a punta
-    runs-on: ubuntu-latest
+    # Fijo en 24.04: Playwright 1.56.1 no instala Chromium en Ubuntu 26.04, que es hoy ubuntu-latest.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Descargar el código
