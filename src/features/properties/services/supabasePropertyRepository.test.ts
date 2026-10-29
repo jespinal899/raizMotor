@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { AgencyBrand } from '@/features/agencies/types/agency.types'
 import {
   PublicationLimitError,
   PublicationSignInRequiredError,
@@ -52,10 +53,12 @@ interface Database {
   rows?: PropertyRow[]
   /** Anuncios que admite la cuenta, según su perfil; sin valor, la cuenta no tiene perfil. */
   limit?: number
+  /** Las inmobiliarias de las cuentas; sin valor, el repositorio no las busca. */
+  brands?: (ownerIds: string[]) => Promise<Map<string, AgencyBrand>>
 }
 
 /** Una base de datos de mentira que guarda como la de verdad: una sola vez por clave. */
-const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
+const setup = ({ userId = ANA, rows = [], limit, brands }: Database = {}) => {
   const stored = [...rows]
   const gateway = {
     currentUserId: vi.fn<PropertyGateway['currentUserId']>(async () => userId),
@@ -67,6 +70,9 @@ const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
     })),
     findById: vi.fn<PropertyGateway['findById']>(async (id) => stored.find((saved) => saved.id === id)),
     listByOwner: vi.fn<PropertyGateway['listByOwner']>(async (owner) => stored.filter((saved) => saved.owner_id === owner)),
+    listPublishedByOwner: vi.fn<PropertyGateway['listPublishedByOwner']>(async (owner) =>
+      stored.filter((saved) => saved.owner_id === owner && saved.status === 'published'),
+    ),
     findByOperationKey: vi.fn<PropertyGateway['findByOperationKey']>(async (owner, key) =>
       stored.find((saved) => saved.owner_id === owner && saved.operation_key === key),
     ),
@@ -88,7 +94,7 @@ const setup = ({ userId = ANA, rows = [], limit }: Database = {}) => {
   }
   const preparePhoto = vi.fn(async () => PREPARED)
 
-  return { gateway, preparePhoto, repository: createSupabasePropertyRepository({ gateway, preparePhoto }) }
+  return { gateway, preparePhoto, repository: createSupabasePropertyRepository({ gateway, preparePhoto, brands }) }
 }
 
 describe('createSupabasePropertyRepository: publicar', () => {
@@ -598,5 +604,52 @@ describe('createSupabasePropertyRepository: eliminar', () => {
     // Assert
     expect(gateway.deleteById).not.toHaveBeenCalled()
     expect(gateway.removePhotos).not.toHaveBeenCalled()
+  })
+})
+
+describe('createSupabasePropertyRepository: inmobiliarias', () => {
+  const CASA_NORTE: AgencyBrand = {
+    slug: 'casa-norte',
+    name: 'Casa Norte',
+    kind: 'inmobiliaria',
+    logoUrl: 'https://logos.example/casa-norte.webp',
+    verified: true,
+  }
+
+  it('un anuncio de una cuenta con inmobiliaria sale a su nombre, con su logo y el teléfono de la cuenta', async () => {
+    // Arrange
+    const brands = vi.fn(async () => new Map([[ANA, CASA_NORTE]]))
+    const { repository } = setup({ rows: [row(), row({ id: NEW_ID, owner_id: 'otra-cuenta' })], brands })
+
+    // Act
+    const [own, other] = await repository.getAll()
+
+    // Assert
+    expect(brands).toHaveBeenCalledExactlyOnceWith([ANA, 'otra-cuenta'])
+    expect(own.advertiser).toEqual({ name: 'Casa Norte', kind: 'inmobiliaria', phone: '+50499999999', agency: CASA_NORTE })
+    expect(other.advertiser).toEqual({ name: 'Ana Mejía', kind: 'particular', phone: '+50499999999' })
+  })
+
+  it('si no se pudieron leer las inmobiliarias, el anuncio sale igual, a nombre de quien lo publicó', async () => {
+    // Arrange
+    const { repository } = setup({ rows: [row()], brands: async () => Promise.reject(new Error('sin red')) })
+
+    // Act
+    const stored = await repository.getById(SAVED_ID)
+
+    // Assert
+    expect(stored?.advertiser).toEqual({ name: 'Ana Mejía', kind: 'particular', phone: '+50499999999' })
+  })
+
+  it('entrega solo los publicados de una cuenta, para la página de su inmobiliaria', async () => {
+    // Arrange
+    const rows = [row(), row({ id: NEW_ID, status: 'unpublished' }), row({ id: 'de-otra', owner_id: 'otra-cuenta' })]
+    const { repository } = setup({ rows })
+
+    // Act
+    const published = await repository.getPublishedByOwner!(ANA)
+
+    // Assert
+    expect(published.map((stored) => stored.id)).toEqual([SAVED_ID])
   })
 })

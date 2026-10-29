@@ -2,6 +2,7 @@ import { Building2, CalendarClock, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import AgencyLogo from '@/features/agencies/components/AgencyLogo'
 import { PROJECT_KINDS, PROJECT_STAGES } from '@/features/projects/data/projectOptions.data'
 import type { Project } from '@/features/projects/types/project.types'
 import { formatDelivery } from '@/features/projects/utils/projectText'
@@ -14,7 +15,8 @@ interface ProjectCardProps {
 }
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
-  const { id, name, kind, stage, deliveryDate, priceFrom, district, city, image, developer, featured, example } = project
+  const { id, name, kind, stage, deliveryDate, priceFrom, district, city, image, developer, featured, example, agency } =
+    project
 
   return (
     <Card className="relative h-full gap-0 py-0 transition-shadow duration-300 focus-within:shadow-lg hover:shadow-lg">
@@ -40,6 +42,8 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
             </Badge>
           )}
         </div>
+        {/* La marca de la inmobiliaria que lo publica, sobre la foto. */}
+        {agency && <AgencyLogo agency={agency} className="absolute bottom-3 left-3 size-11 text-xs shadow-sm" />}
       </div>
 
       <CardContent className="flex flex-1 flex-col gap-2 p-4">

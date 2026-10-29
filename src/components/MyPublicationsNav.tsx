@@ -5,9 +5,10 @@ import { ROUTES } from '@/shared/constants/routes'
 const LINKS = [
   { label: 'Propiedades', to: ROUTES.myProperties },
   { label: 'Proyectos', to: ROUTES.myProjects },
+  { label: 'Mi inmobiliaria', to: ROUTES.myAgency },
 ]
 
-/** Las dos partes de «Mis publicaciones»: las propiedades y los proyectos de la cuenta. */
+/** Las partes de «Mis publicaciones»: las propiedades y los proyectos de la cuenta, y el perfil de su inmobiliaria. */
 const MyPublicationsNav = () => (
   <nav aria-label="Mis publicaciones" className="flex gap-1 border-b">
     {LINKS.map(({ label, to }) => (

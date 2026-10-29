@@ -66,6 +66,7 @@ export const routes: RouteObject[] = [
           { path: ROUTES.propertyDetail, ...page(() => import('@/features/properties/pages/PropertyDetailPage')) },
           { path: ROUTES.projects, ...page(() => import('@/features/projects/pages/ProjectsPage')) },
           { path: ROUTES.projectDetail, ...page(() => import('@/features/projects/pages/ProjectDetailPage')) },
+          { path: ROUTES.agency, ...page(() => import('@/features/agencies/pages/AgencyPage')) },
           { path: ROUTES.contact, ...page(() => import('@/features/contact/pages/ContactPage')) },
           { path: ROUTES.forgotPassword, ...page(() => import('@/features/auth/pages/ForgotPasswordPage')) },
           { path: ROUTES.resetPassword, ...page(() => import('@/features/auth/pages/ResetPasswordPage')) },
@@ -124,6 +125,13 @@ export const routes: RouteObject[] = [
             ...page(() => import('@/features/auth/pages/AccountPage'), {
               title: 'Inicia sesión para ver tu cuenta',
               description: 'Aquí corriges tu nombre y el teléfono al que te escriben por tus anuncios.',
+            }),
+          },
+          {
+            path: ROUTES.myAgency,
+            ...page(() => import('@/features/agencies/pages/MyAgencyPage'), {
+              title: 'Inicia sesión para ver tu inmobiliaria',
+              description: 'Aquí armas el perfil público de tu inmobiliaria, con su logo.',
             }),
           },
           {

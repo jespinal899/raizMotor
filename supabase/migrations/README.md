@@ -23,6 +23,7 @@ Cada archivo de esta carpeta es un cambio en la base de datos de Supabase: tabla
 | 17 | `20261019000000_limpieza_de_fotos_de_proyectos.sql` | Las funciones con que `cleanup-photos` sabe qué fotos del depósito `project-photos` no usa ningún proyecto desde hace más de 24 horas, y un índice sobre `projects.photos`. No borra nada por sí misma. | La 12 y la 14 |
 | 18 | `20261020000000_cotizar_proyectos.sql` | Cotizar un proyecto: `claim_project_contact` reserva el envío que hace `contact-publisher` a la cuenta de la inmobiliaria, con los mismos límites que el contacto por un anuncio, y `publisher_contacts` pasa a ser de un anuncio o de un proyecto. No guarda los datos de quien escribe. | La 11 y la 14 |
 | 19 | `20261025000000_proyectos_del_equipo_desde_el_sitio.sql` | Que una cuenta del equipo publique un proyecto desde el sitio: si no dice de quién es, queda a su nombre, y sale publicado. Antes llegaba sin dueño y la base lo rechazaba. Lo que el equipo carga desde el panel conserva el dueño y el estado que escriba. | La 15 |
+| 20 | `20261029000000_inmobiliarias.sql` | El perfil público de cada inmobiliaria (`agencies`): nombre comercial, tipo (inmobiliaria o constructora), logo, contacto, redes y la dirección de su página (`/inmobiliaria/<slug>`). Solo lo crea una cuenta con plan de inmobiliaria (`max_projects > 0`, si no responde `RZ006`), cada una edita el suyo, y el público lo ve mientras el plan siga activo. El depósito público `agency-logos` (512 KB por archivo, cada cuenta en su carpeta) y `admin_set_agency_verified`, con que el equipo marca una inmobiliaria como verificada; la marca se pierde sola si cambia de nombre. | La 15 y la 16 |
 
 Cada archivo es una unidad que funciona completa: una tabla va siempre con sus permisos y con los disparadores que la protegen, nunca en archivos distintos. Una tabla sin ellos aceptaría lo que no debe.
 
@@ -66,5 +67,7 @@ Las que ya se aplicaron no hay que repetirlas, pero repetir una no rompe ni dupl
 - **Revisar los reportes:** ocultar el anuncio reportado, darlo por resuelto o descartarlo.
 - **Ocultar un anuncio, o devolverlo al catálogo:** deja de verse en el catálogo, y quien lo publicó lo sigue viendo en «Mis publicaciones», entre las despublicadas, sin poder volver a publicarlo. El estado `unpublished` es el de los que despublica su propio dueño, que sí puede volver a publicarlos; el equipo no los vuelve a publicar.
 - **Dar más anuncios a una cuenta que contrató un plan:** en la pestaña Cuentas, «Cambiar límite»: 25 para Agente Pro y 100 para Agente Élite. Es cuántos puede tener publicados a la vez, y de ese número saca «Mis publicaciones» el nombre del plan; con otra cantidad lo llama «Plan a medida».
+
+- **Verificar una inmobiliaria:** en la pestaña Inmobiliarias, «Verificar», después de revisar que la empresa existe y que la cuenta es suya (RTN, sitio web o una llamada). Sale la marca «Verificada» en su página, sus anuncios y sus proyectos. Si la inmobiliaria cambia de nombre, la marca se quita sola y hay que volver a revisarla.
 
 Cada decisión queda en la tabla `moderation_log`, con quién la tomó, cuándo y la nota que se escribió.

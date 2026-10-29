@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   AdminAccount,
+  AdminAgency,
   AdminListing,
   AdminProject,
   AdminReport,
@@ -107,6 +108,22 @@ interface AccountRow {
   project_count: number
   total_count: number
 }
+
+interface AgencyAdminRow {
+  owner_id: string
+  slug: string
+  name: string
+  kind: AdminAgency['kind']
+  city: string
+  phone: string
+  email: string
+  website: string
+  logo: string | null
+  verified: boolean
+  created_at: string
+}
+
+const AGENCY_COLUMNS = 'owner_id, slug, name, kind, city, phone, email, website, logo, verified, created_at'
 
 const LISTING_COLUMNS = 'id, title, status, advertiser_name, advertiser_phone, city, price, operation, created_at'
 
@@ -228,6 +245,42 @@ export const createSupabaseAdminService = (client: SupabaseClient): AdminService
     // La función la crea supabase/migrations/20261018000000_moderar_proyectos.sql.
     setProjectStatus: (projectId, status, note) =>
       call('admin_set_project_status', { target_project: projectId, new_status: status, review_note: note }),
+
+    listAgencies: ({ verified, search }, page) => {
+      const agencies = (head = false) => {
+        let query = client.from('agencies').select(AGENCY_COLUMNS, { count: 'exact', head })
+        if (verified !== undefined) query = query.eq('verified', verified)
+        if (search?.trim()) query = query.ilike('name', toPattern(search))
+
+        return query
+      }
+
+      return readPage<AgencyAdminRow, AdminAgency>(
+        agencies()
+          .order('created_at', { ascending: false })
+          .order('owner_id', { ascending: true })
+          .range(...rangeOf(page)),
+        () => agencies(true),
+        (row) => ({
+          ownerId: row.owner_id,
+          slug: row.slug,
+          name: row.name,
+          kind: row.kind,
+          city: row.city,
+          phone: row.phone,
+          email: row.email,
+          website: row.website,
+          ...(row.logo && { logoUrl: client.storage.from('agency-logos').getPublicUrl(row.logo).data.publicUrl }),
+          verified: row.verified,
+          createdAt: row.created_at,
+        }),
+        page,
+      )
+    },
+
+    // La función la crea supabase/migrations/20261029000000_inmobiliarias.sql.
+    setAgencyVerified: (ownerId, verified, note) =>
+      call('admin_set_agency_verified', { target_agency: ownerId, new_verified: verified, review_note: note }),
 
     listAccounts: async (search, page) => {
       const [offset] = rangeOf(page)

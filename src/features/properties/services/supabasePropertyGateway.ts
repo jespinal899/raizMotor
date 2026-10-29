@@ -112,6 +112,11 @@ export const createSupabasePropertyGateway = (client: SupabaseClient): PropertyG
     listByOwner: (ownerId) =>
       readAll((from, to) => newestFirst(properties().select('*').eq('owner_id', ownerId)).range(from, to)),
 
+    listPublishedByOwner: (ownerId) =>
+      readAll((from, to) =>
+        newestFirst(properties().select('*').eq('owner_id', ownerId).eq('status', 'published')).range(from, to),
+      ),
+
     findByOperationKey: async (ownerId, operationKey) =>
       unwrap<PropertyRow[] | null>(
         await properties().select('*').eq('owner_id', ownerId).eq('operation_key', operationKey).limit(1),

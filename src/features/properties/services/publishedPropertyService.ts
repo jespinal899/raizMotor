@@ -154,5 +154,7 @@ export const createPublishedPropertyService = (
     getById: async (id) => (await findPublished(id)) ?? samples.getById(id),
     // Aquí un fallo no se calla: decir «no tienes anuncios» a quien sí los tiene sería falso.
     getOwn: async () => (await repository.getOwn()).map(toProperty),
+    getByOwner: async (ownerId) =>
+      repository.getPublishedByOwner ? (await repository.getPublishedByOwner(ownerId)).map(toProperty) : [],
   }
 }

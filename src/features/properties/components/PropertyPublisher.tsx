@@ -1,5 +1,6 @@
 import { Building2, HardHat, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import AgencyByline from '@/features/agencies/components/AgencyByline'
 import { ADVERTISER_KINDS } from '@/features/properties/data/propertyOptions.data'
 import type { AdvertiserKind, Property } from '@/features/properties/types/property.types'
 
@@ -33,6 +34,9 @@ interface PropertyPublisherProps {
 
 /** Quién publica la propiedad, en una sola fila. No aparece si no se sabe. */
 const PropertyPublisher = ({ property }: PropertyPublisherProps) => {
+  // Una inmobiliaria se presenta con su logo y su página.
+  if (property.advertiser?.agency) return <AgencyByline agency={property.advertiser.agency} />
+
   const publisher = toPublisher(property)
   if (!publisher) return null
 

@@ -17,13 +17,14 @@ export const fitWithin = (width: number, height: number, maxSide = MAX_PHOTO_SID
 
 /**
  * Reduce una foto antes de subirla: las de un teléfono pesan varios megas, y el catálogo las cargaría tal
- * cual. Si el navegador no puede reducirla, o la reducida no pesa menos, se sube la original.
+ * cual. `maxSide` cambia el lado máximo (un logo se guarda más chico). Si el navegador no puede reducirla, o la
+ * reducida no pesa menos, se sube la original.
  */
-export const resizePhoto = async (photo: File): Promise<Blob> => {
+export const resizePhoto = async (photo: File, maxSide = MAX_PHOTO_SIDE): Promise<Blob> => {
   try {
     const bitmap = await createImageBitmap(photo)
     const canvas = document.createElement('canvas')
-    Object.assign(canvas, fitWithin(bitmap.width, bitmap.height))
+    Object.assign(canvas, fitWithin(bitmap.width, bitmap.height, maxSide))
     canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
     bitmap.close()
 

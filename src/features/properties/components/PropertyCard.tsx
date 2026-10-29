@@ -2,6 +2,7 @@ import { MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import AgencyLogo from '@/features/agencies/components/AgencyLogo'
 import PropertyPhoto from '@/features/properties/components/PropertyPhoto'
 import PropertyPrice from '@/features/properties/components/PropertyPrice'
 import PropertyStats from '@/features/properties/components/PropertyStats'
@@ -16,7 +17,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property }: PropertyCardProps) => {
-  const { id, title, type, operation, district, city, image, featured, localOnly, example, withdrawn } = property
+  const { id, title, type, operation, district, city, image, featured, localOnly, example, withdrawn, advertiser } = property
 
   return (
     <Card className="relative h-full gap-0 py-0 transition-shadow duration-300 focus-within:shadow-lg hover:shadow-lg">
@@ -55,6 +56,10 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
             </Badge>
           )}
         </div>
+        {/* La marca de la inmobiliaria que lo publica, sobre la foto. */}
+        {advertiser?.agency && (
+          <AgencyLogo agency={advertiser.agency} className="absolute bottom-3 left-3 size-11 text-xs shadow-sm" />
+        )}
       </div>
 
       <CardContent className="flex flex-1 flex-col gap-2 p-4">

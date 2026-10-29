@@ -9,6 +9,7 @@ const serviceWith = (getFeatured: ProjectService['getFeatured']): ProjectService
   getFeatured: vi.fn(getFeatured),
   search: vi.fn(),
   getById: vi.fn(),
+  getByOwner: vi.fn(),
 })
 
 describe('FeaturedProjects', () => {

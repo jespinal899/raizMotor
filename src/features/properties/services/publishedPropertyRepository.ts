@@ -56,6 +56,11 @@ export interface PublishedPropertyRepository {
    * el servidor. Quien no lo tiene no destaca ningún anuncio.
    */
   getFeatured?(limit: number): Promise<StoredPropertyPublication[]>
+  /**
+   * Los publicados de una cuenta, del más reciente al más antiguo: los de la página de su inmobiliaria. Quien
+   * no guarda anuncios de otras cuentas no lo tiene.
+   */
+  getPublishedByOwner?(ownerId: string): Promise<StoredPropertyPublication[]>
   /** Los de quien usa el sitio, también los que no están en el catálogo, del más reciente al más antiguo. */
   getOwn(): Promise<StoredPropertyPublication[]>
   /** Cuántos anuncios puede tener publicados a la vez quien usa el sitio. */

@@ -154,3 +154,45 @@ describe('createProjectService', () => {
     await expect(result).rejects.toBe(failure)
   })
 })
+
+describe('createProjectService: inmobiliarias', () => {
+  const BRAND = { slug: 'casa-norte', name: 'Casa Norte', kind: 'inmobiliaria' as const, verified: false }
+
+  it('cada proyecto sale con la inmobiliaria de su cuenta, también en la ficha', async () => {
+    // Arrange
+    const brands = vi.fn(async () => new Map([['inmobiliaria', BRAND]]))
+    const service = createProjectService([], gatewayWith([row()]), brands)
+
+    // Act
+    const [{ items }, detail] = await Promise.all([service.search({}, { page: 1, pageSize: 6 }), service.getById(SAVED_ID)])
+
+    // Assert
+    expect(items[0].agency).toEqual(BRAND)
+    expect(detail?.agency).toEqual(BRAND)
+  })
+
+  it('si no se pudieron leer las inmobiliarias, los proyectos salen igual, sin logo', async () => {
+    // Arrange
+    const service = createProjectService([], gatewayWith([row()]), async () => Promise.reject(new Error('sin red')))
+
+    // Act
+    const { items } = await service.search({}, { page: 1, pageSize: 6 })
+
+    // Assert
+    expect(items).toHaveLength(1)
+    expect(items[0].agency).toBeUndefined()
+  })
+
+  it('entrega los publicados de una cuenta, para la página de su inmobiliaria', async () => {
+    // Arrange
+    const gateway = gatewayWith([row()])
+    const service = createProjectService(PROJECTS, gateway)
+
+    // Act
+    const projects = await service.getByOwner('inmobiliaria')
+
+    // Assert
+    expect(gateway.listPublished).toHaveBeenCalledExactlyOnceWith('inmobiliaria')
+    expect(projects.map(({ id }) => id)).toEqual([SAVED_ID])
+  })
+})

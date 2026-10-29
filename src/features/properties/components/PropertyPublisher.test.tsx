@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import PropertyPublisher from '@/features/properties/components/PropertyPublisher'
 import { buildProperty } from '@/test/factories'
+import { renderWithRouter } from '@/test/renderWithRouter'
 
 describe('PropertyPublisher', () => {
   it('dice quién publica la propiedad y qué tipo de anunciante es', () => {
@@ -15,6 +16,26 @@ describe('PropertyPublisher', () => {
     expect(screen.getByText('Publicado por')).toBeInTheDocument()
     expect(screen.getByText('Inmobiliaria de prueba')).toBeInTheDocument()
     expect(screen.getByText('Inmobiliaria')).toBeInTheDocument()
+  })
+
+  it('si publica una inmobiliaria, muestra su logo y lleva a su página', () => {
+    // Arrange
+    const agency = {
+      slug: 'casa-norte',
+      name: 'Casa Norte',
+      kind: 'inmobiliaria' as const,
+      logoUrl: 'https://logos.example/casa-norte.webp',
+      verified: true,
+    }
+    const property = buildProperty({ advertiser: { name: 'Casa Norte', kind: 'inmobiliaria', agency } })
+
+    // Act
+    renderWithRouter(<PropertyPublisher property={property} />)
+
+    // Assert
+    expect(screen.getByRole('link', { name: 'Casa Norte' })).toHaveAttribute('href', '/inmobiliaria/casa-norte')
+    expect(screen.getByRole('presentation')).toHaveAttribute('src', 'https://logos.example/casa-norte.webp')
+    expect(screen.getByText('Verificada')).toBeInTheDocument()
   })
 
   it('en un anuncio guardado en este navegador, dice que lo publicó quien lo está viendo', () => {

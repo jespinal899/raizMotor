@@ -1,3 +1,5 @@
+import type { AgencyBrand } from '@/features/agencies/types/agency.types'
+
 export type PropertyType = 'casa' | 'apartamento' | 'terreno'
 
 export type PropertyOperation = 'venta' | 'alquiler'
@@ -23,6 +25,8 @@ export interface Advertiser {
   kind: AdvertiserKind
   /** Completo y sin separadores (+50499999999), cuando quien publica tiene uno al que escribirle. */
   phone?: string
+  /** La inmobiliaria a cuyo nombre publica, con su logo, cuando la cuenta tiene una. */
+  agency?: AgencyBrand
 }
 
 /** Quién retiró un anuncio del catálogo: quien lo publicó, que puede volver a publicarlo, o el equipo del sitio. */

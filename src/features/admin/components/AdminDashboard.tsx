@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import AdminAgenciesTable from '@/features/admin/components/AdminAgenciesTable'
 import AdminListingsTable from '@/features/admin/components/AdminListingsTable'
 import AdminProjectsTable from '@/features/admin/components/AdminProjectsTable'
 import AdminReportsTable from '@/features/admin/components/AdminReportsTable'
@@ -9,6 +10,7 @@ const SECTIONS = [
   { id: 'reportes', title: 'Reportes', Content: AdminReportsTable },
   { id: 'anuncios', title: 'Anuncios', Content: AdminListingsTable },
   { id: 'proyectos', title: 'Proyectos', Content: AdminProjectsTable },
+  { id: 'inmobiliarias', title: 'Inmobiliarias', Content: AdminAgenciesTable },
   { id: 'cuentas', title: 'Cuentas', Content: AdminUsersTable },
 ] as const
 
