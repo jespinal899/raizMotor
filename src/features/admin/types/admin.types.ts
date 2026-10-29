@@ -1,3 +1,4 @@
+import type { AgencyKind } from '@/features/agencies/types/agency.types'
 import type { PropertyOperation } from '@/features/properties/types/property.types'
 import type { ReportReason } from '@/features/properties/types/report.types'
 import type { PageRequest, Paginated } from '@/shared/types/common.types'
@@ -41,6 +42,29 @@ export interface AdminProject {
 export interface ProjectFilter {
   /** Sin él, todos. */
   status?: AdminProjectStatus
+  /** Un trozo del nombre. */
+  search?: string
+}
+
+/** El perfil público de una inmobiliaria, para revisarlo y verificarlo. */
+export interface AdminAgency {
+  /** La cuenta que la administra. */
+  ownerId: string
+  slug: string
+  name: string
+  kind: AgencyKind
+  city: string
+  phone: string
+  email: string
+  website: string
+  logoUrl?: string
+  verified: boolean
+  createdAt: string
+}
+
+export interface AgencyFilter {
+  /** Sin él, todas. */
+  verified?: boolean
   /** Un trozo del nombre. */
   search?: string
 }
@@ -98,6 +122,9 @@ export interface AdminService {
   listProjects(filter: ProjectFilter, page: PageRequest): Promise<Paginated<AdminProject>>
   /** Oculta un proyecto, o devuelve al catálogo uno que ocultó el equipo. */
   setProjectStatus(projectId: string, status: 'published' | 'hidden', note: string): Promise<void>
+  listAgencies(filter: AgencyFilter, page: PageRequest): Promise<Paginated<AdminAgency>>
+  /** Marca una inmobiliaria como verificada, o le quita la marca. */
+  setAgencyVerified(ownerId: string, verified: boolean, note: string): Promise<void>
   /** Busca en el correo y en el nombre. */
   listAccounts(search: string, page: PageRequest): Promise<Paginated<AdminAccount>>
 /** Los dos límites de la cuenta, en un paso: lo que se hace al activar un plan contratado. */

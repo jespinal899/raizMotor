@@ -24,6 +24,10 @@ export const ROUTES = {
   newProject: '/mis-publicaciones/proyectos/nuevo',
   editProject: '/mis-publicaciones/proyectos/:id/editar',
   account: '/mi-cuenta',
+  /** Donde una inmobiliaria corrige su perfil público y su logo. */
+  myAgency: '/mi-inmobiliaria',
+  /** La página pública de una inmobiliaria, con todo lo que publica. */
+  agency: '/inmobiliaria/:slug',
   /** El panel del equipo del sitio. */
   admin: '/admin',
   /** A donde lleva «Publicar»: con un plan de pago, ese plan y qué publicar; sin él, todos los planes. */
@@ -63,6 +67,8 @@ export const propertyTypePath = (tipo: string) => `${ROUTES.properties}/${tipo}`
 export const propertyDetailPath = (id: string) => `/propiedad/${id}`
 
 export const projectDetailPath = (id: string) => `${ROUTES.projects}/${encodeURIComponent(id)}`
+
+export const agencyPath = (slug: string) => `/inmobiliaria/${encodeURIComponent(slug)}`
 
 /** Abre el formulario para corregir un anuncio propio. */
 export const editPropertyPath = (id: string) => `${ROUTES.myProperties}/${encodeURIComponent(id)}/editar`

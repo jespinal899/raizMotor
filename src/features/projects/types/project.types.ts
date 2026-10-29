@@ -1,3 +1,4 @@
+import type { AgencyBrand } from '@/features/agencies/types/agency.types'
 import type { Coordinates, PhotoSource } from '@/features/properties/types/property.types'
 
 /** Qué se construye: casas en una residencial, apartamentos en una torre, un condominio o lotes. */
@@ -52,6 +53,8 @@ export interface Project {
   models: ProjectModel[]
   /** Sale entre los destacados de la portada. */
   featured: boolean
+  /** La inmobiliaria que lo publica, con su logo, cuando la cuenta tiene una. */
+  agency?: AgencyBrand
   /** De muestra: no corresponde a ningún proyecto real. */
   example?: boolean
   /** Solo en «Mis publicaciones»: si está publicado, en borrador o lo ocultó el equipo. */

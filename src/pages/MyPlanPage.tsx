@@ -1,4 +1,4 @@
-import { ArrowUpRight, Building2, House, Plus } from 'lucide-react'
+import { ArrowUpRight, Building2, House, Plus, Store } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import ButtonLink from '@/components/ButtonLink'
 import PageHeader from '@/components/PageHeader'
@@ -138,6 +138,31 @@ const PaidPlan = ({ plan }: { plan: AccountPlan }) => {
           />
         )}
       </div>
+
+      {/* Con un plan de inmobiliaria, sus publicaciones salen con su nombre comercial y su logo. */}
+      {hasProjects && (
+        <section
+          aria-labelledby="plan-inmobiliaria"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-5 sm:p-6"
+        >
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Store aria-hidden="true" className="size-5" />
+            </span>
+            <div className="grid gap-1">
+              <h2 id="plan-inmobiliaria" className="font-heading text-lg font-semibold">
+                Tu inmobiliaria
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Tu nombre comercial y tu logo en cada publicación, y tu propia página con todo lo que publicas.
+              </p>
+            </div>
+          </div>
+          <ButtonLink to={ROUTES.myAgency} variant="outline">
+            Editar perfil y logo
+          </ButtonLink>
+        </section>
+      )}
 
       <p className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
         <TextLink to={ROUTES.myProperties}>Ver mis publicaciones</TextLink>

@@ -13,6 +13,8 @@ export interface PropertyService {
   getById(id: string): Promise<Property | undefined>
   /** Los anuncios de quien usa el sitio, del más reciente al más antiguo. Rechaza si no se pudieron leer. */
   getOwn(): Promise<Property[]>
+  /** Los publicados de una cuenta, del más reciente al más antiguo: los de la página de su inmobiliaria. */
+  getByOwner(ownerId: string): Promise<Property[]>
 }
 
 // Los anuncios publicados se suman al catálogo de ejemplo, que sale marcado como tal, si se muestra.

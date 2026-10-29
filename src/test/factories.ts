@@ -101,6 +101,7 @@ export const buildPage = <T>(items: T[], overrides: Partial<Paginated<T>> = {}):
 export const buildPropertyService = (overrides: Partial<PropertyService> = {}): PropertyService => ({
   getFeatured: vi.fn(async () => []),
   getOwn: vi.fn(async () => []),
+  getByOwner: vi.fn(async () => []),
   search: vi.fn(async () => buildPage<Property>([])),
   getById: vi.fn(async () => undefined),
   ...overrides,

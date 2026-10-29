@@ -1,3 +1,5 @@
+import { agencyService } from '@/features/agencies/services/agencyService'
+import type { AgencyBrand } from '@/features/agencies/types/agency.types'
 import { PROJECTS } from '@/features/projects/data/projects.data'
 import { createSupabaseProjectGateway } from '@/features/projects/services/projectGateway'
 import type { ProjectGateway, ProjectModelRow, ProjectRow } from '@/features/projects/services/projectGateway'
@@ -17,7 +19,12 @@ export interface ProjectService {
   search(filters: ProjectFilters, pageRequest: PageRequest): Promise<Paginated<Project>>
   /** El proyecto con sus modelos; `undefined` si no existe o no está publicado. */
   getById(id: string): Promise<Project | undefined>
+  /** Los publicados de una cuenta, del más reciente al más antiguo: los de la página de su inmobiliaria. */
+  getByOwner(ownerId: string): Promise<Project[]>
 }
+
+/** La inmobiliaria de cada cuenta que tiene una, para mostrar su nombre y su logo en los proyectos. */
+export type BrandLookup = (ownerIds: string[]) => Promise<Map<string, AgencyBrand>>
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -27,6 +34,7 @@ export const toProject = (
   row: ProjectRow,
   models: ProjectModelRow[] = [],
   featured = false,
+  agency?: AgencyBrand,
 ): Project => {
   const gallery = row.photos.map(gateway.photoUrl)
 
@@ -57,6 +65,7 @@ export const toProject = (
       priceFrom: price_from,
     })),
     featured,
+    ...(agency && { agency }),
   }
 }
 
@@ -65,19 +74,28 @@ export const toProject = (
  * pocos (decenas, no miles), así que el catálogo se lee entero y se filtra aquí. Con Supabase, la portada
  * destaca solo los de cuentas con plan de pago, nunca los de ejemplo; sin él, los de ejemplo enseñan el sitio.
  */
-export const createProjectService = (samples: readonly Project[], gateway?: ProjectGateway): ProjectService => {
+export const createProjectService = (
+  samples: readonly Project[],
+  gateway?: ProjectGateway,
+  brands?: BrandLookup,
+): ProjectService => {
   const examples = samples.map((project) => ({ ...project, example: true }))
 
-  const getAll = async () => [
-    ...(gateway ? (await gateway.listPublished()).map((row) => toProject(gateway, row)) : []),
-    ...examples,
-  ]
+  /** Las inmobiliarias de esos proyectos. Si no se pudieron leer, salen sin logo: el catálogo no se pierde por eso. */
+  const brandsOf = async (rows: ProjectRow[]) =>
+    brands && rows.length > 0 ? await brands(rows.map((row) => row.owner_id)).catch(() => undefined) : undefined
+
+  const toProjects = async (rows: ProjectRow[], featured = false) => {
+    const found = await brandsOf(rows)
+
+    return rows.map((row) => toProject(gateway!, row, [], featured, found?.get(row.owner_id)))
+  }
+
+  const getAll = async () => [...(gateway ? await toProjects(await gateway.listPublished()) : []), ...examples]
 
   return {
     getFeatured: async () =>
-      gateway
-        ? (await gateway.listFeatured(FEATURED_COUNT)).map((row) => toProject(gateway, row, [], true))
-        : examples.filter((project) => project.featured),
+      gateway ? toProjects(await gateway.listFeatured(FEATURED_COUNT), true) : examples.filter((project) => project.featured),
 
     search: async (filters, pageRequest) =>
       paginate(
@@ -88,15 +106,22 @@ export const createProjectService = (samples: readonly Project[], gateway?: Proj
     getById: async (id) => {
       if (gateway && UUID.test(id)) {
         const found = await gateway.findById(id)
-        if (found) return toProject(gateway, found.row, found.models)
+        if (found) {
+          const agency = (await brandsOf([found.row]))?.get(found.row.owner_id)
+
+          return toProject(gateway, found.row, found.models, false, agency)
+        }
       }
 
       return examples.find((project) => project.id === id)
     },
+
+    getByOwner: async (ownerId) => (gateway ? toProjects(await gateway.listPublished(ownerId)) : []),
   }
 }
 
 export const projectService: ProjectService = createProjectService(
   showSampleListings(supabase !== null, import.meta.env) ? PROJECTS : [],
   supabase ? createSupabaseProjectGateway(supabase) : undefined,
+  agencyService.getBrands,
 )

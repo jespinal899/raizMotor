@@ -1,3 +1,4 @@
+import { agencyService } from '@/features/agencies/services/agencyService'
 import { createIndexedDbPublicationRepository } from '@/features/properties/services/publishedPropertyRepository'
 import type { PublishedPropertyRepository } from '@/features/properties/services/publishedPropertyRepository'
 import { createSupabasePropertyGateway } from '@/features/properties/services/supabasePropertyGateway'
@@ -10,5 +11,9 @@ export const ADS_SHARED = supabase !== null
 
 // Único punto donde se elige dónde se guardan los anuncios.
 export const propertyRepository: PublishedPropertyRepository = supabase
-  ? createSupabasePropertyRepository({ gateway: createSupabasePropertyGateway(supabase), preparePhoto: resizePhoto })
+  ? createSupabasePropertyRepository({
+      gateway: createSupabasePropertyGateway(supabase),
+      preparePhoto: resizePhoto,
+      brands: agencyService.getBrands,
+    })
   : createIndexedDbPublicationRepository()

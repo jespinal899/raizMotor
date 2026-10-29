@@ -1,3 +1,4 @@
+import type { AgencyBrand } from '@/features/agencies/types/agency.types'
 import {
   PublicationLimitError,
   PublicationSignInRequiredError,
@@ -93,6 +94,8 @@ export interface PropertyGateway {
   findById(id: string): Promise<PropertyRow | undefined>
   /** Los de una cuenta, también los ocultos, del más reciente al más antiguo. */
   listByOwner(ownerId: string): Promise<PropertyRow[]>
+  /** Los publicados de una cuenta, del más reciente al más antiguo: los que muestra la página de su inmobiliaria. */
+  listPublishedByOwner(ownerId: string): Promise<PropertyRow[]>
   /** El anuncio que la cuenta guardó con esa clave, si ya lo guardó. */
   findByOperationKey(ownerId: string, operationKey: string): Promise<PropertyRow | undefined>
   /** Cuántos anuncios admite la cuenta; sin valor si no tiene perfil. */
@@ -118,6 +121,8 @@ interface SupabasePropertyOptions {
   gateway: PropertyGateway
   /** Deja la foto lista para subirla: reducida, para que el catálogo no pese. */
   preparePhoto: (photo: File) => Promise<Blob>
+  /** La inmobiliaria de cada cuenta que tiene una, para mostrar su nombre y su logo en los anuncios. */
+  brands?: (ownerIds: string[]) => Promise<Map<string, AgencyBrand>>
 }
 
 /** Código con el que la base de datos dice que el plan de la cuenta no admite más anuncios. */
@@ -210,8 +215,9 @@ const toChanges = (
 export const createSupabasePropertyRepository = ({
   gateway,
   preparePhoto,
+  brands,
 }: SupabasePropertyOptions): PublishedPropertyRepository => {
-  const toStored = (row: PropertyRow): StoredPropertyPublication => ({
+  const toStored = (row: PropertyRow, brand?: AgencyBrand): StoredPropertyPublication => ({
     id: row.id,
     operationKey: row.operation_key,
     createdAt: Date.parse(row.created_at),
@@ -236,13 +242,25 @@ export const createSupabasePropertyRepository = ({
       price: row.price,
       images: row.photos.map(gateway.photoUrl),
     },
+    // Con inmobiliaria, el anuncio sale a su nombre; el teléfono sigue siendo el de la cuenta que lo publicó.
     advertiser: {
-      name: row.advertiser_name || UNNAMED_ADVERTISER,
-      kind: 'particular',
+      name: brand?.name ?? (row.advertiser_name || UNNAMED_ADVERTISER),
+      kind: brand?.kind ?? 'particular',
       ...(row.advertiser_phone && { phone: row.advertiser_phone }),
+      ...(brand && { agency: brand }),
     },
     ...(WITHDRAWALS[row.status] && { withdrawn: WITHDRAWALS[row.status] }),
   })
+
+  /**
+   * Los anuncios con la inmobiliaria de cada cuenta. Si no se pudieron leer las inmobiliarias, salen igual,
+   * a nombre de quien los publicó: el catálogo no se pierde por un logo.
+   */
+  const toStoredAll = async (rows: PropertyRow[]) => {
+    const found = brands && rows.length > 0 ? await brands(rows.map((row) => row.owner_id)).catch(() => undefined) : undefined
+
+    return rows.map((row) => toStored(row, found?.get(row.owner_id)))
+  }
 
   /**
    * Deja guardadas las fotos del anuncio y entrega sus rutas, en el mismo orden. Las que ya tenía (`kept`,
@@ -316,23 +334,25 @@ export const createSupabasePropertyRepository = ({
     getById: async (id) => {
       const row = UUID.test(id) ? await gateway.findById(id) : undefined
 
-      return row && toStored(row)
+      return row && (await toStoredAll([row]))[0]
     },
 
-    getAll: async () => (await gateway.listPublished()).map(toStored),
+    getAll: async () => toStoredAll(await gateway.listPublished()),
 
-    getFeatured: async (limit) => (await gateway.listFeatured(limit)).map(toStored),
+    getFeatured: async (limit) => toStoredAll(await gateway.listFeatured(limit)),
 
     search: async ({ filters, offset, limit }) => {
       const { rows, total } = await gateway.searchPublished(toCatalogSearch(filters, offset, limit))
 
-      return { records: rows.map(toStored), total }
+      return { records: await toStoredAll(rows), total }
     },
+
+    getPublishedByOwner: async (ownerId) => toStoredAll(await gateway.listPublishedByOwner(ownerId)),
 
     getOwn: async () => {
       const ownerId = await gateway.currentUserId()
 
-      return ownerId ? (await gateway.listByOwner(ownerId)).map(toStored) : []
+      return ownerId ? toStoredAll(await gateway.listByOwner(ownerId)) : []
     },
 
     getLimit: async () => {

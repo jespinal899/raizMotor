@@ -1,6 +1,7 @@
 import { vi } from 'vitest'
 import type {
   AdminAccount,
+  AdminAgency,
   AdminListing,
   AdminProject,
   AdminReport,
@@ -75,6 +76,8 @@ export const buildAdminService = (overrides: Partial<AdminService> = {}): AdminS
   setListingStatus: vi.fn(async () => {}),
   listProjects: vi.fn(async () => pageOf<AdminProject>([])),
   setProjectStatus: vi.fn(async () => {}),
+  listAgencies: vi.fn(async () => pageOf<AdminAgency>([])),
+  setAgencyVerified: vi.fn(async () => {}),
   listAccounts: vi.fn(async () => pageOf<AdminAccount>([])),
   setAccountLimits: vi.fn(async () => {}),
   ...overrides,

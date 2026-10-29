@@ -4,6 +4,7 @@ import ButtonLink from '@/components/ButtonLink'
 import ExternalButtonLink from '@/components/ExternalButtonLink'
 import FormSelect from '@/components/FormSelect'
 import { Card } from '@/components/ui/card'
+import AgencyByline from '@/features/agencies/components/AgencyByline'
 import { projectQuoteService } from '@/features/projects/services/projectQuoteService'
 import type { ProjectQuoteService } from '@/features/projects/services/projectQuoteService'
 import type { Project } from '@/features/projects/types/project.types'
@@ -27,7 +28,9 @@ interface ProjectContactCardProps {
  * desarrolla el proyecto y cómo escribirle. Un proyecto de ejemplo no es de nadie: no lleva el formulario.
  */
 const ProjectContactCard = ({ project, quoteService = projectQuoteService }: ProjectContactCardProps) => {
-  const { id, name, developer, videoUrl, models, example } = project
+  const { id, name, developer, videoUrl, models, example, agency } = project
+  // Si la desarrolladora es la misma inmobiliaria que lo publica, basta con su logo.
+  const showsDeveloper = !agency || developer.name.trim().toLowerCase() !== agency.name.trim().toLowerCase()
   const projectUrl = useAbsoluteUrl(projectDetailPath(id))
   const [model, setModel] = useState(ANY_MODEL)
   const modelOptions = [
@@ -55,15 +58,23 @@ const ProjectContactCard = ({ project, quoteService = projectQuoteService }: Pro
         </PropertyQuoteForm>
       )}
 
-      <div className={cn('flex items-center gap-3', !example && 'border-t pt-4')}>
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-          <Building2 className="size-5" aria-hidden="true" />
-        </span>
-        <div className="grid gap-0.5">
-          <span className="text-xs text-muted-foreground">Desarrolla</span>
-          <span className="font-medium">{developer.name}</span>
+      {agency && (
+        <div className={cn(!example && 'border-t pt-4')}>
+          <AgencyByline agency={agency} />
         </div>
-      </div>
+      )}
+
+      {showsDeveloper && (
+        <div className={cn('flex items-center gap-3', !example && !agency && 'border-t pt-4')}>
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+            <Building2 className="size-5" aria-hidden="true" />
+          </span>
+          <div className="grid gap-0.5">
+            <span className="text-xs text-muted-foreground">Desarrolla</span>
+            <span className="font-medium">{developer.name}</span>
+          </div>
+        </div>
+      )}
 
       {developer.phone ? (
         <ExternalButtonLink href={buildDeveloperChatUrl(name, projectUrl, developer.phone)} size="lg" className="h-11 text-base">

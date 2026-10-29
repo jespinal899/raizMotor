@@ -41,8 +41,8 @@ export interface ProjectModelRow {
 
 /** Lo que el servicio de proyectos necesita de Supabase, sin su manera de escribir las consultas. */
 export interface ProjectGateway {
-  /** Los proyectos publicados, del más reciente al más antiguo. */
-  listPublished(): Promise<ProjectRow[]>
+  /** Los proyectos publicados, del más reciente al más antiguo; con `ownerId`, solo los de esa cuenta. */
+  listPublished(ownerId?: string): Promise<ProjectRow[]>
   /** Los destacados de la portada, como mucho `limit`, que elige la base de datos entre los de planes de pago. */
   listFeatured(limit: number): Promise<ProjectRow[]>
   /** Un proyecto publicado con sus modelos, del más barato al más caro; sin valor si no existe. */
@@ -68,15 +68,14 @@ const unwrap = <Data>({ data, error }: { data: Data; error: Error | null }): Dat
  * supabase/migrations/20261016000000_proyectos.sql.
  */
 export const createSupabaseProjectGateway = (client: SupabaseClient): ProjectGateway => ({
-  listPublished: async () => {
+  listPublished: async (ownerId) => {
     const rows: ProjectRow[] = []
     for (let from = 0; ; from += READ_BATCH) {
+      let query = client.from(PROJECTS).select('*').eq('status', 'published')
+      if (ownerId) query = query.eq('owner_id', ownerId)
       const batch =
         unwrap<ProjectRow[] | null>(
-          await client
-            .from(PROJECTS)
-            .select('*')
-            .eq('status', 'published')
+          await query
             .order('created_at', { ascending: false })
             .order('id', { ascending: true })
             .range(from, from + READ_BATCH - 1),
